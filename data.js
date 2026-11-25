@@ -2,11 +2,6 @@
    Add disciplines, theories, techniques or worked examples here. See CONTRIBUTING.md. */
 
 window.LAB = {
-  disciplines: [
-    "History", "Literary studies", "Linguistics", "Translation studies", "Oral literature",
-    "Philosophy", "Religious studies", "Cultural studies", "Media and communication studies",
-    "Art history and visual culture", "Archival studies", "Film studies", "Anthropology", "Other"
-  ],
 
 
   techniques: {

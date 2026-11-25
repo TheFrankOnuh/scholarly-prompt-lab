@@ -3,7 +3,7 @@
   "use strict";
 
   const L = window.LAB;
-  const VERSION = "0.5.1";
+  const VERSION = "0.6.0";
   const KEY_DRAFT = "spl.draft.v1";
   const KEY_LOG = "spl.log.v1";
   const $ = (id) => document.getElementById(id);
@@ -56,7 +56,6 @@
   function slug(s) { return (s || "research-design").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 50) || "research-design"; }
 
   /* ---------- populate controls ---------- */
-  L.disciplines.forEach((d) => $("discipline").append(option(d, d)));
   Object.keys(L.techniques).forEach((k) => $("technique").append(option(k, L.techniques[k].label)));
   $("example").append(option("", "Choose an example…"));
   L.examples.forEach((x) => $("example").append(option(x.id, x.title)));
@@ -84,6 +83,93 @@
     ]));
   });
   $("lgDate").value = today();
+
+  /* ---------- discipline picker (searchable, add your own) ---------- */
+  const KEY_DISC = "spl.mydisciplines.v1";
+  let myDisciplines = store.get(KEY_DISC, []);
+  if (!Array.isArray(myDisciplines)) myDisciplines = [];
+  const discInput = $("discipline"), discList = $("discList");
+  let discActive = -1, discOptions = [];
+  function discNorm(x) { return (x || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim(); }
+  function allDisciplines() {
+    return [{ group: "Your disciplines", items: myDisciplines, mine: true }].concat(window.LAB_DISCIPLINES || []);
+  }
+  function discExists(v) { return allDisciplines().some((g) => g.items.some((d) => discNorm(d) === discNorm(v))); }
+  function addDiscipline(v) {
+    v = v.trim().replace(/\s+/g, " ");
+    if (!v) return;
+    if (!discExists(v)) { myDisciplines.unshift(v); store.set(KEY_DISC, myDisciplines); }
+    chooseDiscipline(v);
+  }
+  function chooseDiscipline(v) {
+    discInput.value = v;
+    closeDisc();
+    renderBuild();
+  }
+  function closeDisc() { discList.hidden = true; discInput.setAttribute("aria-expanded", "false"); discInput.removeAttribute("aria-activedescendant"); discActive = -1; }
+  function setActive(i) {
+    discActive = i;
+    discOptions.forEach((o, k) => o.el.classList.toggle("active", k === i));
+    if (discOptions[i]) { discInput.setAttribute("aria-activedescendant", discOptions[i].el.id); discOptions[i].el.scrollIntoView({ block: "nearest" }); }
+  }
+  function renderDisc(showAll) {
+    const q = showAll ? "" : discNorm(discInput.value);
+    discList.replaceChildren(); discOptions = [];
+    let n = 0;
+    const typed = discInput.value.trim();
+    allDisciplines().forEach((g) => {
+      const items = g.items.filter((d) => !q || discNorm(d).includes(q) || discNorm(g.group).includes(q));
+      if (!items.length) return;
+      discList.append(el("div", { class: "combo-group", role: "presentation", text: g.group }));
+      items.forEach((d) => {
+        const id = "disc_" + (n++);
+        const opt = el("div", { class: "combo-opt", role: "option", id, "aria-selected": discNorm(d) === discNorm(discInput.value) ? "true" : "false" }, [d]);
+        opt.addEventListener("mousedown", (e) => { e.preventDefault(); chooseDiscipline(d); });
+        if (g.mine) {
+          const del = el("button", { type: "button", class: "combo-del", title: "Remove from your disciplines", "aria-label": "Remove " + d, text: "×" });
+          del.addEventListener("mousedown", (e) => {
+            e.preventDefault(); e.stopPropagation();
+            myDisciplines = myDisciplines.filter((x) => x !== d); store.set(KEY_DISC, myDisciplines); renderDisc(showAll);
+          });
+          opt.append(del);
+        }
+        discList.append(opt); discOptions.push({ el: opt, value: d });
+      });
+    });
+    if (typed && !discExists(typed)) {
+      // offer to add, after any matches so Enter picks the best existing match first
+      const add = el("div", { class: "combo-opt add", role: "option", id: "disc_add", "aria-selected": "false" }, ["+ Add “" + typed + "” as your discipline"]);
+      add.addEventListener("mousedown", (e) => { e.preventDefault(); addDiscipline(typed); });
+      discList.append(add); discOptions.push({ el: add, value: null, add: true });
+    }
+    if (!discOptions.length) discList.append(el("div", { class: "combo-empty", text: "Type a discipline name to add it." }));
+    discList.hidden = false; discInput.setAttribute("aria-expanded", "true");
+    setActive(discOptions.length ? 0 : -1);
+  }
+  discInput.addEventListener("focus", () => { discInput.select(); renderDisc(true); });
+  discInput.addEventListener("click", () => { if (discList.hidden) renderDisc(true); });
+  discInput.addEventListener("input", () => renderDisc(false));
+  discInput.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault();
+      if (discList.hidden) { renderDisc(true); return; }
+      if (!discOptions.length) return;
+      setActive((discActive + (e.key === "ArrowDown" ? 1 : discOptions.length - 1)) % discOptions.length);
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      const o = discOptions[discActive];
+      if (o && o.add) addDiscipline(discInput.value);
+      else if (o) chooseDiscipline(o.value);
+      else if (discInput.value.trim()) addDiscipline(discInput.value);
+    } else if (e.key === "Escape") { closeDisc(); }
+  });
+  discInput.addEventListener("blur", () => {
+    setTimeout(() => {
+      closeDisc();
+      if (!discInput.value.trim()) discInput.value = "History";
+      renderBuild();
+    }, 120);
+  });
 
   /* ---------- theory library and picker ---------- */
   const KEY_THEORIES = "spl.mytheories.v1";
@@ -119,6 +205,43 @@
     frag.append(text.slice(i));
     return frag;
   }
+
+  /* ---------- citations (Harvard author-date) ---------- */
+  const TYPE_LABEL = { theory: "Theory", framework: "Framework", approach: "Approach", method: "Method", concept: "Concept", school: "School of thought", movement: "Movement", critique: "Critique" };
+  function citeSurnames(authors) {
+    const parts = (authors || "").replace(/\s*\(eds?\.?\)/gi, "").split(/\s*;\s*|\s+and\s+|\s*&\s*|,\s+(?=[^,]+,\s*[A-Z]\.)/).map((x) => x.split(",")[0].trim()).filter(Boolean);
+    if (parts.length > 2) return parts[0] + " et al.";
+    return parts.join(" and ");
+  }
+  function shortCite(c) { return citeSurnames(c.authors) + " " + c.year; }
+  function harvard(c) {
+    const yr = "(" + c.year + ")";
+    const tr = c.translator || c.translators;
+    const extra = (tr ? " Translated by " + tr + "." : "") + (c.original_year ? " (Original work published " + c.original_year + ".)" : "");
+    const pub = [c.place, c.publisher].filter(Boolean).join(": ");
+    const pp = c.pages ? (/^\d+$/.test(String(c.pages)) ? "p. " : "pp. ") + c.pages : "";
+    if (c.kind === "article") {
+      const vol = (c.volume || "") + (c.issue ? "(" + c.issue + ")" : "");
+      return c.authors + " " + yr + " \u2018" + c.title + "\u2019, *" + c.container + "*" + (vol ? ", " + vol : "") + (pp ? ", " + pp : "") + "." + (c.doi ? " doi:" + c.doi + "." : "") + extra;
+    }
+    if (c.kind === "chapter") {
+      return c.authors + " " + yr + " \u2018" + c.title + "\u2019, in " + (c.editors ? c.editors + " (eds) " : "") + "*" + c.container + "*." + (pub ? " " + pub : "") + (pp ? ", " + pp : "") + "." + extra;
+    }
+    return c.authors + " " + yr + " *" + c.title + "*" + (c.edition ? ", " + c.edition : "") + "." + (pub ? " " + pub + "." : "") + extra;
+  }
+  function citeNode(c) {
+    const span = el("span", { class: "cite" });
+    harvard(c).split(/(\*[^*]+\*)/).forEach((part) => {
+      if (/^\*[^*]+\*$/.test(part)) span.append(el("em", { text: part.slice(1, -1) })); else span.append(part);
+    });
+    return span;
+  }
+  function sentence(x) { x = (x || "").trim(); return x ? x.charAt(0).toUpperCase() + x.slice(1) + (/[.!?]$/.test(x) ? "" : ".") : ""; }
+  function reportUrl(t) {
+    const body = "Entry: " + t.n + " (id: " + t.id + ")\n\nWhat is wrong (citation detail, attribution, description, missing debate):\n\n\nCorrect information and a source for it:\n";
+    return "https://github.com/TheFrankOnuh/scholarly-prompt-lab/issues/new?title=" + encodeURIComponent("Theory entry correction: " + t.n) + "&body=" + encodeURIComponent(body) + "&labels=theory";
+  }
+  const openDetails = new Set();
 
   function shareUrl(t) {
     const body = "Please consider adding this theory to the Scholarly Prompt Lab.\n\nName: " + t.n + "\nKey thinkers: " + (t.t || "") +
@@ -160,7 +283,7 @@
       if (theoryField === "selected" && !selectedTheories.includes(t.id)) return false;
       if (theoryField !== "all" && theoryField !== "selected" && t.f !== theoryField) return false;
       if (!q) return true;
-      return norm(t.n + " " + t.t + " " + t.a + " " + fieldLabel(t.f)).includes(q);
+      return norm(t.n + " " + t.t + " " + t.a + " " + fieldLabel(t.f) + " " + (t.concepts || []).join(" ") + " " + (t.works || []).map((w) => w.authors + " " + w.title).join(" ")).includes(q);
     });
     // when searching, rank name matches first
     if (q) shown = shown.sort((a, b) => (norm(b.n).includes(q) ? 1 : 0) - (norm(a.n).includes(q) ? 1 : 0));
@@ -178,8 +301,15 @@
         cb.addEventListener("change", () => toggleTheory(t.id, cb.checked));
         const name = el("span", { class: "tn" }, [highlight(t.n, q)]);
         if (t.custom) name.append(el("span", { class: "badge", text: "Yours" }));
-        const text = el("span", {}, [name, " ", t.t ? el("span", { class: "tt" }, [highlight(t.t, q)]) : "", el("span", { class: "ta" }, [highlight(t.a, q)])]);
+        const text = el("span", {}, [name, " ", t.t ? el("span", { class: "tt" }, [highlight(t.t, q)]) : "",
+          t.type ? el("span", { class: "ttype", text: TYPE_LABEL[t.type] || t.type }) : "", el("span", { class: "ta" }, [highlight(t.a, q)])]);
         const tools = el("span", { class: "tools" });
+        if (t.works && t.works.length) {
+          const open = openDetails.has(t.id);
+          const det = el("button", { type: "button", "aria-expanded": open ? "true" : "false", text: open ? "Hide" : "Sources" });
+          det.addEventListener("click", (e) => { e.preventDefault(); if (openDetails.has(t.id)) openDetails.delete(t.id); else openDetails.add(t.id); renderTheoryPicker(); });
+          tools.append(det);
+        }
         if (t.custom) {
           const share = el("a", { href: shareUrl(t), target: "_blank", rel: "noopener", title: "Opens a pre-filled suggestion on GitHub (needs a GitHub account)", text: "Share" });
           const del = el("button", { type: "button", text: "Delete" });
@@ -194,6 +324,18 @@
           tools.append(share, del);
         }
         box.append(el("label", { class: "theory-row" + (on ? " on" : "") }, [cb, text, tools]));
+        if (openDetails.has(t.id) && t.works) {
+          const d = el("div", { class: "theory-detail" });
+          d.append(el("h5", { text: "Key works" }));
+          const ul = el("ul"); t.works.forEach((w) => ul.append(el("li", {}, [citeNode(w)]))); d.append(ul);
+          if (t.concepts && t.concepts.length) { d.append(el("h5", { text: "Core concepts" })); d.append(el("p", { text: t.concepts.join("; ") })); }
+          if (t.debates && t.debates.length) {
+            d.append(el("h5", { text: "Debates and critiques" }));
+            const dl = el("ul"); t.debates.forEach((w) => dl.append(el("li", {}, [citeNode(w), w.note ? el("span", { class: "dnote", text: " " + sentence(w.note) }) : ""]))); d.append(dl);
+          }
+          d.append(el("a", { href: reportUrl(t), target: "_blank", rel: "noopener", class: "report-link", text: "Report an error in this entry" }));
+          box.append(d);
+        }
       });
       list.append(box);
     });
@@ -472,7 +614,12 @@
       if (th.length || notes) {
         let block = "THEORETICAL ORIENTATION:";
         if (th.length) block += (th.length > 1 ? " Use these frameworks together, and say where they point in different directions." : "") +
-          "\n" + th.map((t) => "- " + t.n + (t.t ? " (" + t.t + ")" : "") + ": attend to " + t.a + ".").join("\n");
+          "\n" + th.map((t) => {
+            const cites = (t.works || []).map(shortCite).join("; ");
+            return "- " + t.n + (cites ? " (" + cites + ")" : t.t ? " (" + t.t + ")" : "") + (t.custom ? " [researcher-defined framework]" : "") +
+              ": attend to " + t.a + "." + (t.concepts && t.concepts.length ? " Core concepts: " + t.concepts.join("; ") + "." : "");
+          }).join("\n") +
+          "\nApply each framework through its own concepts, and name the concept you are applying in each finding. Say where the evidence does not fit a framework. Do not attribute quotations, page numbers or specific claims to these authors: you have not been given their texts.";
         if (notes) block += (th.length ? "\n" : " ") + notes;
         out.push(block);
       }
@@ -577,6 +724,15 @@
     md += row("Source material", s.sourceDesc) + row("Context", s.context) + row("Contested terminology", s.terms) + row("Output", s.output + ": " + (s.fields || "default fields")) + "\n";
     md += "## CONTEXT checklist\n\n" + cov.map((c) => "- [" + (c.on ? "x" : " ") + "] **" + c.l + " · " + c.name + "**" + (c.on ? "" : " (needs " + c.need + ")")).join("\n") + "\n\n";
     md += "## Prompt\n\n```text\n" + buildPrompt(s, 4) + "\n```\n\n";
+    const lib = theoryLines(s).filter((t) => t.works && t.works.length);
+    if (lib.length) {
+      const refs = new Set();
+      lib.forEach((t) => t.works.forEach((w) => refs.add(harvard(w))));
+      md += "## References for the theoretical frameworks\n\nHarvard (author-date) style. Each reference was checked against library catalogues when the Lab's theory library was compiled. Confirm editions and page numbers against your own copy before publication.\n\n" +
+        [...refs].sort((a, b) => a.localeCompare(b)).map((r) => "- " + r).join("\n") + "\n\n";
+      const deb = lib.filter((t) => t.debates && t.debates.length);
+      if (deb.length) md += "## Debates to engage\n\n" + deb.map((t) => "**" + t.n + "**\n\n" + t.debates.map((w) => "- " + harvard(w) + (w.note ? " " + sentence(w.note) : "")).join("\n")).join("\n\n") + "\n\n";
+    }
     md += "## Disclosure statement (draft)\n\nThis study used generative AI as part of its method. Prompts, model names and versions, run dates and settings are recorded in the accompanying log. All AI outputs were reviewed by the researcher" + (s.safeguards.includes("review") ? ", and culturally sensitive classifications were referred to subject specialists" : "") + ". AI outputs are treated as data for analysis, not as evidence about the past.\n";
     return md;
   }

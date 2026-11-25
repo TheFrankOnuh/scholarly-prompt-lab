@@ -144,6 +144,31 @@ button:hover, .button-like:hover { filter: brightness(1.08); }
 .second-model summary { cursor: pointer; font-weight: 600; }
 .steps-small { padding-left: 20px; font-size: 0.9rem; display: grid; gap: 6px; }
 
+/* ---------- discipline combobox ---------- */
+.combo { position: relative; }
+.combo-list {
+  position: absolute; z-index: 20; left: 0; right: 0; top: calc(100% + 4px); max-height: 300px; overflow-y: auto;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  overscroll-behavior: contain; scrollbar-width: thin;
+}
+.combo-group { position: sticky; top: 0; padding: 5px 12px; font: 700 0.72rem/1.3 var(--sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); background: var(--code); }
+.combo-opt { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 7px 12px; cursor: pointer; font-size: 0.92rem; }
+.combo-opt.active, .combo-opt:hover { background: var(--accent-soft); }
+.combo-opt[aria-selected="true"] { font-weight: 600; }
+.combo-opt.add { color: var(--accent); font-weight: 600; border-top: 1px solid var(--line); }
+.combo-del { background: transparent; border: 0; color: var(--muted); padding: 0 6px; font-size: 1rem; line-height: 1; }
+.combo-del:hover { color: var(--warn); filter: none; }
+.combo-empty { padding: 10px 12px; color: var(--muted); font-size: 0.88rem; }
+
+/* ---------- theory details ---------- */
+.ttype { display: inline-block; font-size: 0.66rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 0 5px; margin-left: 6px; vertical-align: 1px; }
+.theory-detail { padding: 8px 12px 12px 38px; border-bottom: 1px solid var(--line); background: var(--surface); font-size: 0.84rem; line-height: 1.5; }
+.theory-detail h5 { margin: 8px 0 3px; font: 700 0.7rem/1.3 var(--sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.theory-detail ul { margin: 0; padding-left: 16px; display: grid; gap: 4px; }
+.theory-detail p { margin: 0; }
+.theory-detail .dnote { color: var(--muted); }
+.report-link { display: inline-block; margin-top: 10px; font-size: 0.78rem; color: var(--muted); }
+
 /* ---------- recommendations and duplicates ---------- */
 .recs { margin-top: 10px; border: 1px solid var(--accent); border-radius: 10px; background: var(--accent-soft); padding: 10px 12px; }
 .recs-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 0.92rem; }

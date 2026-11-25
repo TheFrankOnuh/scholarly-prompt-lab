@@ -6,7 +6,7 @@
   <title>Scholarly Prompt Lab</title>
   <meta name="description" content="A free, open-source environment for designing, documenting and evaluating AI prompts in digital humanities research.">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23185c4a'/%3E%3Ctext x='16' y='22' font-size='16' text-anchor='middle' fill='white' font-family='Georgia'%3EP%3C/text%3E%3C/svg%3E">
-  <link rel="stylesheet" href="styles.css?v=0.5.1">
+  <link rel="stylesheet" href="styles.css?v=0.6.0">
 </head>
 <body>
   <header class="site-header">
@@ -52,7 +52,10 @@
           <fieldset>
             <legend><span class="letter">C</span> Conceptual grounding</legend>
             <label for="discipline">Discipline</label>
-            <select id="discipline" name="discipline"></select>
+            <div class="combo">
+              <input id="discipline" name="discipline" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="discList" autocomplete="off" spellcheck="false" placeholder="Search or type your discipline">
+              <div id="discList" class="combo-list" role="listbox" aria-label="Disciplines" hidden></div>
+            </div>
             <label for="question">Research question</label>
             <textarea id="question" name="question" rows="3" placeholder="e.g. How is indigenous political authority represented in colonial records?"></textarea>
             <div class="theory-head">
@@ -331,10 +334,11 @@
     <p>Open source under the MIT licence. Your work is saved only in this browser. Export it to keep it.</p>
   </footer>
 
-  <script src="theories.js?v=0.5.1"></script>
-  <script src="theory-links.js?v=0.5.1"></script>
-  <script src="data.js?v=0.5.1"></script>
-  <script src="checks.js?v=0.5.1"></script>
-  <script src="app.js?v=0.5.1"></script>
+  <script src="theories.js?v=0.6.0"></script>
+  <script src="theory-links.js?v=0.6.0"></script>
+  <script src="disciplines.js?v=0.6.0"></script>
+  <script src="data.js?v=0.6.0"></script>
+  <script src="checks.js?v=0.6.0"></script>
+  <script src="app.js?v=0.6.0"></script>
 </body>
 </html>
