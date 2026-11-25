@@ -42,11 +42,11 @@ Seven worked examples are included, from different regions and disciplines: the 
 
 ## Privacy
 
-The Lab runs entirely in the browser. It sends nothing to any server, calls no AI model, and needs no account or API key. The PDF and Word readers (PDF.js and Mammoth, in `vendor/`) are part of the Lab itself and also run on your machine. Your work is saved only in your own browser's local storage. Export it to keep a copy or move it to another device.
+The Lab runs entirely in the browser. It sends none of your work to any server, calls no AI model, and needs no account or API key. The PDF and Word readers (PDF.js and Mammoth, in `vendor/`) are part of the Lab itself and also run on your machine. Your work is saved only in your own browser's local storage. Export it to keep a copy or move it to another device.
 
 This matters for research involving oral histories, interview transcripts or unpublished archives: nothing leaves your machine unless you paste it into an AI system yourself.
 
-The Lab has no server, no accounts and no tracking, and it never contacts an AI system. Everything you type or load stays in your browser's storage on your device. Your material leaves the device only when you send it: when you paste a prompt into an AI system (that provider then holds it under its own terms), when you propose a theory or discipline through GitHub or email, or when you share a file you exported. Browser storage is not encrypted by the Lab, so on a shared computer export your work and clear the site's data when you finish.
+The Lab has no server and no accounts, and it never contacts an AI system. Everything you type or load stays in your browser's storage on your device. When the Lab is opened online, one visit is counted by [GoatCounter](https://www.goatcounter.com/), a privacy-friendly, open-source service. It receives the page address, the website that linked to the Lab and the screen size. It sets no cookies, receives nothing you type or load, and records no one's identity. No visit is counted when the browser asks sites not to track it (see `counter.js`, which an automated test checks). Your material leaves the device only when you send it: when you paste a prompt into an AI system (that provider then holds it under its own terms), when you propose a theory or discipline through GitHub or email, or when you share a file you exported. Browser storage is not encrypted by the Lab, so on a shared computer export your work and clear the site's data when you finish.
 
 ## Use it
 
