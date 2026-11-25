@@ -3,7 +3,7 @@
   "use strict";
 
   const L = window.LAB;
-  const VERSION = "0.10.2";
+  const VERSION = "0.11.0";
   const KEY_DRAFT = "spl.draft.v1";
   const KEY_LOG = "spl.log.v1";
   const $ = (id) => document.getElementById(id);
@@ -317,6 +317,9 @@
     harvard(c).split(/(\*[^*]+\*)/).forEach((part) => {
       if (/^\*[^*]+\*$/.test(part)) span.append(el("em", { text: part.slice(1, -1) })); else span.append(part);
     });
+    // say plainly when the catalogue check could not fully confirm a reference
+    if (c.v === 2) span.append(el("span", { class: "cite-flag", text: " Edition year not confirmed in library catalogues: check your copy." }));
+    if (c.v === 3) span.append(el("span", { class: "cite-flag", text: " Not found in the library catalogues searched: check before citing." }));
     return span;
   }
   function sentence(x) { x = (x || "").trim(); return x ? x.charAt(0).toUpperCase() + x.slice(1) + (/[.!?]$/.test(x) ? "" : ".") : ""; }
@@ -501,6 +504,7 @@
             d.append(el("h5", { text: "Debates and critiques" }));
             const dl = el("ul"); t.debates.forEach((w) => dl.append(el("li", {}, [citeNode(w), w.note ? el("span", { class: "dnote", text: " " + sentence(w.note) }) : ""]))); d.append(dl);
           }
+          if (t.caution) { if (!(t.debates && t.debates.length)) d.append(el("h5", { text: "Debates and critiques" })); d.append(el("p", { text: t.caution })); }
           if (t.community) d.append(el("p", { class: "dnote", text: "Proposed" + (t.contributor ? " by " + t.contributor : " by a user of the Lab") + " and accepted by the editor" + (t.added ? " on " + t.added : "") + "." }));
           if (!t.custom) d.append(el("a", { href: reportUrl(t), target: "_blank", rel: "noopener", class: "report-link", text: "Report an error in this entry" }));
           box.append(d);
@@ -521,6 +525,11 @@
       list.append(empty);
     }
     $("theoryShowing").textContent = "Showing " + shown.length + " of " + total;
+    const chk = window.LAB_THEORY_CHECK;
+    if (chk && !$("theoryCheckNote").textContent) {
+      $("theoryCheckNote").append("Key works were checked against library catalogues: " + chk.confirmed + " of " + chk.citations + " references confirmed, and the rest are marked. ",
+        el("a", { href: "https://github.com/TheFrankOnuh/scholarly-prompt-lab/blob/main/docs/theory-library.md", target: "_blank", rel: "noopener", text: "How the library was compiled and checked" }), ".");
+    }
   }
 
   let editingTheory = null;
@@ -1077,9 +1086,10 @@
     const lib = theoryLines(s).filter((t) => t.works && t.works.length);
     if (lib.length) {
       const refs = new Set();
-      lib.forEach((t) => t.works.forEach((w) => refs.add(harvard(w))));
+      lib.forEach((t) => t.works.forEach((w) => refs.add(harvard(w) + (w.v > 1 ? " \u2020" : ""))));
       md += "## References for the theoretical frameworks\n\nHarvard (author-date) style. Each reference was checked against library catalogues when the Lab's theory library was compiled. Confirm editions and page numbers against your own copy before publication.\n\n" +
-        [...refs].sort((a, b) => a.localeCompare(b)).map((r) => "- " + r).join("\n") + "\n\n";
+        [...refs].sort((a, b) => a.localeCompare(b)).map((r) => "- " + r).join("\n") + "\n\n" +
+        ([...refs].some((r) => r.endsWith("\u2020")) ? "\u2020 This reference could not be fully confirmed in library catalogues (usually the year of this edition). Check it against your own copy.\n\n" : "");
       const deb = lib.filter((t) => t.debates && t.debates.length);
       if (deb.length) md += "## Debates to engage\n\n" + deb.map((t) => "**" + t.n + "**\n\n" + t.debates.map((w) => "- " + harvard(w) + (w.note ? " " + sentence(w.note) : "")).join("\n")).join("\n\n") + "\n\n";
     }

@@ -257,9 +257,11 @@
 
     out.push("<h2>Appendix D. References</h2>");
     var refs = {};
-    th.forEach(function (t) { (t.works || []).forEach(function (w) { refs[A.harvard(w)] = 1; }); });
+    var flagged = false;
+    th.forEach(function (t) { (t.works || []).forEach(function (w) { if (w.v > 1) flagged = true; refs[A.harvard(w) + (w.v > 1 ? " \u2020" : "")] = 1; }); });
     refs["Onuh, F. (2026) *Scholarly Prompt Lab: The Prompt as Method* (Version " + A.VERSION + ") [Computer software]. Zenodo. " + LAB_DOI] = 1;
     out.push(list(Object.keys(refs).sort(function (a, b) { return a.localeCompare(b); }).map(ital)));
+    if (flagged) out.push(p("\u2020 This reference could not be fully confirmed in library catalogues (usually the year of this edition). Check it against your own copy."));
     if (th.some(function (t) { return t.works && t.works.length; })) out.push(p("References to theoretical frameworks come from the Lab's theory library. Check editions and page numbers against your own copies before publication."));
 
     out.push("<h2>Appendix E. CONTEXT checklist for this prompt</h2>");
