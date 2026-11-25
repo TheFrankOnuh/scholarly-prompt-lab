@@ -160,6 +160,23 @@ button:hover, .button-like:hover { filter: brightness(1.08); }
 .combo-del:hover { color: var(--warn); filter: none; }
 .combo-empty { padding: 10px 12px; color: var(--muted); font-size: 0.88rem; }
 
+/* ---------- guided demo ---------- */
+.tour-backdrop { position: fixed; inset: 0; z-index: 40; pointer-events: none; transition: background 0.2s; }
+.tour-backdrop.dim { background: rgba(0, 0, 0, 0.45); pointer-events: auto; }
+.tour-box {
+  position: fixed; z-index: 50; left: 50%; bottom: 16px; transform: translateX(-50%); width: min(560px, calc(100vw - 24px));
+  background: var(--surface); color: var(--ink); border: 2px solid var(--accent); border-radius: 12px; padding: 14px 16px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+}
+.tour-box h2 { font-size: 1.1rem; margin: 2px 0 6px; outline: none; }
+.tour-box p { margin: 0; font-size: 0.93rem; }
+.tour-count { color: var(--accent); font-weight: 700; font-size: 0.78rem !important; letter-spacing: 0.04em; text-transform: uppercase; }
+.tour-actions { display: flex; gap: 8px; align-items: center; margin-top: 12px; }
+.tour-spacer { flex: 1; }
+.tour-target { outline: 3px solid var(--accent) !important; outline-offset: 4px; border-radius: 6px; scroll-margin-bottom: 240px; }
+body.tour-on main { padding-bottom: 260px; }
+@media (prefers-reduced-motion: reduce) { .tour-backdrop { transition: none; } .flash-target { animation: none; } }
+
 /* ---------- theory details ---------- */
 .ttype { display: inline-block; font-size: 0.66rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 0 5px; margin-left: 6px; vertical-align: 1px; }
 .theory-detail { padding: 8px 12px 12px 38px; border-bottom: 1px solid var(--line); background: var(--surface); font-size: 0.84rem; line-height: 1.5; }

@@ -6,7 +6,10 @@
   <title>Scholarly Prompt Lab</title>
   <meta name="description" content="A free, open-source environment for designing, documenting and evaluating AI prompts in digital humanities research.">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23185c4a'/%3E%3Ctext x='16' y='22' font-size='16' text-anchor='middle' fill='white' font-family='Georgia'%3EP%3C/text%3E%3C/svg%3E">
-  <link rel="stylesheet" href="styles.css?v=0.6.0">
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#185c4a">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="styles.css?v=0.6.1">
 </head>
 <body>
   <header class="site-header">
@@ -35,6 +38,7 @@
           <p class="hint">Type your own question and sources, or load your own files: PDF, Word (.docx), or text and transcripts. Files stay on your computer.</p>
           <div class="actions">
             <button type="button" id="startOwn">Start my own research</button>
+            <button type="button" class="ghost" id="tourStart">Take the 2-minute demo</button>
             <label class="ghost button-like" for="sourceFiles">Load your own files</label>
           </div>
         </div>
@@ -332,13 +336,16 @@
 
   <footer class="wrap footer">
     <p>Open source under the MIT licence. Your work is saved only in this browser. Export it to keep it.</p>
+    <p><span id="offlineStatus" role="status"></span> <button type="button" id="installBtn" class="ghost small-btn" hidden>Install the Lab on this device</button></p>
   </footer>
 
-  <script src="theories.js?v=0.6.0"></script>
-  <script src="theory-links.js?v=0.6.0"></script>
-  <script src="disciplines.js?v=0.6.0"></script>
-  <script src="data.js?v=0.6.0"></script>
-  <script src="checks.js?v=0.6.0"></script>
-  <script src="app.js?v=0.6.0"></script>
+  <script src="theories.js?v=0.6.1"></script>
+  <script src="theory-links.js?v=0.6.1"></script>
+  <script src="disciplines.js?v=0.6.1"></script>
+  <script src="data.js?v=0.6.1"></script>
+  <script src="checks.js?v=0.6.1"></script>
+  <script src="app.js?v=0.6.1"></script>
+  <script src="tour.js?v=0.6.1"></script>
+  <script src="offline.js?v=0.6.1"></script>
 </body>
 </html>

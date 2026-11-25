@@ -20,20 +20,31 @@
 
   /* ---------- quotation extraction ---------- */
   function cleanQuote(q) {
-    return q.replace(/\*\*|__|`/g, "").replace(/^[\s"“”«»'‘’]+|[\s"“”«»'‘’]+$/g, "").replace(/\s+/g, " ").trim();
+    return q.replace(/\*\*|__|`/g, "").replace(/^[\s*_"“”«»'‘’]+|[\s*_"“”«»'‘’]+$/g, "").replace(/\s+/g, " ").trim();
   }
   function extractQuotes(output) {
     const found = [];
     const seen = new Set();
     const lines = nfc(output).split(/\r?\n/);
     const rest = [];
+    let block = [];
+    const flush = () => {
+      if (!block.length) return;
+      const joined = block.join(" ").replace(/\s+/g, " ").trim();
+      block = [];
+      // several separately quoted passages in one block are separate quotations
+      const pairs = joined.match(/“[^”]{1,800}”/g);
+      const outside = pairs ? joined.replace(/“[^”]{1,800}”/g, "").replace(/[\s*_>.,;:()\-–]/g, "") : "x";
+      if (pairs && pairs.length >= 2 && !outside) pairs.forEach((x) => { const q = cleanQuote(x); if (q) found.push({ text: q, block: true }); });
+      else { const q = cleanQuote(joined); if (q) found.push({ text: q, block: true }); }
+    };
     lines.forEach((line) => {
       const m = line.match(/^\s*>+\s?(.*)$/);
       if (m) {
-        const q = cleanQuote(m[1]);
-        if (q) found.push({ text: q, block: true });
-      } else rest.push(line);
+        if (m[1].trim()) block.push(m[1]); else flush();
+      } else { flush(); rest.push(line); }
     });
+    flush();
     const body = rest.join("\n");
     const re = /“([^”\n]{1,800})”|"([^"\n]{1,800})"|«([^»\n]{1,800})»/g;
     let m;
@@ -73,8 +84,10 @@
     const toks = tokens(text);
     const joined = " " + toks.map((t) => t.w).join(" ") + " ";
     const bare = stripMarks(joined);
+    // fuzzy matching ignores accents, so a misquotation that also drops diacritics is still found
+    const bareWords = toks.map((t) => stripMarks(t.w));
     const index = new Map();
-    toks.forEach((t, k) => { if (!index.has(t.w)) index.set(t.w, []); index.get(t.w).push(k); });
+    bareWords.forEach((w, k) => { if (!index.has(w)) index.set(w, []); index.get(w).push(k); });
     const docs = [];
     const dre = /\[DOC-(\d+)[^\]]*\]/g;
     let m;
@@ -83,7 +96,7 @@
     const pre = /\[p\.\s*(\d+)\]/g;
     while ((m = pre.exec(text))) pages.add(m[1]);
     const wordSet = new Set(toks.map((t) => stripMarks(t.w)));
-    return { text, toks, joined, bare, index, docs, pages, wordSet, empty: !toks.length };
+    return { text, toks, joined, bare, bareWords, index, docs, pages, wordSet, empty: !toks.length };
   }
   function docAt(src, charIndex) {
     let id = null;
@@ -117,7 +130,8 @@
     return before ? before.split(" ").length : 0;
   }
 
-  function nearest(src, q) {
+  function nearest(src, qWords) {
+    const q = qWords.map(stripMarks);
     const n = q.length;
     const starts = new Set();
     const probes = [0, 1, 2, n - 1, n - 2].filter((k) => k >= 0 && k < n);
@@ -127,7 +141,7 @@
     for (const s of starts) {
       if (++checked > 3000) break;
       for (let len = Math.max(1, n - 2); len <= n + 2; len++) {
-        const win = src.toks.slice(s, s + len).map((t) => t.w);
+        const win = src.bareWords.slice(s, s + len);
         if (!win.length) continue;
         const sim = 1 - lev(q, win) / Math.max(n, win.length);
         if (sim > best.sim) best = { sim, start: s, len: win.length };
@@ -165,8 +179,9 @@
     const best = nearest(src, longest);
     if (best.sim >= 0.75 && best.start >= 0) {
       res.status = "near";
-      res.note = "Wording differs from the source (" + Math.round(best.sim * 100) + "% match)";
       res.source = excerpt(src, best.start, best.len);
+      const marksToo = stripMarks(wordsOf(res.source).join(" ")) !== wordsOf(res.source).join(" ") && stripMarks(longest.join(" ")) === longest.join(" ");
+      res.note = "Wording differs from the source (" + Math.round(best.sim * 100) + "% match)" + (marksToo ? ", and accents or diacritics are missing" : "");
       res.doc = docAt(src, src.toks[best.start].i);
     }
     return res;
