@@ -33,7 +33,7 @@
 
   var steps = [
     { title: "Welcome to the Scholarly Prompt Lab", body: "This short demo shows the whole workflow with a sample editorial: design a research prompt, run it in an AI system, then check what the AI gave back. Your own work is put back when the demo ends.", prep: loadSample },
-    { tab: "tab-build", target: "question", title: "1. Start with your research question", body: "Everything follows from the question. The demo has filled one in. Choose your discipline above it: there are 80, and you can add your own." },
+    { tab: "tab-build", target: "question", title: "1. Start with your research question(s)", body: "Everything follows from the question. The demo has filled one in. Choose your discipline above it: there are 80, and you can add your own." },
     { tab: "tab-build", target: "theoryLabel", scrollTo: "theoryChips", title: "2. Choose your theoretical frameworks", body: "Search the library by theory, thinker or idea, or add your own. “Sources” shows each framework's key works and debates. With one theory chosen, the Lab suggests companions and says why." },
     { tab: "tab-build", target: "sourceText", title: "3. Load your sources", body: "Paste text or load PDF, Word or text files. Each document is tagged DOC-01, DOC-02 so the AI can cite it. Files are read on your device and never uploaded." },
     { tab: "tab-build", target: "prompt", title: "4. Copy the prompt into the AI system you are using", body: "The Lab assembles your question, theories, procedure, safeguards and sources into one structured prompt. The meter above shows how much of the CONTEXT framework it covers. The Lab never sends it anywhere: you paste it into the AI system yourself." },

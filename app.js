@@ -3,7 +3,7 @@
   "use strict";
 
   const L = window.LAB;
-  const VERSION = "0.10.1";
+  const VERSION = "0.10.2";
   const KEY_DRAFT = "spl.draft.v1";
   const KEY_LOG = "spl.log.v1";
   const $ = (id) => document.getElementById(id);
@@ -915,11 +915,12 @@
   function buildPrompt(s, level) {
     level = level || 4;
     const out = [];
-    const q = s.question.trim() || "[State your research question]";
+    const qs = lines(s.question);
+    const q = qs.length > 1 ? "\n" + qs.map((x, i) => (i + 1) + ". " + x).join("\n") : (s.question.trim() || "[State your research question]");
     if (level >= 2) {
       out.push("ROLE: You are assisting a researcher in " + (s.discipline || "the humanities") + ". Treat your answer as material for scholarly checking, not as an authoritative account: it will be compared with independent evidence and expert judgement.");
     }
-    out.push("RESEARCH QUESTION: " + q);
+    out.push((qs.length > 1 ? "RESEARCH QUESTIONS:" : "RESEARCH QUESTION: ") + q);
     if (level >= 2) {
       const th = theoryLines(s);
       const notes = s.theoryNotes.trim();
@@ -1052,7 +1053,7 @@
     const runs = Math.max(1, parseInt(s.runs, 10) || 1);
     let md = "# Prompt-sensitivity study protocol\n\n";
     md += "- Generated: " + today() + " with Scholarly Prompt Lab v" + VERSION + "\n";
-    md += "- Discipline: " + s.discipline + "\n- Research question: " + (s.question || "—") + "\n";
+    md += "- Discipline: " + s.discipline + "\n- Research question(s): " + (lines(s.question).join("; ") || "—") + "\n";
     md += "- Models: " + (models.join(", ") || "to be specified") + "\n- Runs per condition: " + runs + "\n";
     md += "- Planned outputs: " + 4 * runs * Math.max(1, models.length) + "\n\n";
     md += "## Procedure\n\n1. Record each model's exact name, version and settings before running.\n2. Start a fresh conversation for every run so earlier runs do not influence later ones.\n3. Paste the condition prompt exactly as written. Do not edit between runs.\n4. Save each output in full with the date, then score it against the six criteria.\n5. Where possible, have a subject specialist score independently. Keep disagreements; do not average them away.\n\n";

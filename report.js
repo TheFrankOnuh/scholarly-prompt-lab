@@ -14,6 +14,7 @@
   // The ways researchers use generative AI. A study often involves several.
   var ROLES = [
     { id: "prelim", label: "Preliminary analysis: a first-pass reading of my sources, which I then checked", text: "to produce a first-pass analysis of the source material, which the researcher then checked against the sources" },
+    { id: "aicoding", label: "Preliminary coding: the AI did the first round of coding, which I reviewed and revised", text: "to carry out a first round of coding of the material, which the researcher then reviewed and revised" },
     { id: "coding", label: "Coding or classifying material with my own coding scheme", text: "to apply the researcher's own coding scheme to the material, with the coding checked by the researcher" },
     { id: "extract", label: "Extracting, summarising or organising information from sources", text: "to extract, summarise and organise information from the sources" },
     { id: "translate", label: "Translation or transcription support", text: "to support translation or transcription, which the researcher checked against the original" },
@@ -130,7 +131,7 @@
     var objectSentence = "Generative AI was " + (tool.length ? "also " : "") + "the object of " + (tool.length ? "study" : "this study") + ": the outputs of " + (sysNames.length ? plural(sysNames.length, "AI system") : "AI systems") + " were collected and analysed as data about how such systems respond, and were not used as evidence about the subject matter itself.";
     var roleSentence = !roles.length
       ? gap("how generative AI was used in this study. Tick the uses that apply in the form beside this preview")
-      : (tool.length ? "Generative AI was used in this study " + (tool.length === 1 ? tool[0] : "in " + ["two", "three", "four", "five", "six"][tool.length - 2] + " ways: " + tool.join("; ")) + ". Its output was not treated as a finding in itself." : "") +
+      : (tool.length ? "Generative AI was used in this study " + (tool.length === 1 ? tool[0] : "in " + ["two", "three", "four", "five", "six", "seven"][tool.length - 2] + " ways: " + tool.join("; ")) + ". Its output was not treated as a finding in itself." : "") +
         (asObject ? (tool.length ? " " : "") + objectSentence : "");
     var stmt = roleSentence + " " +
       (n ? "The " + (sysNames.length === 1 ? "system used was " : "systems used were ") + esc(joinAnd(sysNames)) + (allDates.length ? ", " + (allDates[0] === allDates[allDates.length - 1] ? "on " + niceDate(allDates[0]) : "between " + niceDate(allDates[0]) + " and " + niceDate(allDates[allDates.length - 1])) : "") + ". " : "") +
@@ -153,7 +154,10 @@
 
     out.push("<h3>2.2 Design of the prompt</h3>");
     var design = [];
-    design.push("The research question put to the AI system was: " + (d.question.trim() ? "“" + esc(d.question.trim()) + "”" : gap("your research question")) + ".");
+    var qLines = d.question.split("\n").map(function (x) { return x.trim(); }).filter(Boolean);
+    design.push(qLines.length > 1
+      ? "The research questions put to the AI system were: " + qLines.map(function (x, k) { return "(" + (k + 1) + ") \u201c" + esc(x) + "\u201d"; }).join("; ") + "."
+      : "The research question put to the AI system was: " + (qLines.length ? "\u201c" + esc(qLines[0]) + "\u201d" : gap("your research question")) + ".");
     design.push("The study is in " + esc(d.discipline) + "." + (conv && tech.sources !== "none" ? " Following the conventions of the discipline, the prompt first required " + esc(conv.label.toLowerCase()) + "." : ""));
     if (th.length) design.push("The analysis was framed by " + joinAnd(th.map(function (t) { var c = (t.works || []).map(function (w) { return esc(w.authors.replace(/\s*\(eds?\.?\)/i, "").split(",")[0]) + " " + w.year; }).join("; "); return esc(t.n) + (c ? " (" + c + ")" : t.custom ? " (a framework defined by the researcher)" : ""); })) + ". The prompt set out the analytical steps of " + (th.length > 1 ? "each framework" : "the framework") + " and its core concepts, and instructed the AI system to say where the material did not fit.");
     else design.push(gap("the theoretical framework that guided the analysis, or a statement that none was used"));
@@ -268,7 +272,7 @@
     var mine = log.filter(function (e) { return (e.question || "").trim() === d.question.trim(); }).length;
     var sel = $("rpScope"), cur = sel.value || settings().scope || "";
     sel.replaceChildren();
-    [["question", "Outputs logged for my current research question (" + mine + ")"], ["all", "Every output in my log (" + log.length + ")"]].forEach(function (o) {
+    [["question", "Outputs logged for my current research question(s) (" + mine + ")"], ["all", "Every output in my log (" + log.length + ")"]].forEach(function (o) {
       var op = document.createElement("option"); op.value = o[0]; op.textContent = o[1]; sel.append(op);
     });
     sel.value = cur === "all" || cur === "question" ? cur : (mine || !log.length ? "question" : "all");
