@@ -9,9 +9,10 @@
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="theme-color" content="#185c4a">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="styles.css?v=0.7.0">
+  <link rel="stylesheet" href="styles.css?v=0.8.0">
 </head>
 <body>
+  <a class="skip-link" href="#main">Skip to the main content</a>
   <header class="site-header">
     <div class="wrap header-inner">
       <div>
@@ -27,8 +28,8 @@
     </div>
   </header>
 
-  <main class="wrap">
-    <p class="notice">Everything runs in your browser. Nothing you type is sent anywhere, and the Lab does not call any AI model: you copy the prompt into the system you are studying, then log what came back.</p>
+  <main class="wrap" id="main" tabindex="-1">
+    <p class="notice"><strong>Private by design.</strong> Everything runs in your browser. Nothing you type or load is sent anywhere, and the Lab does not call any AI model: you copy the prompt into the system you are studying, then log what came back.</p>
 
     <p class="notice warn" id="storageWarn" role="alert" hidden>This browser's storage is full, so recent work may not be saved. Use Export JSON in Log &amp; evaluate now, then delete old entries or remove very large source texts.</p>
 
@@ -73,7 +74,11 @@
               <div class="picker-search">
                 <input type="search" id="theorySearch" placeholder="Search theories, thinkers or ideas (e.g. framing, Hall, memory)" aria-label="Search theories" autocomplete="off">
               </div>
-              <div class="field-tabs" id="theoryFields" role="group" aria-label="Filter by field"></div>
+              <div class="picker-filters">
+                <div class="seg" id="theoryFields" role="group" aria-label="Show"></div>
+                <label class="vh" for="theoryFieldSel">Field</label>
+                <select id="theoryFieldSel"></select>
+              </div>
               <div class="picker-list" id="theoryList" tabindex="-1"></div>
               <div class="picker-foot">
                 <span class="muted small" id="theoryShowing"></span>
@@ -177,18 +182,24 @@
           </fieldset>
         </form>
 
-        <aside class="card sticky">
-          <div class="meter" id="meter" aria-label="CONTEXT coverage"></div>
-          <p class="meter-note" id="meterNote"></p>
-          <ul class="design-warn" id="designWarn" hidden></ul>
-          <h2 class="h-small">Generated scholarly prompt</h2>
-          <pre id="prompt" class="prompt" tabindex="0"></pre>
-          <div class="actions">
+        <aside class="card sticky" aria-label="Your prompt">
+          <div class="panel-head">
+            <h2 class="h-small" id="promptTitle">Your scholarly prompt</h2>
             <button type="button" id="copyPrompt">Copy prompt</button>
+          </div>
+          <p class="status" id="buildStatus" role="status"></p>
+          <ul class="design-warn" id="designWarn" aria-label="Things to check in this design" hidden></ul>
+          <details class="coverage" id="coverage">
+            <summary><span class="cov-title">CONTEXT coverage</span> <span class="cov-count" id="covCount"></span>
+              <span class="cov-bar" aria-hidden="true"><span id="covFill"></span></span></summary>
+            <ul class="cov-list" id="meter"></ul>
+          </details>
+          <p class="vh" id="meterNote" role="status"></p>
+          <pre id="prompt" class="prompt" tabindex="0" aria-labelledby="promptTitle"></pre>
+          <div class="actions">
             <button type="button" id="dlPrompt" class="ghost">Download .txt</button>
             <button type="button" id="dlDesign" class="ghost">Download research design (.md)</button>
           </div>
-          <p class="status" id="buildStatus" role="status"></p>
           <div class="next-steps">
             <h3 class="h-small">What happens next</h3>
             <ol>
@@ -356,14 +367,14 @@
     <p><span id="offlineStatus" role="status"></span> <button type="button" id="installBtn" class="ghost small-btn" hidden>Install the Lab on this device</button></p>
   </footer>
 
-  <script src="theories.js?v=0.7.0"></script>
-  <script src="theory-links.js?v=0.7.0"></script>
-  <script src="disciplines.js?v=0.7.0"></script>
-  <script src="procedures.js?v=0.7.0"></script>
-  <script src="data.js?v=0.7.0"></script>
-  <script src="checks.js?v=0.7.0"></script>
-  <script src="app.js?v=0.7.0"></script>
-  <script src="tour.js?v=0.7.0"></script>
-  <script src="offline.js?v=0.7.0"></script>
+  <script src="theories.js?v=0.8.0"></script>
+  <script src="theory-links.js?v=0.8.0"></script>
+  <script src="disciplines.js?v=0.8.0"></script>
+  <script src="procedures.js?v=0.8.0"></script>
+  <script src="data.js?v=0.8.0"></script>
+  <script src="checks.js?v=0.8.0"></script>
+  <script src="app.js?v=0.8.0"></script>
+  <script src="tour.js?v=0.8.0"></script>
+  <script src="offline.js?v=0.8.0"></script>
 </body>
 </html>

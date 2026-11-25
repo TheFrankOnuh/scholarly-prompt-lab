@@ -3,7 +3,7 @@
   "use strict";
 
   const L = window.LAB;
-  const VERSION = "0.7.0";
+  const VERSION = "0.8.0";
   const KEY_DRAFT = "spl.draft.v1";
   const KEY_LOG = "spl.log.v1";
   const $ = (id) => document.getElementById(id);
@@ -201,11 +201,14 @@
   function fieldLabel(id) { return id === "mine" ? MINE.label : (TF.find((f) => f.id === id) || {}).label || "Other"; }
   function norm(x) { return (x || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, ""); }
 
-  [{ id: "all", label: "All fields" }, { id: "selected", label: "Selected" }, MINE].concat(TF).forEach((f) => {
-    const b = el("button", { type: "button", "data-field": f.id, text: f.label, "aria-pressed": f.id === "all" ? "true" : "false" });
+  [{ id: "all", label: "All" }, { id: "selected", label: "Selected" }, MINE].forEach((f) => {
+    const b = el("button", { type: "button", "data-field": f.id, "data-fk": "seg:" + f.id, text: f.label, "aria-pressed": f.id === "all" ? "true" : "false" });
     b.addEventListener("click", () => { theoryField = f.id; renderTheoryPicker(); $("theoryList").scrollTop = 0; });
     $("theoryFields").append(b);
   });
+  $("theoryFieldSel").append(option("", "All fields"));
+  TF.forEach((f) => $("theoryFieldSel").append(option(f.id, f.label + " (" + window.LAB_THEORIES.filter((t) => t.f === f.id).length + ")")));
+  $("theoryFieldSel").addEventListener("change", () => { theoryField = $("theoryFieldSel").value || "all"; renderTheoryPicker(); $("theoryList").scrollTop = 0; });
   [MINE].concat(TF).forEach((f) => $("ntField").append(option(f.id, f.label)));
 
   function highlight(text, q) {
@@ -307,8 +310,9 @@
     document.querySelectorAll("#theoryFields button").forEach((b) => {
       b.setAttribute("aria-pressed", b.dataset.field === theoryField ? "true" : "false");
       if (b.dataset.field === "selected") b.textContent = "Selected (" + selectedTheories.length + ")";
-      if (b.dataset.field === "mine") { b.textContent = "Your theories (" + myTheories.length + ")"; }
+      if (b.dataset.field === "mine") { b.textContent = "Yours (" + myTheories.length + ")"; }
     });
+    $("theoryFieldSel").value = TF.some((f) => f.id === theoryField) ? theoryField : "";
 
     // list
     const q = norm(theoryQuery.trim());
@@ -800,28 +804,45 @@
   function coverage(s) {
     const has = (id) => s.safeguards.includes(id);
     return [
-      { l: "C", name: "Conceptual", on: !!(s.question.trim() && (s.theories.length || s.theoryNotes.trim())), need: "a research question and a theoretical orientation" },
-      { l: "O", name: "Operational", on: lines(s.procedure).length >= 2, need: "at least two procedure steps" },
-      { l: "N", name: "Situated", on: !!(s.context.trim() || s.terms.trim() || has("lang")), need: "cultural, linguistic or historical context" },
-      { l: "T", name: "Traceable", on: has("quote") || (has("nofab") && !!s.sourceText.trim()), need: "a traceable-evidence safeguard" },
-      { l: "E", name: "Evaluated", on: ["uncert", "alt", "review", "syco", "obs"].filter(has).length >= 2, need: "at least two evaluation safeguards" },
-      { l: "X", name: "Cross-model", on: s.planCross, need: "a plan to compare models or prompt conditions" },
-      { l: "T", name: "Transparent", on: s.planLog, need: "a plan to log model, version, date and settings" }
+      { l: "C", name: "Conceptual", fullName: "Conceptual grounding", on: !!(s.question.trim() && (s.theories.length || s.theoryNotes.trim())), need: "a research question and a theoretical orientation" },
+      { l: "O", name: "Operational", fullName: "Operationalisation", on: lines(s.procedure).length >= 2, need: "at least two procedure steps" },
+      { l: "N", name: "Situated", fullName: "Situated knowledge", on: !!(s.context.trim() || s.terms.trim() || has("lang")), need: "cultural, linguistic or historical context" },
+      { l: "T", name: "Traceable", fullName: "Traceability", on: has("quote") || (has("nofab") && !!s.sourceText.trim()), need: "a traceable-evidence safeguard" },
+      { l: "E", name: "Evaluated", fullName: "Evaluation", on: ["uncert", "alt", "review", "syco", "obs"].filter(has).length >= 2, need: "at least two evaluation safeguards" },
+      { l: "X", name: "Cross-model", fullName: "Cross-model examination", on: s.planCross, need: "a plan to compare models or prompt conditions" },
+      { l: "T", name: "Transparent", fullName: "Transparency", on: s.planLog, need: "a plan to log model, version, date and settings" }
     ];
   }
 
   /* ---------- render: build ---------- */
+  // The prompt is shown with its section labels picked out, so a long prompt can be scanned. Copying still gives plain text.
+  function renderPrompt(node, text) {
+    node.replaceChildren();
+    text.split("\n").forEach((line, i) => {
+      if (i) node.append("\n");
+      const m = /^([A-Z][A-Z ,]{2,40}:)(.*)$/.exec(line);
+      if (m) { node.append(el("span", { class: "pl", text: m[1] })); if (m[2]) node.append(m[2]); }
+      else node.append(line);
+    });
+  }
+
   function renderBuild() {
     const s = readState();
-    $("prompt").textContent = buildPrompt(s, 4);
+    renderPrompt($("prompt"), buildPrompt(s, 4));
     $("techniqueHint").textContent = L.techniques[s.technique].hint;
     const warns = designWarnings(s);
     const wl = $("designWarn"); wl.replaceChildren(); warns.forEach((x) => wl.append(el("li", { text: x }))); wl.hidden = !warns.length;
     $("fewshotWrap").hidden = s.technique !== "few-shot";
     const cov = coverage(s);
     const meter = $("meter"); meter.replaceChildren();
-    cov.forEach((c) => meter.append(el("div", { class: c.on ? "on" : "", title: c.name + (c.on ? ": covered" : ": add " + c.need) }, [c.l, el("small", { text: c.name })])));
+    // progress is shown with a tick or a ring and words, never by colour alone
+    cov.forEach((c) => meter.append(el("li", { class: c.on ? "on" : "off" }, [
+      el("span", { class: "ci", "aria-hidden": "true", text: c.on ? "\u2713" : "\u25CB" }),
+      el("span", {}, [el("strong", { text: c.l + " \u00b7 " + c.fullName }), el("span", { class: "cov-need", text: c.on ? "Covered" : "To add: " + c.need })])
+    ])));
     const missing = cov.filter((c) => !c.on);
+    $("covCount").textContent = (7 - missing.length) + " of 7 covered";
+    $("covFill").style.width = Math.round(100 * (7 - missing.length) / 7) + "%";
     $("meterNote").textContent = missing.length
       ? "CONTEXT coverage " + (7 - missing.length) + "/7. Still to add: " + missing.map((c) => c.need).join("; ") + "."
       : "CONTEXT coverage 7/7. The design is fully specified; the outputs still need checking.";
@@ -852,7 +873,7 @@
       wrap.append(el("div", { class: "card" }, [
         el("h3", { text: c.n + ". " + c.name }),
         el("p", { class: "muted", text: c.adds }),
-        el("pre", { class: "prompt", text: text, tabindex: "0" }),
+        (() => { const pre = el("pre", { class: "prompt", tabindex: "0", "aria-label": "Prompt for condition " + c.n }); renderPrompt(pre, text); return pre; })(),
         el("div", { class: "actions" }, [btn]), status
       ]));
     });
