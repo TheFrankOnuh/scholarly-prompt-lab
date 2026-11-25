@@ -1,0 +1,27 @@
+{
+  "title": "Scholarly Prompt Lab: The Prompt as Method",
+  "upload_type": "software",
+  "description": "<p>A free, open-source, browser-based tool for designing, documenting and evaluating generative-AI prompts in digital humanities research. It turns a research question into a structured scholarly prompt using the proposed CONTEXT framework (Conceptual grounding, Operationalisation, Situated knowledge, Traceability, Evaluation, Cross-model examination, Transparency); generates four-condition prompt-sensitivity studies; and logs and scores model outputs on six criteria (factual accuracy, contextual fidelity, evidence traceability, freedom from misrepresentation, interpretive plurality, uncertainty calibration). Built with African, and particularly Nigerian, humanities scholarship in mind. Runs entirely in the browser: no AI model is called and no user files are uploaded.</p>",
+  "creators": [
+    { "name": "Onuh, Frank" }
+  ],
+  "license": "MIT",
+  "access_right": "open",
+  "keywords": [
+    "digital humanities",
+    "prompt engineering",
+    "generative AI",
+    "research methods",
+    "African knowledge systems",
+    "Nigeria",
+    "decolonial methods",
+    "AI evaluation"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "https://thefrankonuh.github.io/scholarly-prompt-lab/",
+      "relation": "isDocumentedBy",
+      "resource_type": "other"
+    }
+  ]
+}

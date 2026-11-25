@@ -15,13 +15,21 @@ It was built with African, and particularly Nigerian, humanities scholarship in 
 | **Log & evaluate** | Record each model output with model, version, date and settings, then score it on six criteria: factual accuracy, contextual fidelity, evidence traceability, freedom from misrepresentation, interpretive plurality and uncertainty calibration. Flag outputs that simply adopted your framing (sycophancy). Export JSON, CSV or a Markdown report. |
 | **CONTEXT framework** | The framework behind the tool, and four roles AI can play in humanities research. |
 
-**Bring your own material.** Paste your own research question and texts, or use *Load your own files* to add plain-text files (.txt, .md, .csv, transcripts). Each file is tagged `[DOC-01: filename]`, `[DOC-02: …]` so the model can cite it. Files are read inside your browser and never uploaded. For Word or PDF documents, save them as .txt first.
+**Bring your own material.** Paste your own research question and texts, or use *Load your own files* to add PDF, Word (.docx) or plain-text files (.txt, .md, .csv, transcripts). Before anything is used, you see the extracted text, can correct it, and can untick files you do not want. Each file is tagged `[DOC-01: filename]`, `[DOC-02: …]`, and PDFs get page markers `[p. 1]`, so the model can cite them. Files are read inside your browser and never uploaded.
+
+| File type | Supported? | Notes |
+|---|---|---|
+| Word (.docx) | Yes | Tables and footnotes become plain text. |
+| Old Word (.doc) | No | Save as .docx first. |
+| PDF with selectable text | Yes | Check that columns, footnotes and headers came out in the right order. |
+| Scanned PDF (image of a page) | No | Needs text recognition (OCR) first. The Lab detects these and warns you. |
+| Plain text, Markdown, CSV, subtitles | Yes | |
 
 Five worked examples are included: the 1929 Women's War, an Igbo proverb, Lugard's *The Dual Mandate*, Nigerian newspaper editorials, and AI images of the Benin Kingdom.
 
 ## Privacy
 
-The Lab runs entirely in the browser. It makes no network requests, calls no AI model, and needs no account or API key. Your work is saved only in your own browser's local storage. Export it to keep a copy or move it to another device.
+The Lab runs entirely in the browser. It sends nothing to any server, calls no AI model, and needs no account or API key. The PDF and Word readers (PDF.js and Mammoth, in `vendor/`) are part of the Lab itself and also run on your machine. Your work is saved only in your own browser's local storage. Export it to keep a copy or move it to another device.
 
 This matters for research involving oral histories, interview transcripts or unpublished archives: nothing leaves your machine unless you paste it into an AI system yourself.
 
@@ -31,7 +39,7 @@ This matters for research involving oral histories, interview transcripts or unp
 
   <img src="assets/qr-code.png" alt="QR code linking to the Scholarly Prompt Lab" width="160">
 
-- **Offline:** download the repository (Code → Download ZIP), unzip it, and open `index.html` in any modern browser. No installation needed.
+- **Offline:** download the repository (Code → Download ZIP), unzip it, and open `index.html` in any modern browser. No installation needed. Everything works offline except reading PDFs, which browsers only allow when the page is served from a web address. To read PDFs offline, run `python -m http.server` in the folder and open <http://localhost:8000>.
 
 ## The CONTEXT framework
 
@@ -62,6 +70,6 @@ The tool is plain HTML, CSS and JavaScript with no build step. Reference data (d
 
 ## Licence
 
-Code: [MIT](LICENSE). Documentation and the CONTEXT framework guide: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+Code: [MIT](LICENSE). Documentation and the CONTEXT framework guide: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Bundled libraries keep their own licences: PDF.js (Apache 2.0) and Mammoth (BSD 2-Clause); see [vendor/README.md](vendor/README.md).
 
 If you use the Lab or the framework in research, please cite it (see [CITATION.cff](CITATION.cff)).

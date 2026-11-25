@@ -3,7 +3,7 @@
   "use strict";
 
   const L = window.LAB;
-  const VERSION = "0.2.0";
+  const VERSION = "0.3.0";
   const KEY_DRAFT = "spl.draft.v1";
   const KEY_LOG = "spl.log.v1";
   const $ = (id) => document.getElementById(id);
@@ -384,9 +384,136 @@
     info.textContent = msg;
     info.classList.toggle("warn", big);
   }
+  /* PDF and Word reading. Libraries live in vendor/ and load only when first needed. */
+  let pdfjsPromise = null, mammothPromise = null;
+  function loadPdfjs() {
+    if (!pdfjsPromise) {
+      pdfjsPromise = import(new URL("vendor/pdfjs/pdf.min.mjs", location.href).href).then((lib) => {
+        lib.GlobalWorkerOptions.workerSrc = new URL("vendor/pdfjs/pdf.worker.min.mjs", location.href).href;
+        return lib;
+      }).catch((e) => { pdfjsPromise = null; throw e; });
+    }
+    return pdfjsPromise;
+  }
+  function loadMammoth() {
+    if (!mammothPromise) {
+      mammothPromise = new Promise((resolve, reject) => {
+        if (window.mammoth) return resolve(window.mammoth);
+        const s = el("script", { src: "vendor/mammoth/mammoth.browser.min.js" });
+        s.onload = () => resolve(window.mammoth);
+        s.onerror = () => { mammothPromise = null; s.remove(); reject(new Error("load failed")); };
+        document.head.append(s);
+      });
+    }
+    return mammothPromise;
+  }
+  function textChecks(text, warnings) {
+    if (/�|[-]/.test(text)) warnings.push("Some characters did not convert cleanly (shown as � or blank boxes). Check accented letters such as ọ, ụ, ị, ẹ, ṣ against the original.");
+  }
+  async function extractFile(f) {
+    const name = f.name;
+    const ext = (name.split(".").pop() || "").toLowerCase();
+    const res = { name, text: "", warnings: [], error: "" };
+    try {
+      if (ext === "pdf") {
+        let lib;
+        try { lib = await loadPdfjs(); }
+        catch (e) { res.error = "PDF reading could not start. If you opened the Lab from a downloaded copy, use the online version instead, or copy and paste the text."; return res; }
+        let pdf;
+        try { pdf = await lib.getDocument({ data: new Uint8Array(await f.arrayBuffer()), isEvalSupported: false, disableFontFace: true }).promise; }
+        catch (e) {
+          res.error = e && e.name === "PasswordException" ? "This PDF is password-protected. Remove the password and try again." : "This file could not be opened as a PDF.";
+          return res;
+        }
+        const pages = [];
+        let chars = 0;
+        for (let p = 1; p <= pdf.numPages; p++) {
+          const tc = await (await pdf.getPage(p)).getTextContent();
+          let t = "";
+          tc.items.forEach((it) => { if (typeof it.str === "string") { t += it.str; if (it.hasEOL) t += "\n"; } });
+          t = t.replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+          chars += t.replace(/\s/g, "").length;
+          pages.push("[p. " + p + "]\n" + t);
+        }
+        res.text = pages.join("\n\n").normalize("NFC");
+        if (chars < 30 * pdf.numPages) {
+          res.warnings.push("Very little text was found (" + pdf.numPages + " page" + (pdf.numPages > 1 ? "s" : "") + "). This looks like a scanned PDF, which needs text recognition (OCR) first. Untick it, or paste a typed transcription instead.");
+        }
+        res.warnings.push("Page markers [p. 1], [p. 2]… were added so claims can cite pages. Check that columns, footnotes and headers came out in the right order.");
+        textChecks(res.text, res.warnings);
+      } else if (ext === "docx") {
+        let m;
+        try { m = await loadMammoth(); }
+        catch (e) { res.error = "Word reading could not start. Try again, or save the document as .txt."; return res; }
+        const out = await m.extractRawText({ arrayBuffer: await f.arrayBuffer() });
+        res.text = out.value.replace(/\n{3,}/g, "\n\n").trim().normalize("NFC");
+        res.warnings.push("Tables and footnotes come through as plain text.");
+        textChecks(res.text, res.warnings);
+      } else if (ext === "doc") {
+        res.error = "This is the old Word format (.doc). Open it in Word and save it as .docx, then load it again.";
+      } else {
+        const body = (await f.text()).replace(/\r\n/g, "\n").trim();
+        if (/\u0000/.test(body.slice(0, 2000))) res.error = "This does not look like a text file. Supported: .txt, .md, .csv, transcripts, .docx and .pdf.";
+        else { res.text = body.normalize("NFC"); textChecks(res.text, res.warnings); }
+      }
+      if (!res.error && !res.text.trim()) res.error = "No text was found in this file.";
+    } catch (e) {
+      res.error = "This file could not be read.";
+    }
+    return res;
+  }
+
+  let pending = [];
+  function renderReview(loading) {
+    const list = $("reviewList"); list.replaceChildren();
+    if (loading) { list.append(el("p", { class: "muted", text: loading })); $("reviewAdd").disabled = true; return; }
+    pending.forEach((r, i) => {
+      const box = el("div", { class: "review-item" + (r.error ? " bad" : "") });
+      const head = el("label", { class: "check" });
+      const cb = el("input", { type: "checkbox" });
+      cb.checked = !r.error && !r.warnings.some((w) => w.startsWith("Very little text"));
+      cb.disabled = !!r.error;
+      cb.addEventListener("change", () => { r.include = cb.checked; updateReviewButton(); });
+      r.include = cb.checked;
+      const words = r.text.trim() ? r.text.trim().split(/\s+/).length : 0;
+      head.append(cb, el("strong", { text: r.name }), el("span", { class: "muted", text: r.error ? "" : " · " + words.toLocaleString() + " words" }));
+      box.append(head);
+      if (r.error) box.append(el("p", { class: "hint warn", text: r.error }));
+      r.warnings.forEach((w) => box.append(el("p", { class: "hint" + (/Very little|did not convert/.test(w) ? " warn" : ""), text: w })));
+      if (!r.error) {
+        const ta = el("textarea", { rows: "8", "aria-label": "Extracted text of " + r.name });
+        ta.value = r.text;
+        ta.addEventListener("input", () => (r.text = ta.value));
+        box.append(ta);
+      }
+      list.append(box);
+    });
+    updateReviewButton();
+  }
+  function updateReviewButton() {
+    const n = pending.filter((r) => r.include).length;
+    $("reviewAdd").disabled = n === 0;
+    $("reviewAdd").textContent = n ? "Add " + n + " file" + (n > 1 ? "s" : "") + " to source text" : "Nothing selected";
+  }
+  function openDialog() { const d = $("review"); if (typeof d.showModal === "function") { if (!d.open) d.showModal(); } else d.setAttribute("open", ""); }
+  function closeDialog() { const d = $("review"); if (typeof d.close === "function" && d.open) d.close(); else d.removeAttribute("open"); }
+
   $("sourceFiles").addEventListener("change", async (ev) => {
     const files = [...ev.target.files];
+    ev.target.value = "";
     if (!files.length) return;
+    pending = [];
+    openDialog();
+    for (let i = 0; i < files.length; i++) {
+      renderReview("Reading " + files[i].name + " (" + (i + 1) + " of " + files.length + ")…");
+      pending.push(await extractFile(files[i]));
+    }
+    renderReview();
+  });
+  $("reviewCancel").addEventListener("click", () => { pending = []; closeDialog(); });
+  $("reviewAdd").addEventListener("click", () => {
+    const chosen = pending.filter((r) => r.include && r.text.trim());
+    if (!chosen.length) return;
     if ($("example").value) {
       // Loading your own files starts your own design instead of adding to a worked example.
       $("example").value = "";
@@ -394,25 +521,17 @@
     }
     let text = $("sourceText").value.replace(/\s+$/, "");
     let n = nextDocNumber(text);
-    const skipped = [];
-    for (const f of files) {
-      try {
-        const body = (await f.text()).replace(/\r\n/g, "\n").trim();
-        if (!body || /\u0000/.test(body.slice(0, 2000))) { skipped.push(f.name); continue; }
-        text += (text ? "\n\n" : "") + "[DOC-" + String(n).padStart(2, "0") + ": " + f.name + "]\n" + body;
-        n++;
-      } catch (e) { skipped.push(f.name); }
-    }
+    chosen.forEach((r) => {
+      text += (text ? "\n\n" : "") + "[DOC-" + String(n).padStart(2, "0") + ": " + r.name + "]\n" + r.text.trim();
+      n++;
+    });
     $("sourceText").value = text;
-    ev.target.value = "";
+    pending = [];
+    closeDialog();
     renderBuild();
     showTab("tab-build");
     $("sourceText").scrollIntoView({ behavior: "smooth", block: "center" });
     $("sourceText").classList.remove("flash-target"); void $("sourceText").offsetWidth; $("sourceText").classList.add("flash-target");
-    if (skipped.length) {
-      $("sourceInfo").textContent = "Could not read " + skipped.join(", ") + " as plain text. For Word or PDF files, save as .txt first, or copy and paste the text.";
-      $("sourceInfo").classList.add("warn");
-    }
   });
 
   /* ---------- events: build ---------- */
