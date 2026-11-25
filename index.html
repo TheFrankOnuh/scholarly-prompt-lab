@@ -9,7 +9,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="theme-color" content="#185c4a">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="styles.css?v=0.9.2">
+  <link rel="stylesheet" href="styles.css?v=0.9.3">
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to the main content</a>
@@ -57,7 +57,7 @@
       <div class="grid">
         <form id="builder" class="card" autocomplete="off">
           <fieldset>
-            <legend><span class="letter">C</span> Conceptual grounding</legend>
+            <legend><span class="step-no" aria-hidden="true">1</span><span class="leg-text"><span class="leg-title">Your question and theory</span><span class="ctx-tag">CONTEXT step C: Conceptual grounding</span></span></legend>
             <label for="discipline">Discipline</label>
             <div class="combo">
               <input id="discipline" name="discipline" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="discList" autocomplete="off" spellcheck="false" placeholder="Search or type your discipline">
@@ -134,7 +134,7 @@
           </fieldset>
 
           <fieldset>
-            <legend><span class="letter">O</span> Operationalisation</legend>
+            <legend><span class="step-no" aria-hidden="true">2</span><span class="leg-text"><span class="leg-title">Method: what the AI should do</span><span class="ctx-tag">CONTEXT step O: Operationalisation</span></span></legend>
             <label for="technique">Prompting technique</label>
             <select id="technique" name="technique"></select>
             <p class="hint" id="techniqueHint"></p>
@@ -149,7 +149,7 @@
           </fieldset>
 
           <fieldset>
-            <legend><span class="letter">O</span> Research design</legend>
+            <legend><span class="step-no" aria-hidden="true">3</span><span class="leg-text"><span class="leg-title">Research design</span><span class="ctx-tag">CONTEXT step O: Operationalisation</span></span></legend>
             <p class="hint">A methods reviewer will ask for these. They go into the prompt so the model works to your design, not its own.</p>
             <label for="unit">Unit of analysis</label>
             <input id="unit" name="unit" placeholder="e.g. the paragraph; the clause; each editorial; each proverb in its speech situation">
@@ -160,7 +160,7 @@
           </fieldset>
 
           <fieldset>
-            <legend><span class="letter">N</span> Situated knowledge</legend>
+            <legend><span class="step-no" aria-hidden="true">4</span><span class="leg-text"><span class="leg-title">Sources and their context</span><span class="ctx-tag">CONTEXT step N: Situated knowledge</span></span></legend>
             <label for="sourceDesc">Source material</label>
             <input id="sourceDesc" name="sourceDesc" placeholder="e.g. Authenticated excerpts from colonial archival documents">
             <label for="sourceText">Source text <span class="muted">(optional: paste the corpus the model must stay within)</span></label>
@@ -177,7 +177,7 @@
           </fieldset>
 
           <fieldset>
-            <legend><span class="letter">T</span> Traceability and output</legend>
+            <legend><span class="step-no" aria-hidden="true">5</span><span class="leg-text"><span class="leg-title">Output: how the findings come back</span><span class="ctx-tag">CONTEXT step T: Traceability</span></span></legend>
             <label for="output">Output format</label>
             <select id="output" name="output">
               <option value="table">Table</option>
@@ -190,15 +190,16 @@
           </fieldset>
 
           <fieldset>
-            <legend><span class="letter">E</span> Standards the model must work to</legend>
+            <legend><span class="step-no" aria-hidden="true">6</span><span class="leg-text"><span class="leg-title">Standards the AI must work to</span><span class="ctx-tag">CONTEXT step E: Evaluation</span></span></legend>
             <div id="safeguards" class="sg-groups"></div>
           </fieldset>
 
           <fieldset>
-            <legend><span class="letter">X</span><span class="letter">T</span> Cross-model examination and transparency</legend>
+            <legend><span class="step-no" aria-hidden="true">7</span><span class="leg-text"><span class="leg-title">Testing and record-keeping</span><span class="ctx-tag">CONTEXT steps X: Cross-model examination, and T: Transparency</span></span></legend>
+            <p class="hint">An answer from one AI system, run once, is not a finding. Tick what you commit to; both are done in the other tabs.</p>
             <div class="checks">
-              <label class="check"><input type="checkbox" id="planCross"> I will run this across at least two models or prompt conditions</label>
-              <label class="check"><input type="checkbox" id="planLog"> I will log model, version, date, settings and human review</label>
+              <label class="check"><input type="checkbox" id="planCross"> <span><strong>Test it.</strong> I will run this prompt more than once, and on at least two AI systems or prompt versions <span class="muted">(Sensitivity study tab)</span></span></label>
+              <label class="check"><input type="checkbox" id="planLog"> <span><strong>Record it.</strong> I will log the AI system, its version, the date, the settings and who reviewed the output <span class="muted">(Log &amp; evaluate tab)</span></span></label>
             </div>
           </fieldset>
         </form>
@@ -412,15 +413,15 @@
     <p><span id="offlineStatus" role="status"></span> <button type="button" id="installBtn" class="ghost small-btn" hidden>Install the Lab on this device</button></p>
   </footer>
 
-  <script src="theories.js?v=0.9.2"></script>
-  <script src="theory-links.js?v=0.9.2"></script>
-  <script src="disciplines.js?v=0.9.2"></script>
-  <script src="community.js?v=0.9.2"></script>
-  <script src="procedures.js?v=0.9.2"></script>
-  <script src="data.js?v=0.9.2"></script>
-  <script src="checks.js?v=0.9.2"></script>
-  <script src="app.js?v=0.9.2"></script>
-  <script src="tour.js?v=0.9.2"></script>
-  <script src="offline.js?v=0.9.2"></script>
+  <script src="theories.js?v=0.9.3"></script>
+  <script src="theory-links.js?v=0.9.3"></script>
+  <script src="disciplines.js?v=0.9.3"></script>
+  <script src="community.js?v=0.9.3"></script>
+  <script src="procedures.js?v=0.9.3"></script>
+  <script src="data.js?v=0.9.3"></script>
+  <script src="checks.js?v=0.9.3"></script>
+  <script src="app.js?v=0.9.3"></script>
+  <script src="tour.js?v=0.9.3"></script>
+  <script src="offline.js?v=0.9.3"></script>
 </body>
 </html>

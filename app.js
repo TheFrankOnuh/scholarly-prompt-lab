@@ -3,7 +3,7 @@
   "use strict";
 
   const L = window.LAB;
-  const VERSION = "0.9.2";
+  const VERSION = "0.9.3";
   const KEY_DRAFT = "spl.draft.v1";
   const KEY_LOG = "spl.log.v1";
   const $ = (id) => document.getElementById(id);
@@ -944,8 +944,8 @@
       { l: "N", name: "Situated", fullName: "Situated knowledge", on: !!(s.context.trim() || s.terms.trim() || has("lang")), need: "cultural, linguistic or historical context" },
       { l: "T", name: "Traceable", fullName: "Traceability", on: has("quote") || (has("nofab") && !!s.sourceText.trim()), need: "a traceable-evidence safeguard" },
       { l: "E", name: "Evaluated", fullName: "Evaluation", on: ["uncert", "alt", "review", "syco", "obs"].filter(has).length >= 2, need: "at least two evaluation safeguards" },
-      { l: "X", name: "Cross-model", fullName: "Cross-model examination", on: s.planCross, need: "a plan to compare models or prompt conditions" },
-      { l: "T", name: "Transparent", fullName: "Transparency", on: s.planLog, need: "a plan to log model, version, date and settings" }
+      { l: "X", name: "Cross-model", fullName: "Cross-model examination", on: s.planCross, need: "a commitment to test the prompt across runs and AI systems (section 7)" },
+      { l: "T", name: "Transparent", fullName: "Transparency", on: s.planLog, need: "a commitment to record the AI system, version, date and settings (section 7)" }
     ];
   }
 
