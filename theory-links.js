@@ -1,7 +1,8 @@
 /* Scholarly Prompt Lab: knowledge used to recommend companion theories.
    PAIRS: theories commonly read together in scholarship (undirected).
    CUES: word stems that, in a research question or source material, suggest a theory may be relevant.
-   Recommendations are prompts for scholarly consideration, never endorsements. */
+   Recommendations are prompts for scholarly consideration, never endorsements.
+   Every id used here must exist in theories.js. An automated test checks this. */
 
 window.LAB_THEORY_PAIRS = [
   // communication
