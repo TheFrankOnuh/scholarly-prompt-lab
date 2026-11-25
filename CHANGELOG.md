@@ -8,7 +8,7 @@ This page lists every version of the Scholarly Prompt Lab, newest first.
 
 To cite the Lab, use the DOI that always opens the latest version: [10.5281/zenodo.24521711](https://doi.org/10.5281/zenodo.24521711).
 
-## 1.0.0, 25 November 2026: first full release
+## 1.0.0, November 2026: first full release
 
 DOI: [10.5281/zenodo.24526790](https://doi.org/10.5281/zenodo.24526790)
 
@@ -17,7 +17,7 @@ DOI: [10.5281/zenodo.24526790](https://doi.org/10.5281/zenodo.24526790)
 - Work saved in earlier versions becomes the first project automatically.
 - The header subtitle uses the full width, and the guided demo no longer states how many steps it has.
 
-## 0.12.0, 25 November 2026
+## 0.12.0, November 2026
 
 DOI: [10.5281/zenodo.24525460](https://doi.org/10.5281/zenodo.24525460)
 
@@ -46,7 +46,7 @@ Changes made in response to an external review:
 - An accessible colour system, numbered section headings in plain language, and a wordmark.
 - Seven worked examples from different regions and periods.
 
-## 0.5.0, 24 November 2026
+## 0.5.0, November 2026
 
 DOI: [10.5281/zenodo.24522303](https://doi.org/10.5281/zenodo.24522303)
 
@@ -58,12 +58,12 @@ DOI: [10.5281/zenodo.24522303](https://doi.org/10.5281/zenodo.24522303)
 
 Version 0.4 was a working version between 0.3.1 and 0.5.0 and was not released.
 
-## 0.3.1, 24 November 2026
+## 0.3.1, November 2026
 
 DOI: [10.5281/zenodo.24521712](https://doi.org/10.5281/zenodo.24521712)
 
 - The same features as 0.3.0. This was the first version archived on Zenodo with a DOI.
 
-## 0.3.0, 24 November 2026
+## 0.3.0, November 2026
 
 - The first public version: the prompt builder organised by the CONTEXT framework, a four-condition sensitivity study, an evaluation log, and loading of PDF, Word and text files with a review step.
