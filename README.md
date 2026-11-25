@@ -2,7 +2,7 @@
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24521711.svg)](https://doi.org/10.5281/zenodo.24521711)
 
-**The prompt as method.** A free, open-source tool for designing, documenting and evaluating AI prompts in digital humanities research.
+**The prompt as method.** A free, offline open-source tool for designing, documenting and evaluating AI prompts in digital humanities research.
 
 When scholars hand interpretive work to a generative AI system, the wording of the prompt becomes part of how knowledge is produced. Change the prompt and you may change the history the machine tells. The Scholarly Prompt Lab treats the prompt as a research instrument: something to design with care, test for stability, and document so that others can audit it.
 
