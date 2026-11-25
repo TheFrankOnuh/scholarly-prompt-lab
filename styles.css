@@ -578,3 +578,21 @@ h1.brand img { display: block; height: 36px; width: auto; max-width: 100%; }
 .privacy ul { margin: 4px 0 10px; padding-left: 20px; display: grid; gap: 8px; }
 .report code { font-size: 0.78rem; word-break: break-all; background: #f1efe8; color: #17201c; }
 .table-wrap:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+/* ---------- projects ---------- */
+.projects { margin: 0 0 22px; padding: 16px 20px; }
+.proj-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+.proj-bar h2 { margin: 0; }
+.proj-bar select { flex: 1 1 240px; max-width: 420px; min-width: 0; }
+.proj-hint { margin: 0; flex: 1 1 260px; }
+#projMsg { margin: 8px 0 0; font-weight: 600; color: var(--ink); }
+#projMsg:empty { display: none; }
+#projManage { margin-top: 10px; }
+#projManage summary { cursor: pointer; font-weight: 600; min-height: 44px; display: inline-flex; align-items: center; gap: 6px; }
+.proj-table { border-collapse: collapse; width: 100%; font-size: 0.92rem; }
+.proj-table th, .proj-table td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+.proj-table thead th { font-size: 0.78rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
+.proj-open { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--ink); font-size: 0.76rem; font-weight: 700; white-space: nowrap; }
+.proj-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.proj-actions button { min-height: 36px; padding: 4px 12px; }
+.proj-restore { margin: 14px 0 6px; }

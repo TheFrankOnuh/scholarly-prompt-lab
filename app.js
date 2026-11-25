@@ -1841,17 +1841,20 @@
     if ($("lgOutput").value.trim()) runChecks();
   }
   let lfTimer;
+  function saveLogForm() {
+    const o = { lgCondition: $("lgCondition").value };
+    LOGFORM_FIELDS.forEach((k) => (o[k] = $(k).value));
+    if (LOGFORM_FIELDS.some((k) => o[k].trim())) store.set(KEY_LOGFORM, o); else { try { localStorage.removeItem(KEY_LOGFORM); } catch (e) { /* ignore */ } }
+  }
   $("logForm").addEventListener("input", () => {
     clearTimeout(lfTimer);
-    lfTimer = setTimeout(() => {
-      const o = { lgCondition: $("lgCondition").value };
-      LOGFORM_FIELDS.forEach((k) => (o[k] = $(k).value));
-      if (LOGFORM_FIELDS.some((k) => o[k].trim())) store.set(KEY_LOGFORM, o); else { try { localStorage.removeItem(KEY_LOGFORM); } catch (e) { /* ignore */ } }
-    }, 600);
+    lfTimer = setTimeout(saveLogForm, 600);
   });
+  // Work is saved a moment after typing stops. Before a project is parked, save it at once.
+  function flush() { clearTimeout(buildTimer); renderBuild(); clearTimeout(lfTimer); saveLogForm(); }
   const hash = location.hash.replace("#", "");
   if (hash && $("tab-" + hash)) showTab("tab-" + hash);
   // a small, read-only window onto the Lab's records for the report module
-  window.LAB_APP = { VERSION, RELEASE, sha256, L, CONDITIONS, readState, getLog: () => log, fullPrompt, coverage, harvard, theoryLines, condName, techniqueOf, conventionFor, download, copy, flash, today, countsScore };
+  window.LAB_APP = { VERSION, RELEASE, sha256, flush, BLANK, L, CONDITIONS, readState, getLog: () => log, fullPrompt, coverage, harvard, theoryLines, condName, techniqueOf, conventionFor, download, copy, flash, today, countsScore };
   { const lv = document.getElementById("labVersion"); if (lv) lv.textContent = "Version " + VERSION + "."; }
 })();

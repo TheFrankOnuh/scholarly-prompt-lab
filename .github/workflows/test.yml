@@ -11,6 +11,6 @@ jobs:
         with:
           node-version: 22
       - name: Syntax check
-        run: for f in release.js app.js checks.js data.js theories.js theory-links.js disciplines.js procedures.js community.js report.js tour.js offline.js sw.js tools/proposal.mjs tools/set-version.mjs; do node --check "$f"; done
+        run: for f in release.js app.js checks.js data.js theories.js theory-links.js disciplines.js procedures.js community.js report.js tour.js projects.js offline.js sw.js tools/proposal.mjs tools/set-version.mjs; do node --check "$f"; done
       - name: Run tests
-        run: node --test tests/checks.test.js tests/data.test.js tests/review.test.js tests/version.test.js
+        run: node --test tests/checks.test.js tests/data.test.js tests/review.test.js tests/version.test.js tests/projects.test.js
