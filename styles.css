@@ -95,6 +95,13 @@ button:hover, .button-like:hover { filter: brightness(1.08); }
 .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .status { min-height: 1.4em; color: var(--accent); font-size: 0.9rem; margin: 8px 0 0; }
 
+.start { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px 28px; }
+@media (min-width: 760px) { .start { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); } .start-example { border-left: 1px solid var(--line); padding-left: 28px; } }
+.start .h-small { margin-top: 0; }
+.start h2 label { font: inherit; margin: 0; }
+.start .actions { margin-top: 10px; }
+.flash-target { animation: flash 1.6s ease-out; }
+@keyframes flash { 0% { box-shadow: 0 0 0 4px var(--accent); } 100% { box-shadow: 0 0 0 0 transparent; } }
 .upload-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin-top: 8px; }
 .upload-row .button-like { margin: 0; font-size: 0.88rem; padding: 6px 12px; }
 .upload-row .hint { margin: 0; flex: 1 1 220px; }

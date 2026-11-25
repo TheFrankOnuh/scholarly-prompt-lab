@@ -3,7 +3,7 @@
   "use strict";
 
   const L = window.LAB;
-  const VERSION = "0.1.0";
+  const VERSION = "0.2.0";
   const KEY_DRAFT = "spl.draft.v1";
   const KEY_LOG = "spl.log.v1";
   const $ = (id) => document.getElementById(id);
@@ -387,6 +387,11 @@
   $("sourceFiles").addEventListener("change", async (ev) => {
     const files = [...ev.target.files];
     if (!files.length) return;
+    if ($("example").value) {
+      // Loading your own files starts your own design instead of adding to a worked example.
+      $("example").value = "";
+      writeState(Object.assign({}, BLANK, { planCross: $("planCross").checked, planLog: $("planLog").checked }));
+    }
     let text = $("sourceText").value.replace(/\s+$/, "");
     let n = nextDocNumber(text);
     const skipped = [];
@@ -401,6 +406,9 @@
     $("sourceText").value = text;
     ev.target.value = "";
     renderBuild();
+    showTab("tab-build");
+    $("sourceText").scrollIntoView({ behavior: "smooth", block: "center" });
+    $("sourceText").classList.remove("flash-target"); void $("sourceText").offsetWidth; $("sourceText").classList.add("flash-target");
     if (skipped.length) {
       $("sourceInfo").textContent = "Could not read " + skipped.join(", ") + " as plain text. For Word or PDF files, save as .txt first, or copy and paste the text.";
       $("sourceInfo").classList.add("warn");
@@ -430,6 +438,16 @@
     if (!x) s.procedure = "";
     else s.procedure = L.techniques[s.technique].steps.join("\n");
     writeState(s); renderBuild();
+  });
+  $("startOwn").addEventListener("click", () => {
+    const s = readState();
+    const dirty = !$("example").value && (s.question.trim() || s.sourceText.trim());
+    if (dirty && !confirm("Start a new blank design? Your current one will be replaced. (Download it first if you want to keep it.)")) return;
+    $("example").value = "";
+    writeState(Object.assign({}, BLANK, { planCross: s.planCross, planLog: s.planLog }));
+    renderBuild();
+    $("question").scrollIntoView({ behavior: "smooth", block: "center" });
+    $("question").focus({ preventScroll: true });
   });
   $("reset").addEventListener("click", () => {
     if (!confirm("Clear the whole form?")) return;

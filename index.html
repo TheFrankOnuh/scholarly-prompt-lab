@@ -6,7 +6,7 @@
   <title>Scholarly Prompt Lab</title>
   <meta name="description" content="A free, open-source environment for designing, documenting and evaluating AI prompts in digital humanities research.">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23185c4a'/%3E%3Ctext x='16' y='22' font-size='16' text-anchor='middle' fill='white' font-family='Georgia'%3EP%3C/text%3E%3C/svg%3E">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=0.2.0">
 </head>
 <body>
   <header class="site-header">
@@ -29,10 +29,22 @@
 
     <!-- BUILD -->
     <section id="panel-build" role="tabpanel" aria-labelledby="tab-build">
-      <div class="toolbar">
-        <label for="example">Start from a worked example</label>
-        <select id="example"></select>
-        <button type="button" id="reset" class="ghost">Clear form</button>
+      <div class="start card">
+        <div class="start-own">
+          <h2 class="h-small">Use your own research</h2>
+          <p class="hint">Type your own question and sources, or load your own text files (.txt, .md, .csv, transcripts). Files stay on your computer.</p>
+          <div class="actions">
+            <button type="button" id="startOwn">Start my own research</button>
+            <label class="ghost button-like" for="sourceFiles">Load your own files</label>
+          </div>
+        </div>
+        <div class="start-example">
+          <h2 class="h-small"><label for="example">Or explore a worked example</label></h2>
+          <select id="example"></select>
+          <div class="actions">
+            <button type="button" id="reset" class="ghost">Clear form</button>
+          </div>
+        </div>
       </div>
 
       <div class="grid">
@@ -230,7 +242,7 @@
     <p>Open source under the MIT licence. Your work is saved only in this browser. Export it to keep it.</p>
   </footer>
 
-  <script src="data.js"></script>
-  <script src="app.js"></script>
+  <script src="data.js?v=0.2.0"></script>
+  <script src="app.js?v=0.2.0"></script>
 </body>
 </html>
