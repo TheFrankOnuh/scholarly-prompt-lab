@@ -11,6 +11,11 @@ const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const MARK = "<!-- spl-proposal-check -->";
 const TYPES = ["theory", "framework", "approach", "method", "concept", "school", "movement", "critique"];
 const KINDS = ["book", "article", "chapter"];
+// The Lab serves the humanities and social sciences only.
+const OUT_OF_SCOPE_WORDS = /(engineering|physics|chemistr|biochem|biolog|microbiolog|zoolog|botan|genetic|medicine|medical science|surgery|nursing|pharmac|dentist|veterinar|anatomy|physiolog|mathematic|statistics|computer science|software|informatics|data science|geolog|astronom|agronom|agricultur|accounting|finance|banking|marketing|business administration|architecture(?! history)|radiograph|optometr|biotechnolog|nanotechnolog|robotic|mechatronic|metallurg|petroleum|materials science)/i;
+// a humanities or social-science field that studies a science (history of medicine, mathematics education) is in scope
+const IN_SCOPE_WORDS = /(history of|historical|philosophy of|sociology of|anthropology of|politics of|economics of|ethics|humanities|studies|education|communication|policy|law|literature|culture|cultural|social|heritage|extension)/i;
+const OUT_OF_SCOPE = { test: (name) => OUT_OF_SCOPE_WORDS.test(name) && !IN_SCOPE_WORDS.test(name) };
 const UA = { "User-Agent": "ScholarlyPromptLab-ProposalCheck/1.0" };
 
 function loadLab() {
@@ -46,6 +51,7 @@ export function validate(d, lab) {
     const group = groups.includes(d.group) ? d.group : "";
     if (name.length < 3) problems.push("The discipline needs a name of at least 3 characters.");
     if (!group) problems.push("The group must be one of: " + groups.join("; ") + ".");
+    if (OUT_OF_SCOPE.test(name)) problems.push("This looks like a discipline outside the humanities and social sciences. The Lab accepts only disciplines within them.");
     return { ok: !problems.length, problems, entry: { proposal: "discipline", name, group, contributor: clean(d.contributor, 80) } };
   }
   if (d.proposal !== "theory") return { ok: false, problems: ["Unknown kind of proposal."], entry: null };

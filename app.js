@@ -3,7 +3,7 @@
   "use strict";
 
   const L = window.LAB;
-  const VERSION = "0.9.1";
+  const VERSION = "0.9.2";
   const KEY_DRAFT = "spl.draft.v1";
   const KEY_LOG = "spl.log.v1";
   const $ = (id) => document.getElementById(id);
@@ -103,6 +103,11 @@
     if (g && d.name && !g.items.includes(d.name)) g.items.push(d.name);
   });
   const REPO_ISSUES = "https://github.com/TheFrankOnuh/scholarly-prompt-lab/issues/new";
+  // The Lab serves the humanities and social sciences: proposals for disciplines outside them are turned away.
+  const OUT_OF_SCOPE_WORDS = /(engineering|physics|chemistr|biochem|biolog|microbiolog|zoolog|botan|genetic|medicine|medical science|surgery|nursing|pharmac|dentist|veterinar|anatomy|physiolog|mathematic|statistics|computer science|software|informatics|data science|geolog|astronom|agronom|agricultur|accounting|finance|banking|marketing|business administration|architecture(?! history)|radiograph|optometr|biotechnolog|nanotechnolog|robotic|mechatronic|metallurg|petroleum|materials science)/i;
+  // a humanities or social-science field that studies a science (history of medicine, mathematics education) is in scope
+  const IN_SCOPE_WORDS = /(history of|historical|philosophy of|sociology of|anthropology of|politics of|economics of|ethics|humanities|studies|education|communication|policy|law|literature|culture|cultural|social|heritage|extension)/i;
+  const OUT_OF_SCOPE = { test: (name) => OUT_OF_SCOPE_WORDS.test(name) && !IN_SCOPE_WORDS.test(name) };
   const EDITOR_EMAIL = "frankonuonyeka@gmail.com";     // where proposals go from scholars without a GitHub account
 
   /* ---------- discipline picker (searchable, add your own) ---------- */
@@ -128,11 +133,7 @@
   }
   $("discPropose").addEventListener("click", () => {
     const name = discInput.value.trim();
-    const groups = (window.LAB_DISCIPLINES || []).map((g) => g.group);
-    const pick = prompt("Which group does \u201c" + name + "\u201d belong to? Type the number:\n" + groups.map((g, i) => (i + 1) + ". " + g).join("\n"), "1");
-    const group = groups[parseInt(pick, 10) - 1];
-    if (!group) return;
-    openProposal({ kind: "discipline", name, group });
+    openProposal({ kind: "discipline", name, group: "" });
   });
   function chooseDiscipline(v) {
     discInput.value = v;
@@ -305,7 +306,12 @@
     return { proposal: "theory", v: 1, name: t.n, type: t.type || "", field: t.f === "mine" ? "" : t.f, thinkers: t.t || "", focus: t.a, concepts: t.concepts || [], work: w, contributor: credit };
   }
   function proposalProblems() {
-    if (proposal.kind === "discipline") return proposal.group ? [] : ["Choose the group this discipline belongs to."];
+    if (proposal.kind === "discipline") {
+      const out = [];
+      if (OUT_OF_SCOPE.test(proposal.name)) out.push("“" + proposal.name + "” looks like a discipline outside the humanities and social sciences, which the Lab does not accept. You can still use it yourself: it stays saved in your browser.");
+      else if (!proposal.group) out.push("Choose the group this discipline belongs to.");
+      return out;
+    }
     const t = proposal.theory, w = (t.works || [])[0], out = [];
     if (!w) out.push("Add its key work (author, year, title and publisher or journal), so the proposal can be checked against library catalogues.");
     else if (w.kind === "book" ? !w.publisher : !w.container) out.push("The key work needs its " + (w.kind === "book" ? "publisher" : w.kind === "article" ? "journal" : "book") + ".");
@@ -324,6 +330,12 @@
   }
   function openProposal(p) {
     proposal = p;
+    $("proposeGroupWrap").hidden = p.kind !== "discipline";
+    if (p.kind === "discipline") {
+      const sel = $("proposeGroup");
+      if (!sel.options.length) { sel.append(option("", "Choose a group")); (window.LAB_DISCIPLINES || []).forEach((g) => sel.append(option(g.group, g.group))); }
+      sel.value = p.group || "";
+    }
     const probs = proposalProblems();
     $("proposeSummary").textContent = p.kind === "discipline"
       ? "Discipline: " + p.name + (p.group ? " (" + p.group + ")" : "")
@@ -339,6 +351,7 @@
     const d = $("proposeDlg"); if (typeof d.showModal === "function") d.showModal(); else d.setAttribute("open", "");
   }
   $("proposeClose").addEventListener("click", () => $("proposeDlg").close());
+  $("proposeGroup").addEventListener("change", () => { if (proposal && proposal.kind === "discipline") openProposal(Object.assign({}, proposal, { group: $("proposeGroup").value })); });
   $("proposeCopy").addEventListener("click", () => copy(proposalText(), "proposeStatus"));
   $("proposeAddr").textContent = EDITOR_EMAIL;
   $("proposeAddr").href = "mailto:" + EDITOR_EMAIL;

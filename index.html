@@ -9,7 +9,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="theme-color" content="#185c4a">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="styles.css?v=0.9.1">
+  <link rel="stylesheet" href="styles.css?v=0.9.2">
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to the main content</a>
@@ -63,7 +63,7 @@
               <input id="discipline" name="discipline" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="discList" autocomplete="off" spellcheck="false" placeholder="Search or type your discipline">
               <div id="discList" class="combo-list" role="listbox" aria-label="Disciplines" hidden></div>
             </div>
-            <p class="hint" id="discOwn" hidden>This is a discipline you added. <button type="button" class="ghost small-btn" id="discPropose">Propose it for everyone</button></p>
+            <p class="hint" id="discOwn" hidden>This is a discipline you added, saved in this browser. <button type="button" class="ghost small-btn" id="discPropose">Propose it for everyone</button> <span class="muted">(humanities and social sciences only)</span></p>
             <label for="question">Research question</label>
             <textarea id="question" name="question" rows="3" placeholder="e.g. How is indigenous political authority represented in colonial records?"></textarea>
             <div class="theory-head">
@@ -376,6 +376,11 @@
       <h2 id="proposeTitle">Propose this for everyone</h2>
       <p id="proposeSummary"></p>
       <p class="hint">Proposals are reviewed like submissions to a journal. An automatic check confirms that the information is complete, that it is not already in the library and, for a theory, that its key work can be found in library catalogues. The editor then decides. If accepted, it appears in the Lab for every user, in the right place.</p>
+      <div id="proposeGroupWrap" hidden>
+        <label for="proposeGroup">Which group does this discipline belong to?</label>
+        <select id="proposeGroup"></select>
+        <p class="hint">The Lab is for the humanities and social sciences. Disciplines outside them, such as the natural sciences, engineering, medicine and business, are not accepted.</p>
+      </div>
       <label for="proposeCredit">Your name, for credit <span class="muted">(optional; it will be public)</span></label>
       <input id="proposeCredit" autocomplete="name">
       <ul class="design-warn" id="proposeProblems" hidden></ul>
@@ -407,15 +412,15 @@
     <p><span id="offlineStatus" role="status"></span> <button type="button" id="installBtn" class="ghost small-btn" hidden>Install the Lab on this device</button></p>
   </footer>
 
-  <script src="theories.js?v=0.9.1"></script>
-  <script src="theory-links.js?v=0.9.1"></script>
-  <script src="disciplines.js?v=0.9.1"></script>
-  <script src="community.js?v=0.9.1"></script>
-  <script src="procedures.js?v=0.9.1"></script>
-  <script src="data.js?v=0.9.1"></script>
-  <script src="checks.js?v=0.9.1"></script>
-  <script src="app.js?v=0.9.1"></script>
-  <script src="tour.js?v=0.9.1"></script>
-  <script src="offline.js?v=0.9.1"></script>
+  <script src="theories.js?v=0.9.2"></script>
+  <script src="theory-links.js?v=0.9.2"></script>
+  <script src="disciplines.js?v=0.9.2"></script>
+  <script src="community.js?v=0.9.2"></script>
+  <script src="procedures.js?v=0.9.2"></script>
+  <script src="data.js?v=0.9.2"></script>
+  <script src="checks.js?v=0.9.2"></script>
+  <script src="app.js?v=0.9.2"></script>
+  <script src="tour.js?v=0.9.2"></script>
+  <script src="offline.js?v=0.9.2"></script>
 </body>
 </html>

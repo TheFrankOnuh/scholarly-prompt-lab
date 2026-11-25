@@ -14,6 +14,8 @@ Thank you for helping. The Lab is meant to grow through scholars adding the exam
 
 You do not need to edit any code. Add your theory in the Lab (with its key work and core concepts) or your discipline, then press **Propose**. Send the proposal on GitHub, or by email to the editor at frankonuonyeka@gmail.com (the Lab fills in the email for you).
 
+**Scope.** The Lab is for the humanities and social sciences. Proposed disciplines outside them (for example the natural sciences, engineering, medicine and business) are not accepted.
+
 What happens next:
 
 1. **Automatic check.** Within a minute, the proposal is checked: is the information complete, is it already in the library, and can the key work be found in Crossref or Open Library? The result is posted as a comment. Books from smaller and African publishers are often missing from those catalogues; in that case add a link to a library record or the publisher's page.
