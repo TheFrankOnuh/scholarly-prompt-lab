@@ -99,7 +99,7 @@
     if (current) current.classList.remove("tour-target");
     if (s.prep && !s.done) { s.prep(); s.done = true; }
     if (s.tab) { var t = $(s.tab); if (t && t.getAttribute("aria-selected") !== "true") t.click(); }
-    $("tourCount").textContent = i === 0 ? "Demo: introduction" : "Demo: step " + i + " of " + (steps.length - 1);
+    $("tourCount").textContent = i === 0 ? "Demo: introduction" : "Demo: step " + i;
     $("tourTitle").textContent = s.title;
     $("tourBody").textContent = s.body;
     $("tourBack").hidden = i === 0;
