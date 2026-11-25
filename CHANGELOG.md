@@ -10,6 +10,8 @@ To cite the Lab, use the DOI that always opens the latest version: [10.5281/zeno
 
 ## 1.0.1, November 2026
 
+DOI: [10.5281/zenodo.24544927](https://doi.org/10.5281/zenodo.24544927)
+
 - A cookie-free visit counter. When the Lab is opened online, GoatCounter counts one visit and receives the page address, the website that linked to the Lab and the screen size. It receives nothing a researcher types or loads, and no visit is counted when the browser asks sites not to track it.
 - The privacy statement now says exactly what is counted.
 
