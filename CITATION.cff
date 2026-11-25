@@ -5,7 +5,7 @@ type: software
 authors:
   - family-names: Onuh
     given-names: Frank
-version: 0.6.2
+version: 0.7.0
 date-released: 2026-11-25
 license: MIT
 doi: 10.5281/zenodo.24521711

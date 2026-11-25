@@ -3,7 +3,7 @@
   "use strict";
 
   const L = window.LAB;
-  const VERSION = "0.6.2";
+  const VERSION = "0.7.0";
   const KEY_DRAFT = "spl.draft.v1";
   const KEY_LOG = "spl.log.v1";
   const $ = (id) => document.getElementById(id);
@@ -66,10 +66,12 @@
   Object.keys(L.techniques).forEach((k) => $("technique").append(option(k, L.techniques[k].label)));
   $("example").append(option("", "Choose an example…"));
   L.examples.forEach((x) => $("example").append(option(x.id, x.title)));
-  L.safeguards.forEach((g) => {
-    $("safeguards").append(el("label", { class: "check" }, [
-      el("input", { type: "checkbox", value: g.id, "data-ctx": g.ctx }), g.label
-    ]));
+  (L.safeguardGroups || [""]).forEach((grp) => {
+    const box = el("div", { class: "checks" });
+    L.safeguards.filter((g) => (g.group || "") === grp).forEach((g) => {
+      box.append(el("label", { class: "check", title: g.text }, [el("input", { type: "checkbox", value: g.id, "data-ctx": g.ctx }), g.label]));
+    });
+    $("safeguards").append(el("div", { class: "sg-group" }, [el("h4", { text: grp }), box]));
   });
   $("lgCondition").append(option("custom", "Prompt from the Build tab"));
   CONDITIONS.forEach((c) => $("lgCondition").append(option(c.id, "Study condition " + c.n + ": " + c.name)));
@@ -586,14 +588,16 @@
   }
 
   /* ---------- state ---------- */
-  const FIELDS = ["discipline", "question", "theoryNotes", "technique", "procedure", "fewshot", "sourceDesc", "sourceText", "context", "terms", "output", "fields"];
+  const FIELDS = ["discipline", "question", "theoryNotes", "technique", "procedure", "fewshot", "unit", "corpus", "definitions", "sourceDesc", "sourceText", "context", "terms", "output", "fields"];
 
   function readState() {
+    syncProcedure();
     const s = {};
     FIELDS.forEach((f) => (s[f] = $(f).value));
     s.theories = selectedTheories.slice();
     s.theoryDefs = s.theories.map(theoryById).filter((t) => t && t.custom);
     s.exampleId = $("example").value;
+    s.procAuto = procAuto;
     s.safeguards = [...document.querySelectorAll("#safeguards input:checked")].map((i) => i.value);
     s.planCross = $("planCross").checked;
     s.planLog = $("planLog").checked;
@@ -606,8 +610,8 @@
     // designs come from older versions, other people's exports and hand-edited files: never trust their shape
     const o = Object.assign({}, BLANK);
     if (!d || typeof d !== "object") return o;
-    Object.keys(BLANK).concat(["runs", "models", "theory", "exampleId"]).forEach((k) => { if (d[k] !== undefined && d[k] !== null) o[k] = d[k]; });
-    ["discipline", "question", "theoryNotes", "technique", "procedure", "fewshot", "sourceDesc", "sourceText", "context", "terms", "output", "fields"].forEach((k) => { o[k] = typeof o[k] === "string" ? o[k] : String(o[k] == null ? "" : o[k]); });
+    Object.keys(BLANK).concat(["runs", "models", "theory", "exampleId", "procAuto"]).forEach((k) => { if (d[k] !== undefined && d[k] !== null) o[k] = d[k]; });
+    FIELDS.forEach((k) => { o[k] = typeof o[k] === "string" ? o[k] : String(o[k] == null ? "" : o[k]); });
     if (!L.techniques[o.technique]) o.technique = BLANK.technique;
     if (!["table", "json", "csv", "prose"].includes(o.output)) o.output = "table";
     o.theories = Array.isArray(d.theories) ? d.theories.filter((x) => typeof x === "string") : [];
@@ -632,7 +636,11 @@
     store.set(KEY_THEORIES, myTheories);
     selectedTheories = (s.theories || []).filter((id) => theoryById(id));
     FIELDS.forEach((f) => { if (s[f] !== undefined) $(f).value = s[f]; });
-    if (!s.procedure) $("procedure").value = L.techniques[$("technique").value].steps.join("\n");
+    // a procedure the Lab generated (now or in an older version) is kept in step with the design; one the researcher wrote is left alone
+    const stored = (s.procedure || "").trim();
+    const legacyAuto = Object.values(L.techniques).some((t) => t.steps.join("\n") === stored);
+    procAuto = !stored || legacyAuto || s.procAuto === true;
+    if (procAuto) $("procedure").value = "";
     document.querySelectorAll("#safeguards input").forEach((i) => (i.checked = (s.safeguards || []).includes(i.value)));
     $("planCross").checked = !!s.planCross;
     $("planLog").checked = !!s.planLog;
@@ -641,9 +649,88 @@
     renderTheoryPicker();
   }
 
-  const BLANK = { discipline: "History", question: "", theories: [], theoryNotes: "", technique: "evidence-constrained", procedure: "", fewshot: "",
-    sourceDesc: "", sourceText: "", context: "", terms: "", output: "table", fields: "", safeguards: ["quote", "nofab", "obs", "uncert", "alt"],
+  const BLANK = { discipline: "History", question: "", theories: [], theoryNotes: "", technique: "evidence-constrained", procedure: "", fewshot: "", unit: "", corpus: "", definitions: "",
+    sourceDesc: "", sourceText: "", context: "", terms: "", output: "table", fields: "", safeguards: ["quote", "nofab", "obs", "alt", "disconfirm", "uncert", "scope"],
     planCross: false, planLog: false };
+
+  /* ---------- procedure: built from the discipline, the technique and the chosen frameworks ---------- */
+  const TSTEPS = window.LAB_THEORY_STEPS || {};
+  const DCONV = window.LAB_DISCIPLINE_CONVENTIONS || [];
+  let procAuto = true;
+  function techniqueOf(s) { return L.techniques[s.technique] || L.techniques[BLANK.technique]; }
+  function noSources(s) { return techniqueOf(s).sources === "none"; }
+  function conventionFor(discipline) {
+    const d = (discipline || "").trim().toLowerCase();
+    return DCONV.find((c) => c.match.includes(d)) || null;
+  }
+  function theorySteps(t, tagged, bare) {
+    const tag = tagged ? "[" + t.n + "] " : "";
+    // with no sources there is no text to analyse step by step: the framework organises the answer instead
+    if (bare) return [tag + "Organise your answer with " + t.n + (t.concepts && t.concepts.length ? ", using its core concepts (" + t.concepts.join("; ") + ")" : ": attend to " + t.a) + ". Say where this framework does not apply, and do not attribute specific claims or quotations to its authors."];
+    const own = TSTEPS[t.id];
+    if (own) return own.map((x) => tag + x);
+    if (t.concepts && t.concepts.length) {
+      return [tag + "Apply " + t.n + " through its core concepts (" + t.concepts.join("; ") + "): for each concept, find where it is at work in the material, give the evidence, and say what the concept explains.",
+        tag + "Say where the material does not fit " + t.n + ", or where the framework has nothing to say."];
+    }
+    return [tag + "Apply " + t.n + ": attend to " + t.a + ". Say where the material does not fit this framework."];
+  }
+  function composeProcedure(s) {
+    const tech = techniqueOf(s);
+    const steps = [];
+    const conv = conventionFor(s.discipline);
+    if (conv && tech.sources !== "none") conv.steps.forEach((x) => steps.push(x));
+    const th = (s.theories || []).map(theoryById).filter(Boolean);
+    let fw = [];
+    th.forEach((t) => { fw = fw.concat(theorySteps(t, th.length > 1, tech.sources === "none")); });
+    if (th.length > 1) fw.push("Compare what the frameworks show: say where they agree, where they point in different directions, and what each one misses.");
+    const at = typeof tech.theoryAt === "number" ? tech.theoryAt : 1;
+    if (at < 0 || !fw.length) return steps.concat(tech.steps).join("\n");
+    return steps.concat(tech.steps.slice(0, at), fw, tech.steps.slice(at)).join("\n");
+  }
+  let lastGenerated = "";
+  function syncProcedure() {
+    // called before the design is read: keeps a generated procedure current, never touches one the researcher edited
+    const box = $("procedure");
+    const partial = {};
+    ["discipline", "technique"].forEach((k) => (partial[k] = $(k).value));
+    partial.theories = selectedTheories.slice();
+    const gen = composeProcedure(partial);
+    const cur = box.value.trim();
+    if (procAuto && document.activeElement !== box) { if (cur !== gen) box.value = gen; }
+    else if (cur === gen || !cur) { procAuto = true; if (!cur) box.value = gen; }
+    else procAuto = false;
+    lastGenerated = gen;
+    const conv = conventionFor(partial.discipline);
+    const th = partial.theories.map(theoryById).filter(Boolean);
+    const own = th.filter((t) => TSTEPS[t.id]).length;
+    $("procNote").textContent = procAuto
+      ? "Built from your choices: " + [conv && techniqueOf(partial).sources !== "none" ? conv.label.toLowerCase() + " for " + partial.discipline : null,
+          "the " + techniqueOf(partial).label.split(" (")[0].toLowerCase() + " technique",
+          th.length ? (own ? own + " framework" + (own > 1 ? "s" : "") + " with their own method" : "") + (own && th.length > own ? " and " : "") + (th.length > own ? (th.length - own) + " applied through core concepts" : "") : null
+        ].filter(Boolean).join("; ") + ". Edit any step: your edits are kept."
+      : "You have edited this procedure, so the Lab no longer changes it when you change discipline, technique or theories.";
+    $("procActions").hidden = procAuto;
+  }
+  $("procedure").addEventListener("input", () => { procAuto = $("procedure").value.trim() === lastGenerated; });
+  $("procRebuild").addEventListener("click", () => {
+    if (!confirm("Replace your edited procedure with one built from your current discipline, technique and theories?")) return;
+    procAuto = true; $("procedure").value = ""; renderBuild();
+  });
+
+  function designWarnings(s) {
+    const w = [];
+    const tech = techniqueOf(s);
+    const hasSrc = !!(s.sourceText.trim() || s.sourceDesc.trim());
+    if (tech.sources === "none" && hasSrc) w.push("Zero-shot asks the model to answer from its own knowledge, so your sources are left out of this prompt. To use them, choose Context-grounded or Evidence-constrained.");
+    if (tech.sources === "required" && !hasSrc) w.push("This technique works from sources, but none are loaded or described yet. Without them the model can only guess.");
+    if (s.technique === "few-shot" && !s.fewshot.trim()) w.push("Few-shot needs your own coded examples: add at least two.");
+    if (s.theories.length >= 4) w.push("You have chosen " + s.theories.length + " frameworks. In one prompt, that usually gives a shallow treatment of each: consider two or three, or separate runs.");
+    const quant = s.theories.map(theoryById).filter((t) => t && ["corpus-ling", "cads", "distant-reading", "content-analysis"].includes(t.id));
+    if (quant.length) w.push(quant.map((t) => t.n).join(" and ") + " depend" + (quant.length > 1 ? "" : "s") + " on counts. AI systems do not count reliably: produce the figures with dedicated software and give them to the model to interpret.");
+    if (tech.sources !== "none" && !s.unit.trim()) w.push("No unit of analysis is stated. A methods reviewer will ask what was coded or compared: the clause, the paragraph, the whole text?");
+    return w;
+  }
 
   /* ---------- prompt construction ---------- */
   function outputSpec(s) {
@@ -681,20 +768,30 @@
         out.push(block);
       }
     }
+    const bare = noSources(s);     // the model answers from its own knowledge: sources are deliberately left out
     if (level >= 3) {
-      if (s.sourceDesc.trim()) out.push("SOURCE MATERIAL: " + s.sourceDesc.trim() + (s.sourceText.trim() ? " (supplied below)." : ""));
+      if (bare) out.push("SOURCE MATERIAL: none supplied. Answer from your general knowledge and treat every claim as unverified.");
+      else if (s.sourceDesc.trim()) out.push("SOURCE MATERIAL: " + s.sourceDesc.trim() + (s.sourceText.trim() ? " (supplied below)." : ""));
       if (s.context.trim()) out.push("CULTURAL, LINGUISTIC AND HISTORICAL CONTEXT: " + s.context.trim());
       if (s.terms.trim()) out.push("CONTESTED TERMINOLOGY: " + s.terms.trim());
     }
     if (level >= 4) {
       if (s.technique === "few-shot" && s.fewshot.trim()) out.push("CODED EXAMPLES:\n" + s.fewshot.trim());
+      const design = [["Unit of analysis", s.unit], ["Corpus and selection", s.corpus], ["Working definitions and decision rules", s.definitions]].filter((x) => x[1].trim());
+      if (design.length) out.push("RESEARCH DESIGN:\n" + design.map((x) => "- " + x[0] + ": " + x[1].trim()).join("\n") + "\nWork to this design. If the material does not allow it, say so instead of changing it silently.");
       const steps = lines(s.procedure);
       if (steps.length) out.push("PROCEDURE:\n" + steps.map((x, i) => (i + 1) + ". " + x).join("\n"));
-      const g = L.safeguards.filter((x) => s.safeguards.includes(x.id)).map((x) => "- " + x.text);
-      if (g.length) out.push("SAFEGUARDS:\n" + g.join("\n"));
+      const chosen = L.safeguards.filter((x) => s.safeguards.includes(x.id));
+      if (chosen.length) {
+        const groups = (L.safeguardGroups || [""]).map((grp) => {
+          const items = chosen.filter((x) => (x.group || "") === grp);
+          return items.length ? (grp ? grp + "\n" : "") + items.map((x) => "- " + (bare && x.noSource ? x.noSource : x.text)).join("\n") : "";
+        }).filter(Boolean);
+        out.push("STANDARDS:\n" + (bare ? "" : "In these standards, a substantive claim is any statement about what the sources say, mean or show.\n") + groups.join("\n"));
+      }
     }
     out.push("OUTPUT: " + outputSpec(s));
-    if (level >= 3 && s.sourceText.trim()) {
+    if (level >= 3 && !bare && s.sourceText.trim()) {
       out.push("SOURCE TEXT:\n<<<BEGIN SOURCE>>>\n" + s.sourceText.trim() + "\n<<<END SOURCE>>>");
     }
     return out.join("\n\n");
@@ -718,6 +815,8 @@
     const s = readState();
     $("prompt").textContent = buildPrompt(s, 4);
     $("techniqueHint").textContent = L.techniques[s.technique].hint;
+    const warns = designWarnings(s);
+    const wl = $("designWarn"); wl.replaceChildren(); warns.forEach((x) => wl.append(el("li", { text: x }))); wl.hidden = !warns.length;
     $("fewshotWrap").hidden = s.technique !== "few-shot";
     const cov = coverage(s);
     const meter = $("meter"); meter.replaceChildren();
@@ -785,7 +884,7 @@
     md += "| Field | Value |\n|---|---|\n";
     const row = (k, v) => "| " + k + " | " + String(v || "—").replace(/\|/g, "\\|").replace(/\n/g, "<br>") + " |\n";
     md += row("Discipline", s.discipline) + row("Theoretical orientation", theoryLines(s).map((t) => t.n + (t.t ? " (" + t.t + ")" : "") + (t.custom ? " [researcher-defined]" : "")).concat(s.theoryNotes.trim() ? [s.theoryNotes.trim()] : []).join("\n")) + row("Technique", L.techniques[s.technique].label);
-    md += row("Source material", s.sourceDesc) + row("Context", s.context) + row("Contested terminology", s.terms) + row("Output", s.output + ": " + (s.fields || "default fields")) + "\n";
+    md += row("Unit of analysis", s.unit) + row("Corpus and selection", s.corpus) + row("Working definitions", s.definitions) + row("Source material", s.sourceDesc) + row("Context", s.context) + row("Contested terminology", s.terms) + row("Output", s.output + ": " + (s.fields || "default fields")) + "\n";
     md += "## CONTEXT checklist\n\n" + cov.map((c) => "- [" + (c.on ? "x" : " ") + "] **" + c.l + " · " + c.name + "**" + (c.on ? "" : " (needs " + c.need + ")")).join("\n") + "\n\n";
     md += "## Prompt\n\n```text\n" + buildPrompt(s, 4) + "\n```\n\n";
     const lib = theoryLines(s).filter((t) => t.works && t.works.length);
@@ -1428,17 +1527,7 @@
   document.querySelectorAll("[data-pick]").forEach((b) => b.addEventListener("click", () => $(b.dataset.pick).click()));
   $("runs").addEventListener("input", renderBuild);
   $("models").addEventListener("input", renderBuild);
-  let lastTechnique = null;
-  $("technique").addEventListener("focus", () => (lastTechnique = $("technique").value));
-  $("technique").addEventListener("change", () => {
-    const prev = lastTechnique && L.techniques[lastTechnique] ? L.techniques[lastTechnique].steps.join("\n") : null;
-    const cur = $("procedure").value.trim();
-    if (!cur || cur === prev || Object.values(L.techniques).some((t) => t.steps.join("\n") === cur)) {
-      $("procedure").value = L.techniques[$("technique").value].steps.join("\n");
-    }
-    lastTechnique = $("technique").value;
-    renderBuild();
-  });
+  $("technique").addEventListener("change", renderBuild);
   $("example").addEventListener("change", () => {
     const hasOwnWork = $("question").value.trim() && !matchingExample();
     if (hasOwnWork && !confirm("Replace your current design with " + ($("example").value ? "this example" : "a blank form") + "? Download your research design first if you want to keep it.")) {
@@ -1447,8 +1536,7 @@
     }
     const x = L.examples.find((e) => e.id === $("example").value);
     const s = Object.assign({}, BLANK, x || {}, { planCross: $("planCross").checked, planLog: $("planLog").checked });
-    if (!x) s.procedure = "";
-    else s.procedure = L.techniques[s.technique].steps.join("\n");
+    s.procedure = ""; s.procAuto = true;
     writeState(s); renderBuild();
   });
   $("startOwn").addEventListener("click", () => {

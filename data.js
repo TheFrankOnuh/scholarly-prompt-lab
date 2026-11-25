@@ -6,6 +6,7 @@ window.LAB = {
 
   techniques: {
     "zero-shot": {
+      sources: "none", theoryAt: 1,
       label: "Zero-shot (baseline interpretation)",
       hint: "No examples or sources. Useful for seeing what the model brings on its own. Treat the result as data about the model, not about the past.",
       steps: [
@@ -15,6 +16,7 @@ window.LAB = {
       ]
     },
     "few-shot": {
+      sources: "required", theoryAt: 1,
       label: "Few-shot (apply a codebook)",
       hint: "Give coded examples so the model applies your categories. Check its coding against a hand-coded sample before trusting it.",
       steps: [
@@ -25,6 +27,7 @@ window.LAB = {
       ]
     },
     "context-grounded": {
+      sources: "required", theoryAt: 2,
       label: "Context-grounded (interpret primary documents)",
       hint: "The model works only from the documents you supply. Paste them in the Source text box with identifiers.",
       steps: [
@@ -35,6 +38,7 @@ window.LAB = {
       ]
     },
     "structured-output": {
+      sources: "required", theoryAt: -1,
       label: "Structured output (extract archival metadata)",
       hint: "For extraction: names, dates, places, document types. Specify the fields exactly and spot-check a sample by hand.",
       steps: [
@@ -45,6 +49,7 @@ window.LAB = {
       ]
     },
     "comparative": {
+      sources: "optional", theoryAt: 1,
       label: "Comparative (across models, languages or framings)",
       hint: "Run the identical prompt on several models or in several languages. The differences are the finding.",
       steps: [
@@ -55,6 +60,7 @@ window.LAB = {
       ]
     },
     "adversarial": {
+      sources: "optional", theoryAt: 0,
       label: "Adversarial (test assumptions and bias)",
       hint: "Ask the model to argue against a reading, including yours. Use it to expose what a framing hides.",
       steps: [
@@ -65,6 +71,7 @@ window.LAB = {
       ]
     },
     "iterative": {
+      sources: "required", theoryAt: 0,
       label: "Iterative (refine analytical categories)",
       hint: "Use across several rounds. Record each round's prompt and output in the log so the refinement is visible.",
       steps: [
@@ -75,6 +82,7 @@ window.LAB = {
       ]
     },
     "evidence-constrained": {
+      sources: "required", theoryAt: 0,
       label: "Evidence-constrained (every claim needs a quotation)",
       hint: "The strictest mode for analytical claims. Pair with pasted source text.",
       steps: [
@@ -86,6 +94,7 @@ window.LAB = {
       ]
     },
     "multimodal": {
+      sources: "required", theoryAt: 2,
       label: "Multimodal (images, manuscripts, artefacts)",
       hint: "For photographs, manuscripts, artefacts or generated images. Generated images are model outputs, never historical evidence.",
       steps: [
@@ -96,6 +105,7 @@ window.LAB = {
       ]
     },
     "rag": {
+      sources: "required", theoryAt: 1,
       label: "Retrieval-augmented (query a curated archive)",
       hint: "Needs a retrieval system beyond the prompt. Document what the archive includes and excludes.",
       steps: [
@@ -107,16 +117,37 @@ window.LAB = {
     }
   },
 
+  /* Standards the model must work to. `noSource` is the wording used when the model answers from its own knowledge,
+     where demanding quotations from sources would push it to invent them. */
+  safeguardGroups: ["Evidence", "Interpretation", "Context", "Limits"],
   safeguards: [
-    { id: "quote", text: "Support every substantive claim with an exact quotation and source identifier.", label: "Require traceable textual evidence", ctx: "T" },
-    { id: "nofab", text: "Do not invent quotations, sources, dates or people. Do not add information absent from the supplied material unless you label it as outside knowledge.", label: "Forbid fabrication", ctx: "T" },
-    { id: "obs", text: "Distinguish documented evidence and textual observations from interpretation.", label: "Separate observation from interpretation", ctx: "E" },
-    { id: "uncert", text: "Report uncertainty, missing evidence and limitations explicitly.", label: "Explicitly report uncertainty", ctx: "E" },
-    { id: "alt", text: "Record defensible alternative interpretations.", label: "Preserve alternative interpretations", ctx: "E" },
-    { id: "review", text: "Flag ambiguous or culturally sensitive classifications for human expert review.", label: "Flag items for human review", ctx: "E" },
-    { id: "syco", text: "Do not simply confirm the framing of this prompt. If the evidence does not support it, say so.", label: "Guard against sycophancy", ctx: "E" },
-    { id: "terms", text: "Comment on how the terminology used to describe the subject shapes its representation.", label: "Examine contested terminology", ctx: "N" },
-    { id: "lang", text: "Keep indigenous-language terms in their original form with a gloss; do not replace them with approximate English equivalents.", label: "Preserve indigenous-language terms", ctx: "N" }
+    { id: "quote", group: "Evidence", ctx: "T", label: "Require traceable textual evidence",
+      text: "Support every substantive claim with an exact quotation and its source identifier.",
+      noSource: "No sources have been supplied, so do not present anything as a quotation. Mark every claim as coming from your general knowledge, and name the kind of source a researcher would need to verify it." },
+    { id: "nofab", group: "Evidence", ctx: "T", label: "Forbid fabrication",
+      text: "Do not invent quotations, sources, dates or people. Do not add information absent from the supplied material unless you label it as outside knowledge.",
+      noSource: "Do not invent quotations, sources, dates or people. If you are not certain that a source exists, say so instead of citing it." },
+    { id: "obs", group: "Interpretation", ctx: "E", label: "Separate observation from interpretation",
+      text: "Keep what the sources say (observation) separate from what you take it to mean (interpretation), and label each.",
+      noSource: "Keep what is well documented separate from your own interpretation or inference, and label each." },
+    { id: "alt", group: "Interpretation", ctx: "E", label: "Preserve alternative interpretations",
+      text: "For each interpretation, give the strongest alternative reading the evidence would also support." },
+    { id: "disconfirm", group: "Interpretation", ctx: "E", label: "Search for disconfirming evidence",
+      text: "Look actively for passages that count against your emerging reading, and report them alongside the passages that support it.",
+      noSource: "State the strongest evidence or argument against your answer." },
+    { id: "syco", group: "Interpretation", ctx: "E", label: "Guard against sycophancy",
+      text: "Do not simply confirm the framing of this prompt. If the evidence does not support the question's assumptions or the chosen frameworks, say so." },
+    { id: "terms", group: "Context", ctx: "N", label: "Examine contested terminology",
+      text: "Comment on how the terminology used to describe the subject shapes its representation." },
+    { id: "lang", group: "Context", ctx: "N", label: "Preserve indigenous-language terms",
+      text: "Keep indigenous-language terms in their original form, with diacritics and tone marks, and add a gloss; do not replace them with approximate English equivalents." },
+    { id: "review", group: "Context", ctx: "E", label: "Flag items for human review",
+      text: "Flag every classification that is ambiguous or culturally sensitive for review by a person with the relevant linguistic and cultural expertise." },
+    { id: "uncert", group: "Limits", ctx: "E", label: "Explicitly report uncertainty",
+      text: "State uncertainty, missing evidence and limitations explicitly, and say what evidence would resolve them." },
+    { id: "scope", group: "Limits", ctx: "E", label: "Stay within the evidence",
+      text: "Do not generalise beyond the supplied material, and do not infer the intentions of authors or the reactions of audiences from the text alone.",
+      noSource: "Do not present contested or regional matters as settled, and say where scholarly opinion is divided." }
   ],
 
   criteria: [

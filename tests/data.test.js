@@ -87,3 +87,26 @@ test("all asset version tags in index.html agree", () => {
   const versions = new Set([...html.matchAll(/\?v=([0-9.]+)"/g)].map((m) => m[1]));
   assert.equal(versions.size, 1, "mixed versions: " + [...versions].join(", "));
 });
+
+test("discipline conventions refer only to listed disciplines, and none is claimed twice", () => {
+  require("../procedures.js");
+  const all = new Set(W.LAB_DISCIPLINES.flatMap((g) => g.items).map((d) => d.toLowerCase()));
+  const seen = new Set();
+  for (const c of W.LAB_DISCIPLINE_CONVENTIONS) {
+    assert.ok(c.steps.length >= 1 && c.label, c.id);
+    for (const m of c.match) { assert.ok(all.has(m), c.id + " lists unknown discipline: " + m); assert.ok(!seen.has(m), m + " appears twice"); seen.add(m); }
+  }
+});
+
+test("framework procedures are well formed", () => {
+  require("../procedures.js");
+  for (const [id, steps] of Object.entries(W.LAB_THEORY_STEPS)) {
+    assert.ok(Array.isArray(steps) && steps.length >= 2 && steps.length <= 7, id);
+    for (const s of steps) { assert.ok(/[.?]$/.test(s.trim()), id + " step should end with a full stop: " + s.slice(0, 40)); assert.ok(!/—/.test(s), id + " has an em dash"); }
+  }
+});
+
+test("every safeguard belongs to a known group, and techniques say where their evidence comes from", () => {
+  for (const g of W.LAB.safeguards) assert.ok(W.LAB.safeguardGroups.includes(g.group), g.id);
+  for (const [k, t] of Object.entries(W.LAB.techniques)) assert.ok(["none", "optional", "required"].includes(t.sources), k);
+});

@@ -9,7 +9,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="theme-color" content="#185c4a">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="styles.css?v=0.6.2">
+  <link rel="stylesheet" href="styles.css?v=0.7.0">
 </head>
 <body>
   <header class="site-header">
@@ -113,11 +113,24 @@
             <select id="technique" name="technique"></select>
             <p class="hint" id="techniqueHint"></p>
             <label for="procedure">Analytical procedure <span class="muted">(one step per line)</span></label>
-            <textarea id="procedure" name="procedure" rows="5"></textarea>
+            <textarea id="procedure" name="procedure" rows="9" aria-describedby="procNote"></textarea>
+            <p class="hint" id="procNote"></p>
+            <div class="actions" id="procActions" hidden><button type="button" class="ghost small-btn" id="procRebuild">Rebuild the procedure from my choices</button></div>
             <div id="fewshotWrap" hidden>
               <label for="fewshot">Coded examples <span class="muted">(input and the code you assigned)</span></label>
               <textarea id="fewshot" name="fewshot" rows="4" placeholder="Example 1: &quot;...&quot; → CODE: communal authority"></textarea>
             </div>
+          </fieldset>
+
+          <fieldset>
+            <legend><span class="letter">O</span> Research design</legend>
+            <p class="hint">A methods reviewer will ask for these. They go into the prompt so the model works to your design, not its own.</p>
+            <label for="unit">Unit of analysis</label>
+            <input id="unit" name="unit" placeholder="e.g. the paragraph; the clause; each editorial; each proverb in its speech situation">
+            <label for="corpus">Corpus and how it was selected</label>
+            <input id="corpus" name="corpus" placeholder="e.g. all 24 editorials on the fuel subsidy in The Guardian (Nigeria), May to July 2023">
+            <label for="definitions">Working definitions <span class="muted">(key categories and how to decide borderline cases)</span></label>
+            <textarea id="definitions" name="definitions" rows="2" placeholder="e.g. Legitimation: any statement giving a reason why the reforms are right or necessary. If a statement only describes the reforms, do not code it."></textarea>
           </fieldset>
 
           <fieldset>
@@ -151,8 +164,8 @@
           </fieldset>
 
           <fieldset>
-            <legend><span class="letter">E</span> Evaluation safeguards</legend>
-            <div id="safeguards" class="checks"></div>
+            <legend><span class="letter">E</span> Standards the model must work to</legend>
+            <div id="safeguards" class="sg-groups"></div>
           </fieldset>
 
           <fieldset>
@@ -167,6 +180,7 @@
         <aside class="card sticky">
           <div class="meter" id="meter" aria-label="CONTEXT coverage"></div>
           <p class="meter-note" id="meterNote"></p>
+          <ul class="design-warn" id="designWarn" hidden></ul>
           <h2 class="h-small">Generated scholarly prompt</h2>
           <pre id="prompt" class="prompt" tabindex="0"></pre>
           <div class="actions">
@@ -342,13 +356,14 @@
     <p><span id="offlineStatus" role="status"></span> <button type="button" id="installBtn" class="ghost small-btn" hidden>Install the Lab on this device</button></p>
   </footer>
 
-  <script src="theories.js?v=0.6.2"></script>
-  <script src="theory-links.js?v=0.6.2"></script>
-  <script src="disciplines.js?v=0.6.2"></script>
-  <script src="data.js?v=0.6.2"></script>
-  <script src="checks.js?v=0.6.2"></script>
-  <script src="app.js?v=0.6.2"></script>
-  <script src="tour.js?v=0.6.2"></script>
-  <script src="offline.js?v=0.6.2"></script>
+  <script src="theories.js?v=0.7.0"></script>
+  <script src="theory-links.js?v=0.7.0"></script>
+  <script src="disciplines.js?v=0.7.0"></script>
+  <script src="procedures.js?v=0.7.0"></script>
+  <script src="data.js?v=0.7.0"></script>
+  <script src="checks.js?v=0.7.0"></script>
+  <script src="app.js?v=0.7.0"></script>
+  <script src="tour.js?v=0.7.0"></script>
+  <script src="offline.js?v=0.7.0"></script>
 </body>
 </html>

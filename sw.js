@@ -1,9 +1,9 @@
 /* Scholarly Prompt Lab: offline support.
    Keeps a copy of the Lab's own files on the device so it opens without a connection.
    It never touches the researcher's data and never contacts any other site. */
-const CACHE = "spl-v1";
+const CACHE = "spl-v2";
 const CORE = [
-  "./", "index.html", "styles.css", "app.js", "checks.js", "data.js", "theories.js", "theory-links.js", "disciplines.js", "tour.js", "offline.js",
+  "./", "index.html", "styles.css", "app.js", "checks.js", "data.js", "theories.js", "theory-links.js", "disciplines.js", "procedures.js", "tour.js", "offline.js",
   "manifest.webmanifest", "icons/icon-192.png", "icons/icon-512.png",
   "vendor/pdfjs/pdf.min.mjs", "vendor/pdfjs/pdf.worker.min.mjs", "vendor/mammoth/mammoth.browser.min.js"
 ];
