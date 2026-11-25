@@ -512,3 +512,12 @@ mark { background: #ffe58a; color: #17201c; }
 }
 .chip { padding: 2px 2px 2px 12px; }
 .chip button { width: 34px; height: 34px; border-radius: 50%; }
+
+/* ---------- proposals ---------- */
+.nt-sources { margin-top: 14px; border: 1.5px solid var(--line); border-radius: 8px; padding: 6px 12px 12px; }
+.nt-sources summary { cursor: pointer; font-weight: 600; font-size: 0.93rem; min-height: 36px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+dialog#proposeDlg { width: min(640px, calc(100vw - 32px)); max-height: calc(100vh - 32px); padding: 0; border: 1.5px solid var(--field); border-radius: var(--radius); background: var(--surface); color: var(--ink); }
+dialog#proposeDlg::backdrop { background: rgba(0, 0, 0, 0.55); }
+.badge.contrib { background: var(--accent-soft); color: var(--accent); border: 1px solid currentColor; }
+#discOwn { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+#discOwn[hidden] { display: none; }

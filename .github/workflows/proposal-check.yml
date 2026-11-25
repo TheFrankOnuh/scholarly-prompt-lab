@@ -1,0 +1,25 @@
+name: Check proposal
+# Runs when someone opens or edits an issue. If the issue is a proposal made with the Lab's
+# "Propose for everyone" form, it checks the information and the key work, and comments with the result.
+on:
+  issues:
+    types: [opened, edited]
+permissions:
+  contents: read
+  issues: write
+concurrency:
+  group: proposal-check-${{ github.event.issue.number }}
+  cancel-in-progress: true
+jobs:
+  check:
+    if: ${{ !github.event.issue.pull_request && contains(github.event.issue.body, '"proposal"') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check the proposal
+        run: node tools/proposal.mjs check
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

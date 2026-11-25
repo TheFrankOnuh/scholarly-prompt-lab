@@ -9,7 +9,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="theme-color" content="#185c4a">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="styles.css?v=0.8.0">
+  <link rel="stylesheet" href="styles.css?v=0.9.0">
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to the main content</a>
@@ -63,6 +63,7 @@
               <input id="discipline" name="discipline" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="discList" autocomplete="off" spellcheck="false" placeholder="Search or type your discipline">
               <div id="discList" class="combo-list" role="listbox" aria-label="Disciplines" hidden></div>
             </div>
+            <p class="hint" id="discOwn" hidden>This is a discipline you added. <button type="button" class="ghost small-btn" id="discPropose">Propose it for everyone</button></p>
             <label for="question">Research question</label>
             <textarea id="question" name="question" rows="3" placeholder="e.g. How is indigenous political authority represented in colonial records?"></textarea>
             <div class="theory-head">
@@ -100,11 +101,31 @@
                 <textarea id="ntFocus" rows="2" placeholder="e.g. how elders' speech establishes the truth of a claim through proverbs and lineage"></textarea>
                 <label for="ntField">Field</label>
                 <select id="ntField"></select>
+                <details class="nt-sources" id="ntSources">
+                  <summary>Add its key work and concepts <span class="muted">(needed if you want to propose it for everyone)</span></summary>
+                  <div class="row">
+                    <div><label for="ntType">Type</label><select id="ntType"></select></div>
+                    <div><label for="ntWKind">Key work is a</label>
+                      <select id="ntWKind"><option value="book">Book</option><option value="article">Journal article</option><option value="chapter">Chapter in a book</option></select></div>
+                  </div>
+                  <div class="row">
+                    <div><label for="ntWAuthors">Author(s) of the key work</label><input id="ntWAuthors" placeholder="e.g. Amadiume, I."></div>
+                    <div><label for="ntWYear">Year first published</label><input id="ntWYear" inputmode="numeric" placeholder="e.g. 1987"></div>
+                  </div>
+                  <label for="ntWTitle">Title of the key work</label>
+                  <input id="ntWTitle" placeholder="Full title and subtitle">
+                  <div class="row">
+                    <div><label for="ntWPub" id="ntWPubLabel">Publisher</label><input id="ntWPub" placeholder="e.g. Zed Books"></div>
+                    <div><label for="ntWPages">Place, or volume, issue and pages</label><input id="ntWPages" placeholder="e.g. London, or 29(2), 357–385"></div>
+                  </div>
+                  <label for="ntConcepts">Core concepts <span class="muted">(the framework's own terms, separated by semicolons)</span></label>
+                  <input id="ntConcepts" placeholder="e.g. nego-feminism; negotiation; no-ego; complementarity">
+                </details>
                 <div class="actions">
                   <button type="button" id="ntSave">Save and select</button>
                   <button type="button" class="ghost" id="ntCancel">Cancel</button>
                 </div>
-                <p class="hint">Your theories are saved in this browser and included when you export a design. To suggest one for everyone, use the share link that appears beside it.</p>
+                <p class="hint">Your theories are saved in this browser and included when you export a design. To offer one to every user of the Lab, use <strong>Propose</strong> beside it: proposals are checked and reviewed by the editor before they join the library.</p>
               </div>
             </div>
             <div id="theoryRecs" class="recs" hidden></div>
@@ -350,6 +371,24 @@
     </section>
   </main>
 
+  <dialog id="proposeDlg" aria-labelledby="proposeTitle">
+    <div class="review-inner">
+      <h2 id="proposeTitle">Propose this for everyone</h2>
+      <p id="proposeSummary"></p>
+      <p class="hint">Proposals are reviewed like submissions to a journal. An automatic check confirms that the information is complete, that it is not already in the library and, for a theory, that its key work can be found in library catalogues. The editor then decides. If accepted, it appears in the Lab for every user, in the right place.</p>
+      <label for="proposeCredit">Your name, for credit <span class="muted">(optional; it will be public)</span></label>
+      <input id="proposeCredit" autocomplete="name">
+      <ul class="design-warn" id="proposeProblems" hidden></ul>
+      <div class="actions">
+        <button type="button" id="proposeGitHub">Send on GitHub</button>
+        <button type="button" class="ghost" id="proposeCopy">Copy the proposal to send another way</button>
+        <button type="button" class="ghost" id="proposeClose">Close</button>
+      </div>
+      <p class="hint">Sending on GitHub needs a free GitHub account and makes the proposal public. Without an account, copy the proposal and send it to the Lab's editor.</p>
+      <p class="status" id="proposeStatus" role="status"></p>
+    </div>
+  </dialog>
+
   <dialog id="review" aria-labelledby="reviewTitle">
     <div class="review-inner">
       <h2 id="reviewTitle">Check the extracted text</h2>
@@ -367,14 +406,15 @@
     <p><span id="offlineStatus" role="status"></span> <button type="button" id="installBtn" class="ghost small-btn" hidden>Install the Lab on this device</button></p>
   </footer>
 
-  <script src="theories.js?v=0.8.0"></script>
-  <script src="theory-links.js?v=0.8.0"></script>
-  <script src="disciplines.js?v=0.8.0"></script>
-  <script src="procedures.js?v=0.8.0"></script>
-  <script src="data.js?v=0.8.0"></script>
-  <script src="checks.js?v=0.8.0"></script>
-  <script src="app.js?v=0.8.0"></script>
-  <script src="tour.js?v=0.8.0"></script>
-  <script src="offline.js?v=0.8.0"></script>
+  <script src="theories.js?v=0.9.0"></script>
+  <script src="theory-links.js?v=0.9.0"></script>
+  <script src="disciplines.js?v=0.9.0"></script>
+  <script src="community.js?v=0.9.0"></script>
+  <script src="procedures.js?v=0.9.0"></script>
+  <script src="data.js?v=0.9.0"></script>
+  <script src="checks.js?v=0.9.0"></script>
+  <script src="app.js?v=0.9.0"></script>
+  <script src="tour.js?v=0.9.0"></script>
+  <script src="offline.js?v=0.9.0"></script>
 </body>
 </html>

@@ -1,0 +1,40 @@
+name: Approve proposal
+# Runs when the repository owner adds the label "approved" to a proposal.
+# It adds the entry to community.js, runs the tests, publishes it and closes the issue with thanks.
+on:
+  issues:
+    types: [labeled]
+permissions:
+  contents: write
+  issues: write
+concurrency:
+  group: proposal-approve
+  cancel-in-progress: false
+jobs:
+  approve:
+    if: ${{ github.event.label.name == 'approved' && github.event.sender.login == github.repository_owner }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Add the entry
+        run: node tools/proposal.mjs apply
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Run tests
+        run: node --test tests/checks.test.js tests/data.test.js tests/review.test.js
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE: ${{ github.event.issue.number }}
+          ACTOR: ${{ github.actor }}
+        run: |
+          git config user.name "$ACTOR"
+          git config user.email "$ACTOR@users.noreply.github.com"
+          git add community.js
+          git commit -m "Add approved proposal from issue #${ISSUE}"
+          git push
+          gh issue comment "$ISSUE" --body-file .proposal-result.md
+          gh issue close "$ISSUE" --reason completed

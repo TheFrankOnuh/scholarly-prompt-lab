@@ -3,7 +3,7 @@
   "use strict";
 
   const L = window.LAB;
-  const VERSION = "0.8.0";
+  const VERSION = "0.9.0";
   const KEY_DRAFT = "spl.draft.v1";
   const KEY_LOG = "spl.log.v1";
   const $ = (id) => document.getElementById(id);
@@ -93,6 +93,17 @@
   });
   $("lgDate").value = today();
 
+  /* ---------- entries proposed by scholars and approved by the editor ---------- */
+  const COMMUNITY = window.LAB_COMMUNITY || { theories: [], disciplines: [] };
+  (COMMUNITY.theories || []).forEach((t) => {
+    if (t && t.id && t.n && t.a && !window.LAB_THEORIES.some((x) => x.id === t.id)) window.LAB_THEORIES.push(Object.assign({}, t, { community: true }));
+  });
+  (COMMUNITY.disciplines || []).forEach((d) => {
+    const g = (window.LAB_DISCIPLINES || []).find((x) => x.group === d.group);
+    if (g && d.name && !g.items.includes(d.name)) g.items.push(d.name);
+  });
+  const REPO_ISSUES = "https://github.com/TheFrankOnuh/scholarly-prompt-lab/issues/new";
+
   /* ---------- discipline picker (searchable, add your own) ---------- */
   const KEY_DISC = "spl.mydisciplines.v1";
   let myDisciplines = store.get(KEY_DISC, []);
@@ -110,6 +121,18 @@
     if (!discExists(v)) { myDisciplines.unshift(v); store.set(KEY_DISC, myDisciplines); }
     chooseDiscipline(v);
   }
+  function refreshDiscOwn() {
+    const v = discInput.value.trim();
+    $("discOwn").hidden = !myDisciplines.some((d) => discNorm(d) === discNorm(v));
+  }
+  $("discPropose").addEventListener("click", () => {
+    const name = discInput.value.trim();
+    const groups = (window.LAB_DISCIPLINES || []).map((g) => g.group);
+    const pick = prompt("Which group does \u201c" + name + "\u201d belong to? Type the number:\n" + groups.map((g, i) => (i + 1) + ". " + g).join("\n"), "1");
+    const group = groups[parseInt(pick, 10) - 1];
+    if (!group) return;
+    openProposal({ kind: "discipline", name, group });
+  });
   function chooseDiscipline(v) {
     discInput.value = v;
     closeDisc();
@@ -182,6 +205,7 @@
     setTimeout(() => {
       closeDisc();
       if (!discInput.value.trim()) discInput.value = "History";
+      refreshDiscOwn();
       renderBuild();
     }, 120);
   });
@@ -271,6 +295,57 @@
   }
   const openDetails = new Set();
 
+  /* ---------- proposing a theory or discipline for everyone ---------- */
+  let proposal = null;
+  function proposalData() {
+    const credit = $("proposeCredit").value.trim();
+    if (proposal.kind === "discipline") return { proposal: "discipline", v: 1, name: proposal.name, group: proposal.group, contributor: credit };
+    const t = proposal.theory, w = (t.works || [])[0] || {};
+    return { proposal: "theory", v: 1, name: t.n, type: t.type || "", field: t.f === "mine" ? "" : t.f, thinkers: t.t || "", focus: t.a, concepts: t.concepts || [], work: w, contributor: credit };
+  }
+  function proposalProblems() {
+    if (proposal.kind === "discipline") return proposal.group ? [] : ["Choose the group this discipline belongs to."];
+    const t = proposal.theory, w = (t.works || [])[0], out = [];
+    if (!w) out.push("Add its key work (author, year, title and publisher or journal), so the proposal can be checked against library catalogues.");
+    else if (w.kind === "book" ? !w.publisher : !w.container) out.push("The key work needs its " + (w.kind === "book" ? "publisher" : w.kind === "article" ? "journal" : "book") + ".");
+    if (!t.concepts || t.concepts.length < 2) out.push("Add at least two core concepts, in the framework's own terms.");
+    if (!t.f || t.f === "mine") out.push("Choose the field it belongs to, so it can be put in the right place.");
+    return out;
+  }
+  function proposalText() {
+    const d = proposalData();
+    const head = d.proposal === "discipline"
+      ? "Proposal for a new discipline in the Scholarly Prompt Lab\n\nDiscipline: " + d.name + "\nGroup: " + d.group
+      : "Proposal for a new entry in the Scholarly Prompt Lab theory library\n\nName: " + d.name + "\nType: " + (TYPE_LABEL[d.type] || d.type) + "\nField: " + fieldLabel(d.field) +
+        "\nKey thinkers: " + d.thinkers + "\nKey work: " + (d.work.title ? harvard(d.work).replace(/\*/g, "") : "") + "\nCore concepts: " + d.concepts.join("; ") + "\nWhat the analysis should attend to: " + d.focus;
+    return head + (d.contributor ? "\nProposed by: " + d.contributor : "") + "\n\nWhy it belongs in the library (please add a sentence):\n\n\n" +
+      "Please do not edit the block below: the Lab reads it automatically.\n\n```json\n" + JSON.stringify(d) + "\n```\n";
+  }
+  function openProposal(p) {
+    proposal = p;
+    const probs = proposalProblems();
+    $("proposeSummary").textContent = p.kind === "discipline"
+      ? "Discipline: " + p.name + (p.group ? " (" + p.group + ")" : "")
+      : p.theory.n + (p.theory.t ? " (" + p.theory.t + ")" : "") + ", in " + fieldLabel(p.theory.f) + ".";
+    const ul = $("proposeProblems"); ul.replaceChildren(); probs.forEach((x) => ul.append(el("li", { text: x }))); ul.hidden = !probs.length;
+    if (probs.length && p.kind === "theory") {
+      const fix = el("button", { type: "button", class: "small-btn", text: "Add the missing details" });
+      fix.addEventListener("click", () => { $("proposeDlg").close(); editTheory(p.theory, true); });
+      ul.append(el("li", {}, [fix]));
+    }
+    $("proposeGitHub").disabled = $("proposeCopy").disabled = !!probs.length;
+    $("proposeStatus").textContent = "";
+    const d = $("proposeDlg"); if (typeof d.showModal === "function") d.showModal(); else d.setAttribute("open", "");
+  }
+  $("proposeClose").addEventListener("click", () => $("proposeDlg").close());
+  $("proposeCopy").addEventListener("click", () => copy(proposalText(), "proposeStatus"));
+  $("proposeGitHub").addEventListener("click", () => {
+    const d = proposalData();
+    const url = REPO_ISSUES + "?title=" + encodeURIComponent((d.proposal === "discipline" ? "Discipline proposal: " : "Theory proposal: ") + d.name) + "&body=" + encodeURIComponent(proposalText());
+    window.open(url, "_blank", "noopener");
+    $("proposeStatus").textContent = "GitHub opened in a new tab. Press \u201cSubmit new issue\u201d there to send the proposal.";
+  });
+
   function shareUrl(t) {
     const body = "Please consider adding this theory to the Scholarly Prompt Lab.\n\nName: " + t.n + "\nKey thinkers: " + (t.t || "") +
       "\nWhat the analysis should attend to: " + t.a + "\nSuggested field: " + fieldLabel(t.f) + "\n\nWhy it matters for humanities research:\n";
@@ -339,6 +414,7 @@
         cb.addEventListener("change", () => toggleTheory(t.id, cb.checked));
         const name = el("span", { class: "tn" }, [highlight(t.n, q)]);
         if (t.custom) name.append(el("span", { class: "badge", text: "Yours" }));
+        if (t.community) name.append(el("span", { class: "badge contrib", text: "Contributed" }));
         const text = el("span", {}, [name, " ", t.t ? el("span", { class: "tt" }, [highlight(t.t, q)]) : "",
           t.type ? el("span", { class: "ttype", text: TYPE_LABEL[t.type] || t.type }) : "", el("span", { class: "ta" }, [highlight(t.a, q)])]);
         const tools = el("span", { class: "tools" });
@@ -349,7 +425,10 @@
           tools.append(det);
         }
         if (t.custom) {
-          const share = el("a", { href: shareUrl(t), target: "_blank", rel: "noopener", title: "Opens a pre-filled suggestion on GitHub (needs a GitHub account)", text: "Share" });
+          const edit = el("button", { type: "button", text: "Edit", "data-fk": "edit:" + t.id });
+          edit.addEventListener("click", (e) => { e.preventDefault(); editTheory(t, false); });
+          const share = el("button", { type: "button", text: "Propose", title: "Offer this theory to every user of the Lab", "data-fk": "prop:" + t.id });
+          share.addEventListener("click", (e) => { e.preventDefault(); openProposal({ kind: "theory", theory: t }); });
           const del = el("button", { type: "button", text: "Delete" });
           del.addEventListener("click", (e) => {
             e.preventDefault();
@@ -359,7 +438,7 @@
             selectedTheories = selectedTheories.filter((x) => x !== t.id);
             renderTheoryPicker(); renderBuild();
           });
-          tools.append(share, del);
+          tools.append(edit, share, del);
         }
         box.append(el("label", { class: "theory-row" + (on ? " on" : "") }, [cb, text, tools]));
         if (openDetails.has(t.id) && t.works) {
@@ -371,7 +450,8 @@
             d.append(el("h5", { text: "Debates and critiques" }));
             const dl = el("ul"); t.debates.forEach((w) => dl.append(el("li", {}, [citeNode(w), w.note ? el("span", { class: "dnote", text: " " + sentence(w.note) }) : ""]))); d.append(dl);
           }
-          d.append(el("a", { href: reportUrl(t), target: "_blank", rel: "noopener", class: "report-link", text: "Report an error in this entry" }));
+          if (t.community) d.append(el("p", { class: "dnote", text: "Proposed" + (t.contributor ? " by " + t.contributor : " by a user of the Lab") + " and accepted by the editor" + (t.added ? " on " + t.added : "") + "." }));
+          if (!t.custom) d.append(el("a", { href: reportUrl(t), target: "_blank", rel: "noopener", class: "report-link", text: "Report an error in this entry" }));
           box.append(d);
         }
       });
@@ -392,7 +472,27 @@
     $("theoryShowing").textContent = "Showing " + shown.length + " of " + total;
   }
 
+  let editingTheory = null;
+  Object.keys(TYPE_LABEL).forEach((k) => $("ntType").append(option(k, TYPE_LABEL[k])));
+  $("ntWKind").addEventListener("change", () => { $("ntWPubLabel").textContent = $("ntWKind").value === "book" ? "Publisher" : $("ntWKind").value === "article" ? "Journal" : "Book the chapter is in"; });
+  function editTheory(t, openSources) {
+    openAddTheory(t.n);
+    editingTheory = t.id;
+    $("ntThinkers").value = t.t || ""; $("ntFocus").value = t.a || ""; $("ntField").value = t.f || "mine"; $("ntType").value = t.type || "theory";
+    const w = (t.works || [])[0] || {};
+    $("ntWKind").value = w.kind || "book"; $("ntWKind").dispatchEvent(new Event("change"));
+    $("ntWAuthors").value = w.authors || ""; $("ntWYear").value = w.year || ""; $("ntWTitle").value = w.title || "";
+    $("ntWPub").value = w.publisher || w.container || "";
+    $("ntWPages").value = w.kind === "book" || !w.kind ? (w.place || "") : [(w.volume || "") + (w.issue ? "(" + w.issue + ")" : ""), w.pages || ""].filter(Boolean).join(", ");
+    $("ntConcepts").value = (t.concepts || []).join("; ");
+    $("ntSave").textContent = "Save changes";
+    if (openSources) { $("ntSources").open = true; $("ntWAuthors").focus(); }
+    $("ntDup").hidden = true;
+    dupAckFor = t.n.toLowerCase();
+  }
   function openAddTheory(name) {
+    editingTheory = null;
+    $("ntSave").textContent = "Save and select";
     $("addTheoryForm").hidden = false;
     $("addTheoryBtn").setAttribute("aria-expanded", "true");
     if (name) $("ntName").value = name;
@@ -402,7 +502,8 @@
   function closeAddTheory() {
     $("addTheoryForm").hidden = true;
     $("addTheoryBtn").setAttribute("aria-expanded", "false");
-    ["ntName", "ntThinkers", "ntFocus"].forEach((i) => ($(i).value = ""));
+    ["ntName", "ntThinkers", "ntFocus", "ntWAuthors", "ntWYear", "ntWTitle", "ntWPub", "ntWPages", "ntConcepts"].forEach((i) => ($(i).value = ""));
+    $("ntSources").open = false; editingTheory = null;
     $("ntDup").hidden = true; $("ntDup").replaceChildren(); dupAckFor = "";
   }
   $("addTheoryBtn").addEventListener("click", () => ($("addTheoryForm").hidden ? openAddTheory("") : closeAddTheory()));
@@ -418,7 +519,7 @@
     const nStr = nw.join(" ");
     const acro = norm(name).replace(/[^a-z]/g, "");
     const sn = surnames(thinkers || "");
-    return allTheories().map((t) => {
+    return allTheories().filter((t) => t.id !== editingTheory).map((t) => {
       const tw = nameWords(t.n), tStr = tw.join(" ");
       let score = 0;
       if (tStr && tStr === nStr) score = 1;
@@ -469,10 +570,22 @@
     if (!n) { $("ntName").focus(); $("ntName").setCustomValidity("Give the theory a name."); $("ntName").reportValidity(); return; }
     if (dupAckFor !== n.toLowerCase() && findDuplicates(n, $("ntThinkers").value).length) { renderDupNote(true); $("ntDup").scrollIntoView({ block: "nearest" }); return; }
     if (!a) { $("ntFocus").focus(); $("ntFocus").setCustomValidity("Say what the analysis should pay attention to."); $("ntFocus").reportValidity(); return; }
-    const t = { id: "u-" + Date.now().toString(36), f: $("ntField").value, n, t: $("ntThinkers").value.trim(), a: a.replace(/\.$/, ""), custom: true };
+    const t = { id: editingTheory || "u-" + Date.now().toString(36), f: $("ntField").value, n, t: $("ntThinkers").value.trim(), a: a.replace(/\.$/, ""), custom: true };
+    const wTitle = $("ntWTitle").value.trim(), wAuthors = $("ntWAuthors").value.trim(), wYear = parseInt($("ntWYear").value, 10);
+    if (wTitle && wAuthors && wYear) {
+      const kind = $("ntWKind").value, extra = $("ntWPages").value.trim(), pub = $("ntWPub").value.trim();
+      const work = { kind, authors: wAuthors, year: wYear, title: wTitle };
+      if (kind === "book") { if (pub) work.publisher = pub; if (extra) work.place = extra; }
+      else { if (pub) work.container = pub; const m = /^(\d+)?\s*(?:\(([^)]+)\))?[,\s]*(.*)$/.exec(extra); if (m) { if (m[1]) work.volume = m[1]; if (m[2]) work.issue = m[2]; if (m[3]) work.pages = m[3].replace(/^pp?\.\s*/, ""); } }
+      t.works = [work];
+    }
+    t.type = $("ntType").value;
+    const cons = $("ntConcepts").value.split(/[;\n]/).map((x) => x.trim()).filter(Boolean).slice(0, 7);
+    if (cons.length) t.concepts = cons;
+    if (editingTheory) myTheories = myTheories.filter((x) => x.id !== editingTheory);
     myTheories.unshift(t);
     store.set(KEY_THEORIES, myTheories);
-    selectedTheories.push(t.id);
+    if (!selectedTheories.includes(t.id)) selectedTheories.push(t.id);
     closeAddTheory();
     theoryQuery = ""; $("theorySearch").value = ""; theoryField = "selected";
     renderTheoryPicker(); renderBuild();
@@ -828,6 +941,7 @@
 
   function renderBuild() {
     const s = readState();
+    refreshDiscOwn();
     renderPrompt($("prompt"), buildPrompt(s, 4));
     $("techniqueHint").textContent = L.techniques[s.technique].hint;
     const warns = designWarnings(s);

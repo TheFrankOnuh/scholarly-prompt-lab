@@ -110,3 +110,17 @@ test("every safeguard belongs to a known group, and techniques say where their e
   for (const g of W.LAB.safeguards) assert.ok(W.LAB.safeguardGroups.includes(g.group), g.id);
   for (const [k, t] of Object.entries(W.LAB.techniques)) assert.ok(["none", "optional", "required"].includes(t.sources), k);
 });
+
+test("approved community entries are well formed and do not clash with the library", () => {
+  require("../community.js");
+  const com = W.LAB_COMMUNITY;
+  assert.ok(Array.isArray(com.theories) && Array.isArray(com.disciplines));
+  const groups = new Set(W.LAB_DISCIPLINES.map((g) => g.group));
+  for (const t of com.theories) {
+    assert.match(t.id, /^c-[a-z0-9-]+$/, "community id");
+    assert.ok(!ids.has(t.id), "id clash " + t.id);
+    assert.ok(fields.has(t.f) && TYPES.has(t.type) && t.n && t.a && t.works && t.works.length === 1, t.id);
+    for (const v of [t.n, t.a, t.t || "", t.contributor || ""]) assert.ok(!/[<>`]/.test(v), t.id + " contains markup");
+  }
+  for (const d of com.disciplines) { assert.ok(groups.has(d.group), d.name); assert.ok(!/[<>`]/.test(d.name)); }
+});
