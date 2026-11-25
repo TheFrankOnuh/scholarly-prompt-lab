@@ -1,0 +1,62 @@
+# Scholarly Prompt Lab
+
+**The prompt as method.** A free, open-source tool for designing, documenting and evaluating AI prompts in digital humanities research.
+
+When scholars hand interpretive work to a generative AI system, the wording of the prompt becomes part of how knowledge is produced. Change the prompt and you may change the history the machine tells. The Scholarly Prompt Lab treats the prompt as a research instrument: something to design with care, test for stability, and document so that others can audit it.
+
+It was built with African, and particularly Nigerian, humanities scholarship in mind: oral literature, indigenous languages, colonial archives, and material culture, where a model's training data is thinnest and its errors are hardest for outsiders to see.
+
+## What it does
+
+| Tab | Purpose |
+|---|---|
+| **Build** | Turn a research question into a structured scholarly prompt: theory, technique, sources, cultural context, contested terms, output format and safeguards. A live meter shows how much of the CONTEXT framework the design covers. |
+| **Sensitivity study** | Generate the same task under four conditions (baseline, theory-grounded, context-grounded, evidence-constrained) with an identical output specification, so the results can be compared. Download a full study protocol. |
+| **Log & evaluate** | Record each model output with model, version, date and settings, then score it on six criteria: factual accuracy, contextual fidelity, evidence traceability, freedom from misrepresentation, interpretive plurality and uncertainty calibration. Flag outputs that simply adopted your framing (sycophancy). Export JSON, CSV or a Markdown report. |
+| **CONTEXT framework** | The framework behind the tool, and four roles AI can play in humanities research. |
+
+Five worked examples are included: the 1929 Women's War, an Igbo proverb, Lugard's *The Dual Mandate*, Nigerian newspaper editorials, and AI images of the Benin Kingdom.
+
+## Privacy
+
+The Lab runs entirely in the browser. It makes no network requests, calls no AI model, and needs no account or API key. Your work is saved only in your own browser's local storage. Export it to keep a copy or move it to another device.
+
+This matters for research involving oral histories, interview transcripts or unpublished archives: nothing leaves your machine unless you paste it into an AI system yourself.
+
+## Use it
+
+- **Online:** open the GitHub Pages link in the repository's About section.
+- **Offline:** download the repository (Code → Download ZIP), unzip it, and open `index.html` in any modern browser. No installation needed.
+
+## The CONTEXT framework
+
+| | Dimension | Question |
+|---|---|---|
+| **C** | Conceptual grounding | What am I investigating, and through which concepts? |
+| **O** | Operationalisation | What operations should the model perform, step by step? |
+| **N** | Situated knowledge | Whose knowledge is this, in which language, and what will an outsider misread? |
+| **T** | Traceability | Can every claim be followed back to a source I can check? |
+| **E** | Evaluation | How will I judge whether the output is defensible, and who else should judge it? |
+| **X** | Cross-model examination | Does the finding survive a different model, wording or language? |
+| **T** | Transparency | Could another scholar reproduce or audit what I did? |
+
+The full guide is in [docs/CONTEXT-framework.md](docs/CONTEXT-framework.md). The framework is offered as a proposal, open to evaluation and refinement.
+
+## Limitations
+
+- The Lab structures and records your method. It cannot tell you whether an output is true. That judgement needs independent evidence and, for culturally situated material, people with the relevant linguistic and cultural expertise.
+- A more elaborate prompt can improve an output, introduce new errors, or encourage a model to agree with you. The sensitivity study exists to find out which.
+- AI-generated images are model outputs. They are never evidence of what the past looked like.
+- The summary averages are descriptive. With a handful of runs they do not support statistical claims.
+
+## Contributing
+
+Contributions are welcome, especially worked examples from other disciplines and languages, translations of the interface, and new evaluation criteria. See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+The tool is plain HTML, CSS and JavaScript with no build step. Reference data (disciplines, theories, techniques, safeguards, examples) lives in `data.js`.
+
+## Licence
+
+Code: [MIT](LICENSE). Documentation and the CONTEXT framework guide: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+
+If you use the Lab or the framework in research, please cite it (see [CITATION.cff](CITATION.cff)).

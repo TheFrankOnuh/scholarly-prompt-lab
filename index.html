@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Scholarly Prompt Lab</title>
+  <meta name="description" content="A free, open-source environment for designing, documenting and evaluating AI prompts in digital humanities research.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23185c4a'/%3E%3Ctext x='16' y='22' font-size='16' text-anchor='middle' fill='white' font-family='Georgia'%3EP%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <div>
+        <h1>Scholarly Prompt Lab</h1>
+        <p class="tagline">The prompt as method: design, document and evaluate AI-assisted humanities research.</p>
+      </div>
+      <nav class="tabs" role="tablist" aria-label="Sections">
+        <button role="tab" aria-selected="true" aria-controls="panel-build" id="tab-build">Build</button>
+        <button role="tab" aria-selected="false" aria-controls="panel-study" id="tab-study">Sensitivity study</button>
+        <button role="tab" aria-selected="false" aria-controls="panel-log" id="tab-log">Log &amp; evaluate</button>
+        <button role="tab" aria-selected="false" aria-controls="panel-framework" id="tab-framework">CONTEXT framework</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <p class="notice">Everything runs in your browser. Nothing you type is sent anywhere, and the Lab does not call any AI model: you copy the prompt into the system you are studying, then log what came back.</p>
+
+    <!-- BUILD -->
+    <section id="panel-build" role="tabpanel" aria-labelledby="tab-build">
+      <div class="toolbar">
+        <label for="example">Start from a worked example</label>
+        <select id="example"></select>
+        <button type="button" id="reset" class="ghost">Clear form</button>
+      </div>
+
+      <div class="grid">
+        <form id="builder" class="card" autocomplete="off">
+          <fieldset>
+            <legend><span class="letter">C</span> Conceptual grounding</legend>
+            <label for="discipline">Discipline</label>
+            <select id="discipline" name="discipline"></select>
+            <label for="question">Research question</label>
+            <textarea id="question" name="question" rows="3" placeholder="e.g. How is indigenous political authority represented in colonial records?"></textarea>
+            <label for="theory">Theoretical orientation</label>
+            <select id="theoryPreset"></select>
+            <textarea id="theory" name="theory" rows="2" placeholder="Name the concepts that guide the inquiry"></textarea>
+          </fieldset>
+
+          <fieldset>
+            <legend><span class="letter">O</span> Operationalisation</legend>
+            <label for="technique">Prompting technique</label>
+            <select id="technique" name="technique"></select>
+            <p class="hint" id="techniqueHint"></p>
+            <label for="procedure">Analytical procedure <span class="muted">(one step per line)</span></label>
+            <textarea id="procedure" name="procedure" rows="5"></textarea>
+            <div id="fewshotWrap" hidden>
+              <label for="fewshot">Coded examples <span class="muted">(input and the code you assigned)</span></label>
+              <textarea id="fewshot" name="fewshot" rows="4" placeholder="Example 1: &quot;...&quot; → CODE: communal authority"></textarea>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend><span class="letter">N</span> Situated knowledge</legend>
+            <label for="sourceDesc">Source material</label>
+            <input id="sourceDesc" name="sourceDesc" placeholder="e.g. Authenticated excerpts from colonial archival documents">
+            <label for="sourceText">Source text <span class="muted">(optional: paste the corpus the model must stay within)</span></label>
+            <textarea id="sourceText" name="sourceText" rows="4" placeholder="[DOC-01] ...&#10;[DOC-02] ..."></textarea>
+            <label for="context">Cultural, linguistic and historical context</label>
+            <textarea id="context" name="context" rows="3" placeholder="Languages, communities, period, and what an outsider is likely to misread"></textarea>
+            <label for="terms">Contested terminology</label>
+            <input id="terms" name="terms" placeholder="e.g. &quot;riot&quot; vs &quot;war&quot;; &quot;tribe&quot;; &quot;chief&quot;">
+          </fieldset>
+
+          <fieldset>
+            <legend><span class="letter">T</span> Traceability and output</legend>
+            <label for="output">Output format</label>
+            <select id="output" name="output">
+              <option value="table">Table</option>
+              <option value="json">JSON</option>
+              <option value="csv">CSV</option>
+              <option value="prose">Structured prose with citations</option>
+            </select>
+            <label for="fields">Output fields <span class="muted">(comma-separated)</span></label>
+            <input id="fields" name="fields" placeholder="document ID, finding, textual evidence, interpretation, alternative interpretation, confidence">
+          </fieldset>
+
+          <fieldset>
+            <legend><span class="letter">E</span> Evaluation safeguards</legend>
+            <div id="safeguards" class="checks"></div>
+          </fieldset>
+
+          <fieldset>
+            <legend><span class="letter">X</span><span class="letter">T</span> Cross-model examination and transparency</legend>
+            <div class="checks">
+              <label class="check"><input type="checkbox" id="planCross"> I will run this across at least two models or prompt conditions</label>
+              <label class="check"><input type="checkbox" id="planLog"> I will log model, version, date, settings and human review</label>
+            </div>
+          </fieldset>
+        </form>
+
+        <aside class="card sticky">
+          <div class="meter" id="meter" aria-label="CONTEXT coverage"></div>
+          <p class="meter-note" id="meterNote"></p>
+          <h2 class="h-small">Generated scholarly prompt</h2>
+          <pre id="prompt" class="prompt" tabindex="0"></pre>
+          <div class="actions">
+            <button type="button" id="copyPrompt">Copy prompt</button>
+            <button type="button" id="dlPrompt" class="ghost">Download .txt</button>
+            <button type="button" id="dlDesign" class="ghost">Download research design (.md)</button>
+          </div>
+          <p class="status" id="buildStatus" role="status"></p>
+        </aside>
+      </div>
+    </section>
+
+    <!-- STUDY -->
+    <section id="panel-study" role="tabpanel" aria-labelledby="tab-study" hidden>
+      <div class="card">
+        <h2>Prompt-sensitivity study</h2>
+        <p>The same research task under four conditions. Each condition adds one layer, and every condition keeps the same output specification so the results stay comparable. Run each condition several times on each model, then log the outputs.</p>
+        <p class="muted">A fuller prompt may improve an output, introduce new errors, or simply teach the model to agree with you. The point is to find out which.</p>
+        <div class="study-controls">
+          <label for="runs">Runs per condition</label>
+          <input type="number" id="runs" min="1" max="20" value="3">
+          <label for="models">Models <span class="muted">(comma-separated)</span></label>
+          <input id="models" placeholder="e.g. Model A, Model B, Model C">
+          <span id="studySize" class="pill"></span>
+        </div>
+      </div>
+      <div id="conditions" class="conditions"></div>
+      <div class="actions">
+        <button type="button" id="dlStudy">Download study protocol (.md)</button>
+      </div>
+    </section>
+
+    <!-- LOG -->
+    <section id="panel-log" role="tabpanel" aria-labelledby="tab-log" hidden>
+      <div class="grid">
+        <form id="logForm" class="card" autocomplete="off">
+          <h2>Log a model output</h2>
+          <div class="row">
+            <div>
+              <label for="lgCondition">Condition</label>
+              <select id="lgCondition"></select>
+            </div>
+            <div>
+              <label for="lgRun">Run #</label>
+              <input type="number" id="lgRun" min="1" value="1">
+            </div>
+          </div>
+          <div class="row">
+            <div>
+              <label for="lgModel">Model and version</label>
+              <input id="lgModel" required placeholder="Exact name and version string">
+            </div>
+            <div>
+              <label for="lgDate">Date run</label>
+              <input type="date" id="lgDate" required>
+            </div>
+          </div>
+          <label for="lgSettings">Settings <span class="muted">(temperature, interface, system prompt, tools)</span></label>
+          <input id="lgSettings" placeholder="e.g. web chat, default settings, no browsing">
+          <label for="lgOutput">Model output</label>
+          <textarea id="lgOutput" rows="6" required></textarea>
+
+          <h3 class="h-small">Evaluation <span class="muted">(1 = poor, 5 = strong, blank = not assessed)</span></h3>
+          <div id="criteria" class="criteria"></div>
+
+          <div class="row">
+            <div>
+              <label for="lgEvaluator">Evaluator</label>
+              <input id="lgEvaluator" placeholder="Initials or role, e.g. Igbo linguist">
+            </div>
+            <div>
+              <label class="check spaced"><input type="checkbox" id="lgSyco"> Output adopted my framing without testing it</label>
+            </div>
+          </div>
+          <label for="lgNotes">Notes, errors found, disagreements between evaluators</label>
+          <textarea id="lgNotes" rows="3"></textarea>
+          <div class="actions">
+            <button type="submit">Save entry</button>
+          </div>
+          <p class="status" id="logStatus" role="status"></p>
+        </form>
+
+        <aside class="card">
+          <h2 class="h-small">Summary by condition</h2>
+          <div id="summary" class="summary"></div>
+          <div class="actions">
+            <button type="button" id="expJson" class="ghost">Export JSON</button>
+            <button type="button" id="expCsv" class="ghost">Export CSV</button>
+            <button type="button" id="expMd" class="ghost">Export report (.md)</button>
+            <label class="ghost button-like" for="impJson">Import JSON</label>
+            <input type="file" id="impJson" accept="application/json" hidden>
+          </div>
+        </aside>
+      </div>
+      <div class="card">
+        <h2 class="h-small">Entries <span id="entryCount" class="muted"></span></h2>
+        <div class="table-wrap"><table id="entries"></table></div>
+      </div>
+    </section>
+
+    <!-- FRAMEWORK -->
+    <section id="panel-framework" role="tabpanel" aria-labelledby="tab-framework" hidden>
+      <div class="card prose">
+        <h2>The CONTEXT framework</h2>
+        <p>A proposed framework for situated and accountable scholarly prompting. Its claim is simple: when scholars delegate interpretive work to AI, the prompt becomes part of how knowledge is made, so it has to be designed, documented and checked like any other research instrument.</p>
+        <div id="frameworkList" class="framework"></div>
+        <h3>Four roles AI can play in humanities research</h3>
+        <div class="roles">
+          <div><strong>Research tool</strong><p>Transcription, extraction, coding, organisation. Check accuracy against a hand-coded sample.</p></div>
+          <div><strong>Object of study</strong><p>Studying a model's assumptions and representations. The prompt is your experimental condition.</p></div>
+          <div><strong>Interpretive aid</strong><p>Exploring hypotheses and alternative readings. Every reading stays under scholarly judgement.</p></div>
+          <div><strong>Research infrastructure</strong><p>Search and retrieval over curated archives. Document what the archive leaves out.</p></div>
+        </div>
+        <p class="muted">The framework is offered for evaluation and refinement. See <code>docs/CONTEXT-framework.md</code> in the repository for the full guide.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="wrap footer">
+    <p>Open source under the MIT licence. Your work is saved only in this browser. Export it to keep it.</p>
+  </footer>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
