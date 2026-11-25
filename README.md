@@ -76,6 +76,10 @@ Contributions are welcome, especially worked examples from other disciplines and
 
 The tool is plain HTML, CSS and JavaScript with no build step. Reference data (disciplines, theories, techniques, safeguards, examples) lives in `data.js`.
 
+## Author
+
+Created by [Frank Onuh](https://www.linkedin.com/in/frank-onuh/).
+
 ## Licence
 
 Code: [MIT](LICENSE). Documentation and the CONTEXT framework guide: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Bundled libraries keep their own licences: PDF.js (Apache 2.0) and Mammoth (BSD 2-Clause); see [vendor/README.md](vendor/README.md).

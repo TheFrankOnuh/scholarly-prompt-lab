@@ -528,3 +528,7 @@ legend { align-items: flex-start; gap: 12px; width: 100%; }
 .leg-text { display: grid; gap: 1px; }
 .leg-title { line-height: 1.3; }
 .ctx-tag { font: 600 0.74rem/1.4 var(--sans); letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+
+.built-by { font-size: 1rem; color: var(--ink); }
+.built-by a { font-weight: 600; }
+.footer a { display: inline-block; padding: 4px 0; }
