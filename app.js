@@ -3,7 +3,7 @@
   "use strict";
 
   const L = window.LAB;
-  const VERSION = "0.4.0";
+  const VERSION = "0.5.0";
   const KEY_DRAFT = "spl.draft.v1";
   const KEY_LOG = "spl.log.v1";
   const $ = (id) => document.getElementById(id);
@@ -65,14 +65,16 @@
       el("input", { type: "checkbox", value: g.id, "data-ctx": g.ctx }), g.label
     ]));
   });
-  CONDITIONS.forEach((c) => $("lgCondition").append(option(c.id, c.n + ". " + c.name)));
-  $("lgCondition").append(option("custom", "Custom / single prompt"));
+  $("lgCondition").append(option("custom", "Prompt from the Build tab"));
+  CONDITIONS.forEach((c) => $("lgCondition").append(option(c.id, "Study condition " + c.n + ": " + c.name)));
+  $("lgCondition").value = "custom";
   L.criteria.forEach((c) => {
     const sel = el("select", { id: "sc_" + c.id, "aria-label": c.label });
     sel.append(option("", "–"));
     for (let i = 1; i <= 5; i++) sel.append(option(String(i), String(i)));
     $("criteria").append(el("div", { class: "criterion" }, [
-      el("span", {}, [c.label, el("small", { text: c.help })]), sel
+      el("span", {}, [c.label, " ", el("span", { id: "st_" + c.id }), el("small", { text: c.help })]), sel,
+      el("div", { class: "sugs", id: "sug_" + c.id })
     ]));
   });
   L.framework.forEach((f) => {
@@ -432,7 +434,203 @@
   let log = store.get(KEY_LOG, []);
   if (!Array.isArray(log)) log = [];
 
-  function condName(id) { const c = CONDITIONS.find((x) => x.id === id); return c ? c.n + ". " + c.name : "Custom"; }
+  function condName(id) { const c = CONDITIONS.find((x) => x.id === id); return c ? c.n + ". " + c.name : "Build tab prompt"; }
+  function countsScore(e, id) {
+    // only confirmed or researcher-entered scores count; entries from older versions have no status and count
+    const st = e.scoreStatus && e.scoreStatus[id];
+    return st !== "suggested";
+  }
+
+  /* ---------- automatic checks and suggested scores ---------- */
+  const CK = window.LAB_CHECKS;
+  let checks = null;            // latest automatic check result
+  let sugs = {};                // { criterionId: { checks: {score, reason}, ai: {score, reason, model} } }
+  let scoreState = {};          // { criterionId: "empty" | "suggested" | "confirmed" | "manual" }
+  let aiEval = null;            // parsed second-model evaluation
+  let lastAutoErrors = "";      // what the Lab last wrote into Errors found
+
+  function promptForEntry() {
+    const s = readState();
+    const c = CONDITIONS.find((x) => x.id === $("lgCondition").value);
+    return buildPrompt(s, c ? c.n : 4);
+  }
+
+  function setScore(id, value, state) {
+    $("sc_" + id).value = value == null ? "" : String(value);
+    scoreState[id] = value == null ? "empty" : state;
+    renderScoreRow(id);
+  }
+
+  function prefill() {
+    // fill empty or still-suggested scores: deterministic checks first, then the second model
+    L.criteria.forEach((c) => {
+      const st = scoreState[c.id] || "empty";
+      if (st === "confirmed" || st === "manual") return;
+      const s = sugs[c.id] || {};
+      const pick = s.checks && s.checks.score != null ? s.checks : s.ai && s.ai.score != null ? s.ai : null;
+      if (pick) setScore(c.id, pick.score, "suggested");
+      else if (st === "suggested") setScore(c.id, null, "empty");
+      else renderScoreRow(c.id);
+    });
+  }
+
+  function renderScoreRow(id) {
+    const st = scoreState[id] || "empty";
+    $("sc_" + id).classList.toggle("suggested", st === "suggested");
+    const badge = $("st_" + id); badge.replaceChildren();
+    if (st === "suggested") badge.append(el("span", { class: "sbadge sug", text: "Suggested" }));
+    if (st === "confirmed" || st === "manual") badge.append(el("span", { class: "sbadge ok", text: st === "confirmed" ? "Confirmed" : "Your score" }));
+    const box = $("sug_" + id); box.replaceChildren();
+    const s = sugs[id] || {};
+    [["checks", "Automatic checks"], ["ai", "Second model"]].forEach(([k, label]) => {
+      const v = s[k];
+      if (!v) return;
+      const chip = v.score == null
+        ? el("span", { class: "sug-chip none", text: label + ": " + v.reason })
+        : el("span", { class: "sug-chip" }, [el("strong", { text: label + ": " + v.score }), " " + v.reason]);
+      const same = String($("sc_" + id).value) === String(v.score);
+      if (v.score != null && !same) {
+        const use = el("button", { type: "button", class: "ghost", text: "Use " + v.score });
+        use.addEventListener("click", () => setScore(id, v.score, "confirmed"));
+        chip.append(use);
+      } else if (v.score != null && same && st !== "suggested") chip.append(el("span", { class: "sbadge ok", text: "matches" }));
+      box.append(chip);
+    });
+    if (st === "suggested") {
+      const ok = el("button", { type: "button", class: "small-btn", text: "Confirm " + $("sc_" + id).value });
+      ok.addEventListener("click", () => setScore(id, $("sc_" + id).value, "confirmed"));
+      box.append(ok);
+    }
+    $("confirmAll").hidden = !L.criteria.some((c) => scoreState[c.id] === "suggested");
+  }
+
+  L.criteria.forEach((c) => {
+    $("sc_" + c.id).addEventListener("change", () => {
+      const v = $("sc_" + c.id).value;
+      const s = sugs[c.id] || {};
+      const matches = [s.checks, s.ai].some((x) => x && String(x.score) === v);
+      scoreState[c.id] = !v ? "empty" : matches ? "confirmed" : "manual";
+      renderScoreRow(c.id);
+    });
+  });
+  $("confirmAll").addEventListener("click", () => {
+    L.criteria.forEach((c) => { if (scoreState[c.id] === "suggested") scoreState[c.id] = "confirmed"; renderScoreRow(c.id); });
+  });
+
+  function composeErrors() {
+    const parts = [];
+    if (checks) parts.push(CK.errorsText(checks, "Scholarly Prompt Lab v" + VERSION + ", " + today()));
+    if (aiEval) parts.push(CK.aiErrorsText(aiEval, $("evModel").value.trim() || aiEval.model));
+    return parts.join("\n\n");
+  }
+  function refreshErrors(force) {
+    const cur = $("lgErrors").value.trim();
+    const next = composeErrors();
+    if (force || !cur || cur === lastAutoErrors.trim()) { $("lgErrors").value = next; lastAutoErrors = next; return true; }
+    return false;
+  }
+
+  function renderChecks() {
+    const box = $("autoChecks"); box.replaceChildren();
+    if (!checks) return;
+    const r = checks;
+    box.append(el("h3", { text: "Automatic checks" }));
+    if (!r.hasSource) {
+      box.append(el("p", { class: "ac-note", text: "No source text is loaded in the Build tab, so quotations cannot be checked. Load or paste your sources there, then come back: the checks re-run automatically." }));
+    }
+    const stat = (n, label, cls) => el("div", { class: "ac-stat " + (cls || "") }, [el("b", { text: String(n) }), el("span", { text: label })]);
+    const Q = r.quotations.length;
+    const grid = el("div", { class: "ac-grid" });
+    if (r.hasSource) {
+      grid.append(stat(r.exact + " / " + Q, "quotations exact", Q && r.exact === Q ? "good" : ""));
+      grid.append(stat(r.near, "need a wording check", r.near ? "bad" : "good"));
+      grid.append(stat(r.missing + r.termsMissing.length, "not found in source", r.missing + r.termsMissing.length ? "bad" : "good"));
+      grid.append(stat(r.outsideFacts.length, "names or numbers from outside the source", r.outsideFacts.length ? "bad" : "good"));
+    }
+    grid.append(stat(r.alternatives + " / " + (r.findings || "?"), "findings with alternative readings", r.findings && r.alternatives < r.findings ? "bad" : ""));
+    if (r.debris.length) grid.append(stat(r.debris.length, "pieces of copy-paste debris", "bad"));
+    box.append(grid);
+    if (r.hasSource && (Q || r.terms.length)) {
+      const d = el("details", {}, [el("summary", { text: "See every quotation (" + (Q + r.terms.length) + ")" })]);
+      const ul = el("ul", { class: "qlist" });
+      const rank = { missing: 0, near: 1, exact: 2 };
+      r.quotations.concat(r.terms).slice().sort((a, b) => rank[a.status] - rank[b.status]).forEach((q) => {
+        const li = el("li", {}, [el("span", { class: "qtag " + q.status, text: q.status === "missing" ? "not found" : q.status }), "“" + q.text + "”"]);
+        if (q.term) li.append(el("span", { class: "muted", text: " (short term)" }));
+        if (q.note) li.append(el("span", { class: "src", text: q.note }));
+        if (q.source) li.append(el("span", { class: "src", text: "Source" + (q.doc ? " " + q.doc : "") + ": “" + q.source + "”" }));
+        else if (q.doc && q.status === "exact") li.append(el("span", { class: "src", text: "Found in " + q.doc }));
+        ul.append(li);
+      });
+      d.append(ul);
+      box.append(d);
+    }
+    const note = el("p", { class: "ac-note", text: "Checked in your browser against the source text in the Build tab (" + r.sourceWords.toLocaleString() + " words). These checks find things to look at; they do not judge interpretations. " });
+    if ($("lgErrors").value.trim() && $("lgErrors").value.trim() !== lastAutoErrors.trim()) {
+      const b = el("button", { type: "button", class: "ghost small-btn", text: "Replace Errors found with these results" });
+      b.addEventListener("click", () => { refreshErrors(true); renderChecks(); });
+      note.append(b);
+    }
+    box.append(note);
+  }
+
+  function runChecks() {
+    const out = $("lgOutput").value;
+    if (!out.trim()) {
+      checks = null; renderChecks();
+      L.criteria.forEach((c) => { if (sugs[c.id]) delete sugs[c.id].checks; });
+      prefill(); refreshErrors(false);
+      return;
+    }
+    const s = readState();
+    checks = CK.analyse(out, s.sourceText, promptForEntry() + "\n" + s.question + "\n" + s.context);
+    const sg = CK.suggestScores(checks);
+    L.criteria.forEach((c) => {
+      sugs[c.id] = sugs[c.id] || {};
+      if (sg[c.id] && sg[c.id].score != null) sugs[c.id].checks = sg[c.id];
+      else if (sg[c.id]) sugs[c.id].checks = { score: null, reason: sg[c.id].reason };
+    });
+    prefill();
+    refreshErrors(false);
+    renderChecks();
+  }
+  let checkTimer;
+  $("lgOutput").addEventListener("input", () => { clearTimeout(checkTimer); checkTimer = setTimeout(runChecks, 400); });
+  $("lgCondition").addEventListener("change", runChecks);
+  $("lgErrors").addEventListener("input", () => { if (checks) renderChecks(); });
+
+  /* second-model evaluation */
+  $("copyEvalPrompt").addEventListener("click", () => {
+    const out = $("lgOutput").value.trim();
+    if (!out) { flash("evalStatus", "Paste the model output first."); return; }
+    const s = readState();
+    copy(CK.evaluatorPrompt({ prompt: promptForEntry(), source: s.sourceText.trim(), output: out, criteria: L.criteria }), "evalStatus");
+  });
+  $("applyEval").addEventListener("click", () => {
+    const ev = CK.parseEvaluatorReply($("evReply").value, L.criteria);
+    if (!ev.ok) { flash("evalStatus", ev.error); return; }
+    aiEval = ev;
+    if (!$("evModel").value.trim() && ev.model) $("evModel").value = ev.model;
+    const model = $("evModel").value.trim() || ev.model || "second model";
+    L.criteria.forEach((c) => {
+      sugs[c.id] = sugs[c.id] || {};
+      if (ev.scores[c.id]) sugs[c.id].ai = Object.assign({ model }, ev.scores[c.id]);
+    });
+    if (ev.framing && !$("lgSyco").checked) flash("evalStatus", "Applied. The evaluator thinks the output adopted the prompt's framing: decide whether to tick that box.");
+    else flash("evalStatus", "Applied: " + Object.keys(ev.scores).length + " scores and " + ev.errors.length + " errors added as suggestions.");
+    prefill();
+    if (!refreshErrors(false)) {
+      $("lgErrors").value = $("lgErrors").value.trim() + "\n\n" + CK.aiErrorsText(ev, model);
+      lastAutoErrors = "";
+    }
+  });
+
+  function resetEvaluation() {
+    checks = null; sugs = {}; scoreState = {}; aiEval = null; lastAutoErrors = "";
+    $("lgErrors").value = ""; $("evReply").value = ""; $("evModel").value = "";
+    L.criteria.forEach((c) => setScore(c.id, null, "empty"));
+    renderChecks();
+  }
   function mean(arr) { return arr.length ? (arr.reduce((a, b) => a + b, 0) / arr.length) : null; }
 
   function renderLog() {
@@ -445,13 +643,15 @@
       t.append(el("thead", {}, [el("tr", {}, ["Date", "Model", "Condition", "Run", "Scores", "Flags", "Output", ""].map((h) => el("th", { text: h })))]));
       const body = el("tbody");
       log.slice().reverse().forEach((e) => {
-        const scores = L.criteria.map((c) => c.label.split(" ")[0].slice(0, 4) + " " + (e.scores[c.id] || "–")).join(" · ");
+        const scores = L.criteria.map((c) => c.label.split(" ")[0].slice(0, 4) + " " + (e.scores[c.id] ? e.scores[c.id] + (countsScore(e, c.id) ? "" : "?") : "–")).join(" · ");
         const del = el("button", { type: "button", class: "ghost", text: "Delete" });
         del.addEventListener("click", () => {
           if (confirm("Delete this entry? This cannot be undone unless you exported it.")) { log = log.filter((x) => x.id !== e.id); renderLog(); }
         });
         const flags = el("td");
-        if (e.sycophancy) flags.append(el("span", { class: "flag", text: "adopted framing" }));
+        if (e.sycophancy) flags.append(el("span", { class: "flag", text: "adopted framing" }), " ");
+        if (e.checks && (e.checks.missing || e.checks.near || e.checks.termsMissing)) flags.append(el("span", { class: "flag", text: (e.checks.missing + e.checks.near + e.checks.termsMissing) + " quote issues" }), " ");
+        if (e.scoreStatus && Object.values(e.scoreStatus).includes("suggested")) flags.append(el("span", { class: "flag", text: "unconfirmed scores" }));
         body.append(el("tr", {}, [
           el("td", { text: e.date }), el("td", { text: e.model }), el("td", { text: condName(e.condition) }),
           el("td", { text: String(e.run) }), el("td", { text: scores }), flags,
@@ -472,7 +672,7 @@
       const g = groups[k];
       const cells = [condName(k), String(g.length)];
       L.criteria.forEach((c) => {
-        const v = g.map((e) => parseInt(e.scores[c.id], 10)).filter((x) => !isNaN(x));
+        const v = g.filter((e) => countsScore(e, c.id)).map((e) => parseInt(e.scores[c.id], 10)).filter((x) => !isNaN(x));
         const m = mean(v);
         cells.push(m === null ? "–" : m.toFixed(1) + (v.length < g.length ? " (" + v.length + ")" : ""));
       });
@@ -480,7 +680,34 @@
       tbl.append(el("tr", {}, cells.map((x) => el("td", { text: x }))));
     });
     sum.append(el("div", { class: "table-wrap" }, [tbl]));
-    sum.append(el("p", { class: "muted", text: "Means on a 1–5 scale. A number in brackets is how many entries were scored on that criterion. With few runs, read these as descriptive only." }));
+    sum.append(el("p", { class: "muted", text: "Means on a 1–5 scale, using confirmed scores only. A number in brackets is how many entries were counted for that criterion. With few runs, read these as descriptive only." }));
+    // agreement between suggestions and the researcher's final scores
+    const agree = { checks: [], ai: [] };
+    log.forEach((e) => {
+      if (!e.suggested || !e.scoreStatus) return;
+      L.criteria.forEach((c) => {
+        const st = e.scoreStatus[c.id], fin = parseInt(e.scores[c.id], 10);
+        if (!st || st === "suggested" || isNaN(fin)) return;
+        ["checks", "ai"].forEach((k) => {
+          const sg = e.suggested[c.id] && e.suggested[c.id][k];
+          if (sg && sg.score != null) agree[k].push({ crit: c.id, diff: fin - sg.score });
+        });
+      });
+    });
+    const rows = [["Automatic checks", agree.checks], ["Second model", agree.ai]].filter(([, a]) => a.length);
+    if (rows.length) {
+      sum.append(el("h3", { class: "h-small", text: "How often you agreed with the suggestions" }));
+      const at = el("table");
+      at.append(el("tr", {}, ["Source", "Scores compared", "Same score", "Mean difference", "You scored lower / higher"].map((h) => el("th", { text: h }))));
+      rows.forEach(([label, a]) => {
+        const same = a.filter((x) => x.diff === 0).length;
+        const mad = a.reduce((t, x) => t + Math.abs(x.diff), 0) / a.length;
+        at.append(el("tr", {}, [label, String(a.length), same + " (" + Math.round(100 * same / a.length) + "%)", mad.toFixed(2),
+          a.filter((x) => x.diff < 0).length + " / " + a.filter((x) => x.diff > 0).length].map((x) => el("td", { text: x }))));
+      });
+      sum.append(el("div", { class: "table-wrap" }, [at]));
+      sum.append(el("p", { class: "muted", text: "Where you and the machine disagree is a finding in itself: it shows where automated judgement departs from scholarly judgement." }));
+    }
   }
 
   $("logForm").addEventListener("submit", (ev) => {
@@ -488,21 +715,32 @@
     const s = readState();
     const cond = $("lgCondition").value;
     const c = CONDITIONS.find((x) => x.id === cond);
-    const scores = {};
-    L.criteria.forEach((cr) => { const v = $("sc_" + cr.id).value; if (v) scores[cr.id] = v; });
+    if (!checks) runChecks();
+    const scores = {}, scoreStatus = {}, suggested = {};
+    L.criteria.forEach((cr) => {
+      const v = $("sc_" + cr.id).value;
+      if (v) { scores[cr.id] = v; scoreStatus[cr.id] = scoreState[cr.id] === "suggested" ? "suggested" : (scoreState[cr.id] || "manual"); }
+      if (sugs[cr.id]) suggested[cr.id] = JSON.parse(JSON.stringify(sugs[cr.id]));
+    });
+    const pending = Object.values(scoreStatus).filter((x) => x === "suggested").length;
+    if (pending && !confirm(pending + (pending > 1 ? " scores are still unconfirmed suggestions" : " score is still an unconfirmed suggestion") + ". Save anyway? Unconfirmed scores are kept but do not count in the summary until you confirm them.")) return;
     log.push({
       id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
       condition: cond, run: parseInt($("lgRun").value, 10) || 1,
       model: $("lgModel").value.trim(), date: $("lgDate").value, settings: $("lgSettings").value.trim(),
-      output: $("lgOutput").value, scores, evaluator: $("lgEvaluator").value.trim(),
-      sycophancy: $("lgSyco").checked, notes: $("lgNotes").value.trim(),
-      question: s.question, prompt: buildPrompt(s, c ? c.n : 4), loggedAt: new Date().toISOString()
+      output: $("lgOutput").value, scores, scoreStatus, suggested, evaluator: $("lgEvaluator").value.trim(),
+      sycophancy: $("lgSyco").checked, notes: $("lgNotes").value.trim(), errors: $("lgErrors").value.trim(),
+      checks: checks ? { sourceWords: checks.sourceWords, quotations: checks.quotations.length, exact: checks.exact, near: checks.near, missing: checks.missing,
+        termsMissing: checks.termsMissing.length, missingDocs: checks.missingDocs, outsideFacts: checks.outsideFacts.map((f) => f.text),
+        findings: checks.findings, alternatives: checks.alternatives, debris: checks.debris.length } : null,
+      secondModel: aiEval ? { model: $("evModel").value.trim() || aiEval.model, scores: aiEval.scores, errors: aiEval.errors, adoptedFraming: aiEval.framing, overall: aiEval.overall } : null,
+      question: s.question, prompt: buildPrompt(s, c ? c.n : 4), loggedAt: new Date().toISOString(), labVersion: VERSION
     });
     renderLog();
     $("lgOutput").value = ""; $("lgNotes").value = ""; $("lgSyco").checked = false;
-    L.criteria.forEach((cr) => ($("sc_" + cr.id).value = ""));
+    resetEvaluation();
     $("lgRun").value = (parseInt($("lgRun").value, 10) || 1) + 1;
-    flash("logStatus", "Saved. The exact prompt for this condition was stored with the entry.");
+    flash("logStatus", "Saved with the exact prompt, the automatic checks, the errors list and the status of every score.");
   });
 
   function csvCell(v) { v = String(v == null ? "" : v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
@@ -511,25 +749,45 @@
     download("prompt-lab-log-" + today() + ".json", JSON.stringify({ tool: "Scholarly Prompt Lab", version: VERSION, exportedAt: new Date().toISOString(), design: readState(), entries: log }, null, 2), "application/json");
   });
   $("expCsv").addEventListener("click", () => {
-    const head = ["id", "date", "model", "settings", "condition", "run", "evaluator"].concat(L.criteria.map((c) => c.id), ["adopted_framing", "notes", "question", "prompt", "output"]);
-    const rows = log.map((e) => [e.id, e.date, e.model, e.settings, e.condition, e.run, e.evaluator].concat(L.criteria.map((c) => e.scores[c.id] || ""), [e.sycophancy ? 1 : 0, e.notes, e.question, e.prompt, e.output]));
+    const crit = L.criteria.map((c) => c.id);
+    const head = ["id", "date", "model", "settings", "condition", "run", "evaluator"]
+      .concat(crit, crit.map((c) => c + "_status"), crit.map((c) => c + "_checks_suggested"), crit.map((c) => c + "_second_model"),
+        ["second_model", "quotations", "quotes_exact", "quotes_near", "quotes_not_found", "outside_facts", "adopted_framing", "errors_found", "notes", "question", "prompt", "output"]);
+    const sg = (e, c, k) => (e.suggested && e.suggested[c] && e.suggested[c][k] && e.suggested[c][k].score != null ? e.suggested[c][k].score : "");
+    const rows = log.map((e) => [e.id, e.date, e.model, e.settings, e.condition, e.run, e.evaluator]
+      .concat(crit.map((c) => e.scores[c] || ""), crit.map((c) => (e.scoreStatus && e.scoreStatus[c]) || (e.scores[c] ? "manual" : "")),
+        crit.map((c) => sg(e, c, "checks")), crit.map((c) => sg(e, c, "ai")),
+        [e.secondModel ? e.secondModel.model : "", e.checks ? e.checks.quotations : "", e.checks ? e.checks.exact : "", e.checks ? e.checks.near : "",
+          e.checks ? e.checks.missing + (e.checks.termsMissing || 0) : "", e.checks ? e.checks.outsideFacts.join("; ") : "",
+          e.sycophancy ? 1 : 0, e.errors || "", e.notes, e.question, e.prompt, e.output]));
     download("prompt-lab-log-" + today() + ".csv", "﻿" + [head].concat(rows).map((r) => r.map(csvCell).join(",")).join("\r\n"), "text/csv;charset=utf-8");
   });
   $("expMd").addEventListener("click", () => {
     let md = "# AI-assisted research log\n\nExported " + today() + " from Scholarly Prompt Lab v" + VERSION + ". " + log.length + " entries.\n\n";
     md += "## Summary by condition\n\n";
-    const sumTbl = $("summary").querySelector("table");
-    if (sumTbl) {
-      const rows = [...sumTbl.querySelectorAll("tr")].map((tr) => [...tr.children].map((td) => td.textContent));
+    [...$("summary").querySelectorAll("table")].forEach((tbl, ti) => {
+      if (ti === 1) md += "### Agreement between suggested and confirmed scores\n\n";
+      const rows = [...tbl.querySelectorAll("tr")].map((tr) => [...tr.children].map((td) => td.textContent));
       md += rows.map((r, i) => "| " + r.join(" | ") + " |" + (i === 0 ? "\n|" + r.map(() => "---").join("|") + "|" : "")).join("\n") + "\n\n";
-    }
+    });
+    md += "Only confirmed scores are averaged. Suggested scores come from the Lab's automatic checks (quotation matching against the supplied sources) or from a second AI model, and were accepted, changed or left unconfirmed by the researcher.\n\n";
     md += "## Entries\n\n";
     log.forEach((e, i) => {
       md += "### " + (i + 1) + ". " + condName(e.condition) + ", run " + e.run + " (" + e.model + ", " + e.date + ")\n\n";
       md += "- Settings: " + (e.settings || "—") + "\n- Evaluator: " + (e.evaluator || "—") + "\n";
-      md += "- Scores: " + L.criteria.map((c) => c.label + " " + (e.scores[c.id] || "–")).join("; ") + "\n";
+      md += "\n| Criterion | Final score | Status | Automatic checks | Second model |\n|---|---|---|---|---|\n";
+      L.criteria.forEach((c) => {
+        const s = (e.suggested && e.suggested[c.id]) || {};
+        const st = (e.scoreStatus && e.scoreStatus[c.id]) || (e.scores[c.id] ? "manual" : "—");
+        const fmt = (x) => (x ? (x.score == null ? "—" : x.score) + (x.reason ? ": " + x.reason.replace(/\|/g, "/") : "") : "—");
+        md += "| " + c.label + " | " + (e.scores[c.id] || "–") + " | " + st + " | " + fmt(s.checks) + " | " + fmt(s.ai) + " |\n";
+      });
+      md += "\n";
+      if (e.checks) md += "- Quotations checked: " + e.checks.quotations + " (" + e.checks.exact + " exact, " + e.checks.near + " need a wording check, " + e.checks.missing + " not found) against " + e.checks.sourceWords + " words of source text\n";
+      if (e.secondModel) md += "- Second-model evaluator: " + (e.secondModel.model || "—") + "\n";
       md += "- Adopted the prompt's framing without testing it: " + (e.sycophancy ? "yes" : "no") + "\n";
       if (e.notes) md += "- Notes: " + e.notes + "\n";
+      if (e.errors) md += "\n**Errors found (reviewed by the researcher)**\n\n```text\n" + e.errors + "\n```\n";
       md += "\n**Prompt**\n\n```text\n" + e.prompt + "\n```\n\n**Output**\n\n```text\n" + e.output + "\n```\n\n";
     });
     download("prompt-lab-report-" + today() + ".md", md, "text/markdown;charset=utf-8");
@@ -764,6 +1022,14 @@
     $("example").value = ""; writeState(Object.assign({}, BLANK)); renderBuild();
   });
   $("copyPrompt").addEventListener("click", () => copy($("prompt").textContent, "buildStatus"));
+  $("goLog").addEventListener("click", () => {
+    $("lgCondition").value = "custom";
+    showTab("tab-log");
+    runChecks();
+    $("lgOutput").scrollIntoView({ behavior: "smooth", block: "center" });
+    $("lgOutput").focus({ preventScroll: true });
+  });
+  $("goStudy").addEventListener("click", () => { showTab("tab-study"); window.scrollTo({ top: 0, behavior: "smooth" }); });
   $("dlPrompt").addEventListener("click", () => download(slug(readState().question) + "-prompt.txt", $("prompt").textContent));
   $("dlDesign").addEventListener("click", () => { const s = readState(); download(slug(s.question) + "-design.md", designRecord(s), "text/markdown;charset=utf-8"); });
   $("dlStudy").addEventListener("click", () => { const s = readState(); download(slug(s.question) + "-study-protocol.md", studyProtocol(s), "text/markdown;charset=utf-8"); });
@@ -778,6 +1044,7 @@
       $(t.getAttribute("aria-controls")).hidden = !on;
     });
     try { history.replaceState(null, "", "#" + id.replace("tab-", "")); } catch (e) { /* ignore */ }
+    if (id === "tab-log" && $("lgOutput").value.trim()) runChecks();
   }
   tabs.forEach((t, i) => {
     t.addEventListener("click", () => showTab(t.id));

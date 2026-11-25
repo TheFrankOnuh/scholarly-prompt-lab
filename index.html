@@ -6,7 +6,7 @@
   <title>Scholarly Prompt Lab</title>
   <meta name="description" content="A free, open-source environment for designing, documenting and evaluating AI prompts in digital humanities research.">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23185c4a'/%3E%3Ctext x='16' y='22' font-size='16' text-anchor='middle' fill='white' font-family='Georgia'%3EP%3C/text%3E%3C/svg%3E">
-  <link rel="stylesheet" href="styles.css?v=0.4.0">
+  <link rel="stylesheet" href="styles.css?v=0.5.0">
 </head>
 <body>
   <header class="site-header">
@@ -164,6 +164,17 @@
             <button type="button" id="dlDesign" class="ghost">Download research design (.md)</button>
           </div>
           <p class="status" id="buildStatus" role="status"></p>
+          <div class="next-steps">
+            <h3 class="h-small">What happens next</h3>
+            <ol>
+              <li><strong>Run it.</strong> Copy the prompt and paste it into the AI system you are studying, in a new conversation. The Lab never sends it anywhere itself.</li>
+              <li><strong>Log the answer.</strong> Paste the AI's response into Log &amp; evaluate. The Lab checks every quotation against your sources and lists errors for you to review.
+                <button type="button" class="ghost small-btn" id="goLog">Go to Log &amp; evaluate</button></li>
+              <li><strong>Confirm the scores.</strong> Suggested scores are pre-filled with their reasons. Accept or change each one; only your confirmed scores count.</li>
+              <li><strong>Test it.</strong> Run the same prompt again, try a second model, and compare framings in the Sensitivity study.
+                <button type="button" class="ghost small-btn" id="goStudy">Open Sensitivity study</button></li>
+            </ol>
+          </div>
         </aside>
       </div>
     </section>
@@ -215,11 +226,39 @@
           </div>
           <label for="lgSettings">Settings <span class="muted">(temperature, interface, system prompt, tools)</span></label>
           <input id="lgSettings" placeholder="e.g. web chat, default settings, no browsing">
-          <label for="lgOutput">Model output</label>
-          <textarea id="lgOutput" rows="6" required></textarea>
+          <label for="lgOutput">Model output <span class="muted">(paste the AI's full response)</span></label>
+          <textarea id="lgOutput" rows="8" required></textarea>
 
-          <h3 class="h-small">Evaluation <span class="muted">(1 = poor, 5 = strong, blank = not assessed)</span></h3>
+          <div id="autoChecks" class="auto-checks" aria-live="polite"></div>
+
+          <div class="eval-head">
+            <h3 class="h-small">Evaluation <span class="muted">(1 = poor, 5 = strong)</span></h3>
+            <button type="button" class="ghost small-btn" id="confirmAll" hidden>Confirm all suggestions</button>
+          </div>
+          <p class="hint">Scores marked <span class="sbadge sug">Suggested</span> come from the automatic checks or a second model. Confirm or change each one. Only confirmed scores count in the summary, and any disagreement with the suggestion is recorded.</p>
           <div id="criteria" class="criteria"></div>
+
+          <details class="second-model" id="secondModel">
+            <summary>Second-model evaluation <span class="muted">(optional, for accuracy, context and misrepresentation)</span></summary>
+            <ol class="steps-small">
+              <li>Copy the evaluator prompt and paste it into a <strong>different</strong> AI system from the one that produced the output.
+                <div class="actions"><button type="button" class="ghost small-btn" id="copyEvalPrompt">Copy evaluator prompt</button></div>
+              </li>
+              <li>
+                <label for="evModel">Evaluator model and version</label>
+                <input id="evModel" placeholder="e.g. the second system's exact name and version">
+              </li>
+              <li>
+                <label for="evReply">Paste the evaluator's reply</label>
+                <textarea id="evReply" rows="4" placeholder='{"scores": {...}, "errors": [...]}'></textarea>
+                <div class="actions"><button type="button" class="small-btn" id="applyEval">Apply evaluation</button></div>
+              </li>
+            </ol>
+            <p class="status" id="evalStatus" role="status"></p>
+          </details>
+
+          <label for="lgErrors">Errors found <span class="muted">(filled automatically; review, delete or add)</span></label>
+          <textarea id="lgErrors" rows="6" placeholder="Paste an output above and the Lab will list possible errors here."></textarea>
 
           <div class="row">
             <div>
@@ -230,7 +269,7 @@
               <label class="check spaced"><input type="checkbox" id="lgSyco"> Output adopted my framing without testing it</label>
             </div>
           </div>
-          <label for="lgNotes">Notes, errors found, disagreements between evaluators</label>
+          <label for="lgNotes">Notes and disagreements between evaluators</label>
           <textarea id="lgNotes" rows="3"></textarea>
           <div class="actions">
             <button type="submit">Save entry</button>
@@ -290,8 +329,9 @@
     <p>Open source under the MIT licence. Your work is saved only in this browser. Export it to keep it.</p>
   </footer>
 
-  <script src="theories.js?v=0.4.0"></script>
-  <script src="data.js?v=0.4.0"></script>
-  <script src="app.js?v=0.4.0"></script>
+  <script src="theories.js?v=0.5.0"></script>
+  <script src="data.js?v=0.5.0"></script>
+  <script src="checks.js?v=0.5.0"></script>
+  <script src="app.js?v=0.5.0"></script>
 </body>
 </html>

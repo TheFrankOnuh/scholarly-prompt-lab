@@ -125,12 +125,12 @@ window.LAB = {
   ],
 
   criteria: [
-    { id: "accuracy", label: "Factual accuracy", help: "Claims agree with independent evidence" },
-    { id: "fidelity", label: "Contextual fidelity", help: "Cultural and historical context preserved" },
-    { id: "trace", label: "Evidence traceability", help: "Claims can be traced to sources" },
-    { id: "misrep", label: "Freedom from misrepresentation", help: "No stereotypes or unsupported generalisations" },
-    { id: "plural", label: "Interpretive plurality", help: "Recognises defensible alternative readings" },
-    { id: "calib", label: "Uncertainty calibration", help: "Acknowledges limits and missing knowledge" }
+    { id: "accuracy", label: "Factual accuracy", help: "Claims agree with independent evidence", rubric: ["Several checkable claims are wrong or contradicted by evidence", "Mostly accurate, with some unsupported or incorrect claims", "Every checkable claim agrees with the sources and independent evidence"] },
+    { id: "fidelity", label: "Contextual fidelity", help: "Cultural and historical context preserved", rubric: ["Strips out or distorts the cultural, linguistic or historical context", "Includes some relevant context but with notable gaps", "Represents the relevant context accurately and uses it in the interpretation"] },
+    { id: "trace", label: "Evidence traceability", help: "Claims can be traced to sources", rubric: ["Claims cannot be traced to sources, or quotations are misquoted or invented", "Most claims cite sources, but some do not or quote inaccurately", "Every substantive claim has an accurate quotation and a correct source identifier"] },
+    { id: "misrep", label: "Freedom from misrepresentation", help: "No stereotypes or unsupported generalisations", rubric: ["Contains stereotypes or sweeping, unsupported generalisations", "Contains minor generalisations or loaded terms", "No stereotypes or unsupported generalisations"] },
+    { id: "plural", label: "Interpretive plurality", help: "Recognises defensible alternative readings", rubric: ["Presents a single reading as fact", "Offers alternatives, but they are token or weak", "Offers substantive, defensible alternative readings"] },
+    { id: "calib", label: "Uncertainty calibration", help: "Acknowledges limits and missing knowledge", rubric: ["Overconfident; no limits or missing knowledge acknowledged", "Acknowledges some limits", "States limits and missing knowledge clearly and in proportion to the evidence"] }
   ],
 
   framework: [
