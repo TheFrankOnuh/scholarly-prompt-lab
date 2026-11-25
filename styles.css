@@ -95,7 +95,11 @@ button:hover, .button-like:hover { filter: brightness(1.08); }
 .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .status { min-height: 1.4em; color: var(--accent); font-size: 0.9rem; margin: 8px 0 0; }
 
-.toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-bottom: 16px; }
+.upload-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin-top: 8px; }
+.upload-row .button-like { margin: 0; font-size: 0.88rem; padding: 6px 12px; }
+.upload-row .hint { margin: 0; flex: 1 1 220px; }
+.hint.warn { color: var(--warn); }
+.toolbar {display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-bottom: 16px; }
 .toolbar label { margin: 0; }
 .toolbar select { width: auto; min-width: 0; flex: 1 1 260px; max-width: 520px; }
 

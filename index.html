@@ -67,6 +67,11 @@
             <input id="sourceDesc" name="sourceDesc" placeholder="e.g. Authenticated excerpts from colonial archival documents">
             <label for="sourceText">Source text <span class="muted">(optional: paste the corpus the model must stay within)</span></label>
             <textarea id="sourceText" name="sourceText" rows="4" placeholder="[DOC-01] ...&#10;[DOC-02] ..."></textarea>
+            <div class="upload-row">
+              <label class="ghost button-like" for="sourceFiles">Load your own files</label>
+              <input type="file" id="sourceFiles" accept=".txt,.md,.csv,.tsv,.json,.xml,.html,.srt,.vtt,text/*" multiple hidden>
+              <span class="hint" id="sourceInfo">Plain-text files (.txt, .md, .csv, transcripts). Each file is tagged DOC-01, DOC-02… Files are read in your browser and never uploaded.</span>
+            </div>
             <label for="context">Cultural, linguistic and historical context</label>
             <textarea id="context" name="context" rows="3" placeholder="Languages, communities, period, and what an outsider is likely to misread"></textarea>
             <label for="terms">Contested terminology</label>

@@ -15,6 +15,8 @@ It was built with African, and particularly Nigerian, humanities scholarship in 
 | **Log & evaluate** | Record each model output with model, version, date and settings, then score it on six criteria: factual accuracy, contextual fidelity, evidence traceability, freedom from misrepresentation, interpretive plurality and uncertainty calibration. Flag outputs that simply adopted your framing (sycophancy). Export JSON, CSV or a Markdown report. |
 | **CONTEXT framework** | The framework behind the tool, and four roles AI can play in humanities research. |
 
+**Bring your own material.** Paste your own research question and texts, or use *Load your own files* to add plain-text files (.txt, .md, .csv, transcripts). Each file is tagged `[DOC-01: filename]`, `[DOC-02: …]` so the model can cite it. Files are read inside your browser and never uploaded. For Word or PDF documents, save them as .txt first.
+
 Five worked examples are included: the 1929 Women's War, an Igbo proverb, Lugard's *The Dual Mandate*, Nigerian newspaper editorials, and AI images of the Benin Kingdom.
 
 ## Privacy
@@ -25,7 +27,10 @@ This matters for research involving oral histories, interview transcripts or unp
 
 ## Use it
 
-- **Online:** open the GitHub Pages link in the repository's About section.
+- **Online:** <https://thefrankonuh.github.io/scholarly-prompt-lab/>
+
+  <img src="assets/qr-code.png" alt="QR code linking to the Scholarly Prompt Lab" width="160">
+
 - **Offline:** download the repository (Code → Download ZIP), unzip it, and open `index.html` in any modern browser. No installation needed.
 
 ## The CONTEXT framework

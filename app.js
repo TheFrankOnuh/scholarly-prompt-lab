@@ -180,6 +180,7 @@
       ? "CONTEXT coverage " + (7 - missing.length) + "/7. Still to add: " + missing.map((c) => c.need).join("; ") + "."
       : "CONTEXT coverage 7/7. The design is fully specified; the outputs still need checking.";
     store.set(KEY_DRAFT, s);
+    updateSourceInfo();
     renderStudy(s);
   }
 
@@ -362,6 +363,48 @@
       flash("logStatus", "Imported " + added + " new entr" + (added === 1 ? "y" : "ies") + ".");
     } catch (e) { flash("logStatus", "That file is not a Prompt Lab export."); }
     ev.target.value = "";
+  });
+
+  /* ---------- user's own source files (read locally, never uploaded) ---------- */
+  const SOURCE_HINT = $("sourceInfo").textContent;
+  function nextDocNumber(text) {
+    let max = 0;
+    (text.match(/\[DOC-(\d+)/g) || []).forEach((m) => { max = Math.max(max, parseInt(m.slice(5), 10)); });
+    return max + 1;
+  }
+  function updateSourceInfo() {
+    const t = $("sourceText").value;
+    const info = $("sourceInfo");
+    if (!t.trim()) { info.textContent = SOURCE_HINT; info.classList.remove("warn"); return; }
+    const words = t.trim().split(/\s+/).length;
+    const docs = (t.match(/\[DOC-\d+/g) || []).length;
+    let msg = words.toLocaleString() + " words" + (docs ? " in " + docs + " document" + (docs > 1 ? "s" : "") : "") + ".";
+    const big = words > 60000;
+    if (big) msg += " This may exceed what some AI systems accept in one prompt. Consider splitting the corpus across several runs.";
+    info.textContent = msg;
+    info.classList.toggle("warn", big);
+  }
+  $("sourceFiles").addEventListener("change", async (ev) => {
+    const files = [...ev.target.files];
+    if (!files.length) return;
+    let text = $("sourceText").value.replace(/\s+$/, "");
+    let n = nextDocNumber(text);
+    const skipped = [];
+    for (const f of files) {
+      try {
+        const body = (await f.text()).replace(/\r\n/g, "\n").trim();
+        if (!body || /\u0000/.test(body.slice(0, 2000))) { skipped.push(f.name); continue; }
+        text += (text ? "\n\n" : "") + "[DOC-" + String(n).padStart(2, "0") + ": " + f.name + "]\n" + body;
+        n++;
+      } catch (e) { skipped.push(f.name); }
+    }
+    $("sourceText").value = text;
+    ev.target.value = "";
+    renderBuild();
+    if (skipped.length) {
+      $("sourceInfo").textContent = "Could not read " + skipped.join(", ") + " as plain text. For Word or PDF files, save as .txt first, or copy and paste the text.";
+      $("sourceInfo").classList.add("warn");
+    }
   });
 
   /* ---------- events: build ---------- */
