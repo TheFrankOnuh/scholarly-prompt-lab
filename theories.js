@@ -136,7 +136,6 @@ window.LAB_THEORIES = [
   { id: "snail-sense", f: "gender", n: "Snail-sense feminism", t: "Akachi Adimora-Ezeigbo", a: "women's strategic, patient negotiation of patriarchal structures" },
   { id: "crt", f: "gender", n: "Critical race theory", t: "Derrick Bell; Richard Delgado", a: "how racism is embedded in law, institutions and everyday practice" },
   { id: "masculinities", f: "gender", n: "Hegemonic masculinity", t: "R. W. Connell", a: "dominant and subordinated forms of masculinity and how they are sustained" },
-  { id: "queer", f: "gender", n: "Queer theory", t: "Eve Kosofsky Sedgwick; Judith Butler", a: "how norms of sexuality and gender are constructed and contested" },
 
   /* ---------- Philosophy & ethics ---------- */
   { id: "hermeneutics", f: "phil", n: "Philosophical hermeneutics", t: "Gadamer; Ricoeur", a: "interpretation as a fusion of horizons between the text's world and the interpreter's" },

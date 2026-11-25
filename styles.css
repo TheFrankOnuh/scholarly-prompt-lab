@@ -144,6 +144,18 @@ button:hover, .button-like:hover { filter: brightness(1.08); }
 .second-model summary { cursor: pointer; font-weight: 600; }
 .steps-small { padding-left: 20px; font-size: 0.9rem; display: grid; gap: 6px; }
 
+/* ---------- recommendations and duplicates ---------- */
+.recs { margin-top: 10px; border: 1px solid var(--accent); border-radius: 10px; background: var(--accent-soft); padding: 10px 12px; }
+.recs-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 0.92rem; }
+.rec { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; padding: 7px 0; border-top: 1px solid var(--line); font-size: 0.9rem; }
+.rec .tt { color: var(--accent); font-size: 0.8rem; font-weight: 600; }
+.rec .why { display: block; color: var(--muted); font-size: 0.8rem; margin-top: 2px; }
+.recs .hint { margin: 8px 0 0; font-size: 0.8rem; }
+.dup-note { margin-top: 10px; border: 1px solid var(--warn); background: var(--warn-soft); border-radius: 8px; padding: 8px 10px; font-size: 0.88rem; }
+.dup-note p { margin: 0 0 6px; }
+.dup-note.strong p { font-weight: 600; }
+.dup-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 4px 0; flex-wrap: wrap; }
+
 /* ---------- theory picker ---------- */
 .label-like { font-weight: 600; font-size: 0.9rem; }
 .small { font-size: 0.82rem; }

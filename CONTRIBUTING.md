@@ -17,6 +17,7 @@ There is no build step. Edit the files and open `index.html` in a browser.
 - `index.html`: page structure
 - `styles.css`: styles (light and dark themes)
 - `theories.js`: the theory library
+- `theory-links.js`: theory pairings and cue words used for recommendations
 - `data.js`: reference data and worked examples
 - `app.js`: application logic
 

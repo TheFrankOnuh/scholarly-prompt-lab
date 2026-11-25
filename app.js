@@ -3,7 +3,7 @@
   "use strict";
 
   const L = window.LAB;
-  const VERSION = "0.5.0";
+  const VERSION = "0.5.1";
   const KEY_DRAFT = "spl.draft.v1";
   const KEY_LOG = "spl.log.v1";
   const $ = (id) => document.getElementById(id);
@@ -223,12 +223,71 @@
     $("addTheoryForm").hidden = true;
     $("addTheoryBtn").setAttribute("aria-expanded", "false");
     ["ntName", "ntThinkers", "ntFocus"].forEach((i) => ($(i).value = ""));
+    $("ntDup").hidden = true; $("ntDup").replaceChildren(); dupAckFor = "";
   }
   $("addTheoryBtn").addEventListener("click", () => ($("addTheoryForm").hidden ? openAddTheory("") : closeAddTheory()));
   $("ntCancel").addEventListener("click", closeAddTheory);
+  /* ---------- duplicate detection for researcher-added theories ---------- */
+  const NAME_STOP = new Set(["the", "of", "a", "an", "and", "theory", "theories", "approach", "s", "on", "in"]);
+  function nameWords(x) { return norm(x).replace(/[^\p{L}\p{N}\s]/gu, " ").split(/\s+/).filter((w) => w && !NAME_STOP.has(w)); }
+  function initials(x) { return norm(x).replace(/[^\p{L}\s]/gu, " ").split(/\s+/).filter((w) => w && !["of", "the", "and"].includes(w)).map((w) => w[0]).join(""); }
+  function surnames(x) { return new Set(norm(x).replace(/[^\p{L}\s]/gu, " ").split(/\s+/).filter((w) => w.length >= 4 && !["and", "with"].includes(w))); }
+  function findDuplicates(name, thinkers) {
+    const nw = nameWords(name);
+    if (!nw.length) return [];
+    const nStr = nw.join(" ");
+    const acro = norm(name).replace(/[^a-z]/g, "");
+    const sn = surnames(thinkers || "");
+    return allTheories().map((t) => {
+      const tw = nameWords(t.n), tStr = tw.join(" ");
+      let score = 0;
+      if (tStr && tStr === nStr) score = 1;
+      else if (tStr && (tStr.includes(nStr) || nStr.includes(tStr)) && Math.min(tStr.length, nStr.length) >= 5) score = 0.9;
+      else if (acro.length >= 2 && acro.length <= 6 && name.trim() === name.trim().toUpperCase() && initials(t.n) === acro) score = 0.95;
+      else {
+        const inter = nw.filter((w) => tw.includes(w)).length;
+        score = inter / new Set(nw.concat(tw)).size;
+      }
+      if (sn.size && score >= 0.25 && [...surnames(t.t || "")].some((s) => sn.has(s))) score += 0.25;
+      return { t, score };
+    }).filter((x) => x.score >= 0.5).sort((a, b) => b.score - a.score).slice(0, 3).map((x) => x.t);
+  }
+  let dupAckFor = "";
+  function renderDupNote(strong) {
+    const n = $("ntName").value.trim();
+    const box = $("ntDup");
+    const matches = n.length >= 3 ? findDuplicates(n, $("ntThinkers").value) : [];
+    box.replaceChildren();
+    if (!matches.length) { box.hidden = true; return matches; }
+    box.hidden = false;
+    box.classList.toggle("strong", !!strong);
+    box.append(el("p", { text: strong ? "Before saving: this looks like a theory already in the library. Select it instead, so your design uses the shared definition and citation?" : "This may already be in the library:" }));
+    matches.forEach((t) => {
+      const already = selectedTheories.includes(t.id);
+      const b = el("button", { type: "button", class: "small-btn", text: already ? "Already selected" : "Select it" });
+      if (already) b.disabled = true;
+      b.addEventListener("click", () => {
+        if (!selectedTheories.includes(t.id)) selectedTheories.push(t.id);
+        closeAddTheory();
+        theoryQuery = ""; $("theorySearch").value = ""; theoryField = "selected";
+        renderTheoryPicker(); renderBuild();
+      });
+      box.append(el("div", { class: "dup-row" }, [el("span", {}, [el("strong", { text: t.n }), t.t ? " (" + t.t + ")" : "", t.custom ? " · yours" : ""]), b]));
+    });
+    if (strong) {
+      const anyway = el("button", { type: "button", class: "ghost small-btn", text: "No, save mine as a separate theory" });
+      anyway.addEventListener("click", () => { dupAckFor = n.toLowerCase(); $("ntSave").click(); });
+      box.append(anyway);
+    }
+    return matches;
+  }
+  let dupTimer;
+  ["ntName", "ntThinkers"].forEach((i) => $(i).addEventListener("input", () => { clearTimeout(dupTimer); dupTimer = setTimeout(() => renderDupNote(false), 200); }));
+
   $("ntSave").addEventListener("click", () => {
     const n = $("ntName").value.trim(), a = $("ntFocus").value.trim();
     if (!n) { $("ntName").focus(); $("ntName").setCustomValidity("Give the theory a name."); $("ntName").reportValidity(); return; }
+    if (dupAckFor !== n.toLowerCase() && findDuplicates(n, $("ntThinkers").value).length) { renderDupNote(true); $("ntDup").scrollIntoView({ block: "nearest" }); return; }
     if (!a) { $("ntFocus").focus(); $("ntFocus").setCustomValidity("Say what the analysis should pay attention to."); $("ntFocus").reportValidity(); return; }
     const t = { id: "u-" + Date.now().toString(36), f: $("ntField").value, n, t: $("ntThinkers").value.trim(), a: a.replace(/\.$/, ""), custom: true };
     myTheories.unshift(t);
@@ -252,6 +311,97 @@
     if (e.key === "Escape" && $("theorySearch").value) { e.preventDefault(); $("theorySearch").value = ""; theoryQuery = ""; renderTheoryPicker(); }
     if (e.key === "Enter") e.preventDefault();
   });
+
+  /* ---------- companion-theory recommendations ---------- */
+  const PAIRS = new Map();
+  (window.LAB_THEORY_PAIRS || []).forEach(([a, b]) => {
+    if (!PAIRS.has(a)) PAIRS.set(a, new Set()); if (!PAIRS.has(b)) PAIRS.set(b, new Set());
+    PAIRS.get(a).add(b); PAIRS.get(b).add(a);
+  });
+  const CUES = window.LAB_THEORY_CUES || {};
+  const CONTENT_STOP = new Set(("how the and of to in a an with as by for from or its their what which that this these those whether who whom between within through into across " +
+    "about rather than not only such other others both also more most them they used uses using made make makes well each some forms form ways way " +
+    "including among over under where when while being been have has does done just like".split(" ")));
+  function contentWords(x) { return new Set(nameWords(x).filter((w) => w.length > 3 && !CONTENT_STOP.has(w))); }
+  function cueRe(stem) {
+    const s = norm(stem).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return new RegExp("(^|[^\\p{L}])" + s + (/\s/.test(stem) ? "" : "\\p{L}*"), "gu");
+  }
+  function matchedWord(stem, text) {
+    const m = cueRe(stem).exec(text);
+    return m ? m[0].replace(/^[^\p{L}]/u, "") : stem;
+  }
+  let matCache = { key: null, text: "", counts: new Map() };
+  function materialCount(stem, text) {
+    const key = text.length + ":" + text.slice(0, 200) + text.slice(-200);
+    if (matCache.key !== key) matCache = { key, text: norm(text), counts: new Map() };
+    if (!matCache.counts.has(stem)) matCache.counts.set(stem, (matCache.text.match(cueRe(stem)) || []).length);
+    return matCache.counts.get(stem);
+  }
+  let recsHidden = false;
+  function recommend(s) {
+    if (selectedTheories.length > 1) return { mode: null, items: [] };
+    const base = selectedTheories.length === 1 ? theoryById(selectedTheories[0]) : null;
+    const q = norm([s.question, s.terms].join(" "));
+    const material = [s.sourceText, s.context, s.sourceDesc].join("\n");
+    if (!base && q.trim().length < 12 && material.trim().length < 40) return { mode: null, items: [] };
+    const baseWords = base ? contentWords(base.n + " " + base.a) : new Set();
+    const items = [];
+    allTheories().forEach((t) => {
+      if (base && t.id === base.id) return;
+      let score = 0;
+      const why = [];
+      let anchored = false;
+      if (base && PAIRS.has(base.id) && PAIRS.get(base.id).has(t.id)) { score += 4; anchored = true; why.push("Often read alongside " + base.n); }
+      const cues = t.custom ? [...contentWords(t.n + " " + t.a)] : (CUES[t.id] || []);
+      const inQ = [], inM = [];
+      cues.forEach((c) => {
+        if (inQ.length < 3 && cueRe(c).test(q)) inQ.push(matchedWord(c, q));
+        else if (inM.length < 3 && material.length > 40) { const n = materialCount(c, material); if (n >= 2) inM.push(matchedWord(c, matCache.text) + " (" + n + "×)"); }
+      });
+      if (inQ.length) { score += 2 * inQ.length; anchored = true; why.push("Your question mentions: " + inQ.join(", ")); }
+      if (inM.length) { score += inM.length; anchored = true; why.push("Your material mentions: " + inM.join(", ")); }
+      if (base) {
+        const shared = [...contentWords(t.n + " " + t.a)].filter((w) => baseWords.has(w));
+        if (shared.length >= 2) { score += Math.min(2, shared.length * 0.6); why.push("Shares a focus on: " + shared.slice(0, 3).join(", ")); }
+        if (t.f === base.f) score += 0.5;
+      }
+      const fromYou = inQ.length + inM.length > 0;
+      if (anchored && score >= 2) items.push({ t, score, why, paired: why[0] && why[0].startsWith("Often read"), fromYou });
+    });
+    items.sort((a, b) => b.score - a.score);
+    // balance: at most 3 standard pairings, and room for theories suggested by the researcher's own question and material
+    const pairs = items.filter((x) => x.paired).slice(0, 3);
+    const own = items.filter((x) => !pairs.includes(x) && x.fromYou);
+    const picked = pairs.concat(own.slice(0, Math.max(2, 5 - pairs.length)));
+    items.filter((x) => !picked.includes(x)).forEach((x) => { if (picked.length < 5) picked.push(x); });
+    picked.sort((a, b) => b.score - a.score);
+    return { mode: base ? "pair" : "start", base, items: picked.slice(0, 5) };
+  }
+  function renderRecs(s) {
+    const box = $("theoryRecs");
+    if (recsHidden) { box.hidden = true; return; }
+    const r = recommend(s);
+    box.replaceChildren();
+    if (!r.mode || !r.items.length) { box.hidden = true; return; }
+    box.hidden = false;
+    const head = el("div", { class: "recs-head" }, [
+      el("strong", { text: r.mode === "pair" ? "Theories to consider alongside " + r.base.n : "Theories that may fit your question and material" })
+    ]);
+    const hide = el("button", { type: "button", class: "ghost small-btn", text: "Hide" });
+    hide.addEventListener("click", () => { recsHidden = true; box.hidden = true; });
+    head.append(hide);
+    box.append(head);
+    r.items.forEach(({ t, why }) => {
+      const add = el("button", { type: "button", class: "small-btn", text: "+ Add" });
+      add.addEventListener("click", () => toggleTheory(t.id, true));
+      box.append(el("div", { class: "rec" }, [
+        el("div", {}, [el("strong", { text: t.n }), t.t ? el("span", { class: "tt", text: " " + t.t }) : "", el("span", { class: "why", text: why.join(" · ") })]),
+        add
+      ]));
+    });
+    box.append(el("p", { class: "hint", text: "Suggested from common scholarly pairings and the words in your research question and material. Add a theory only if it fits your research design; combining frameworks needs a reason you can defend." }));
+  }
 
   function theoryLines(s) {
     return (s.theories || []).map(theoryById).filter(Boolean);
@@ -373,6 +523,7 @@
       ? "CONTEXT coverage " + (7 - missing.length) + "/7. Still to add: " + missing.map((c) => c.need).join("; ") + "."
       : "CONTEXT coverage 7/7. The design is fully specified; the outputs still need checking.";
     store.set(KEY_DRAFT, s);
+    renderRecs(s);
     updateSourceInfo();
     renderStudy(s);
   }
