@@ -12,7 +12,7 @@ Thank you for helping. The Lab is meant to grow through scholars adding the exam
 
 ## Proposing a theory or a discipline from inside the Lab
 
-You do not need to edit any code. Add your theory in the Lab (with its key work and core concepts) or your discipline, then press **Propose**. Send the proposal on GitHub, or copy it and send it to the editor.
+You do not need to edit any code. Add your theory in the Lab (with its key work and core concepts) or your discipline, then press **Propose**. Send the proposal on GitHub, or by email to the editor at frankonuonyeka@gmail.com (the Lab fills in the email for you).
 
 What happens next:
 
@@ -20,7 +20,7 @@ What happens next:
 2. **Editor's decision.** The editor reads the proposal and decides. The checks confirm that a source exists; they do not judge the scholarship.
 3. **Publication.** When the editor adds the label `approved`, the entry is added to `community.js`, the tests run, and it appears in the Lab for everyone, in its field, marked *Contributed* with your name if you gave one.
 
-For the editor: only the repository owner's `approved` label has any effect. To decline, close the issue with a short reason.
+For the editor: a proposal that arrives by email can be entered by opening a new issue and pasting the whole email text, including the block at the end; the automatic check then runs as usual. Only the repository owner's `approved` label has any effect. To decline, close the issue with a short reason.
 
 ## Working on the code
 

@@ -9,7 +9,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="theme-color" content="#185c4a">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="styles.css?v=0.9.0">
+  <link rel="stylesheet" href="styles.css?v=0.9.1">
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to the main content</a>
@@ -381,10 +381,11 @@
       <ul class="design-warn" id="proposeProblems" hidden></ul>
       <div class="actions">
         <button type="button" id="proposeGitHub">Send on GitHub</button>
-        <button type="button" class="ghost" id="proposeCopy">Copy the proposal to send another way</button>
+        <button type="button" class="ghost" id="proposeEmail">Send by email</button>
+        <button type="button" class="ghost" id="proposeCopy">Copy the proposal</button>
         <button type="button" class="ghost" id="proposeClose">Close</button>
       </div>
-      <p class="hint">Sending on GitHub needs a free GitHub account and makes the proposal public. Without an account, copy the proposal and send it to the Lab's editor.</p>
+      <p class="hint">Sending on GitHub needs a free GitHub account and makes the proposal public. Without an account, send it by email to the Lab's editor at <a id="proposeAddr"></a>. If the email button does nothing (it needs an email program on this device), copy the proposal and paste it into an email to that address.</p>
       <p class="status" id="proposeStatus" role="status"></p>
     </div>
   </dialog>
@@ -406,15 +407,15 @@
     <p><span id="offlineStatus" role="status"></span> <button type="button" id="installBtn" class="ghost small-btn" hidden>Install the Lab on this device</button></p>
   </footer>
 
-  <script src="theories.js?v=0.9.0"></script>
-  <script src="theory-links.js?v=0.9.0"></script>
-  <script src="disciplines.js?v=0.9.0"></script>
-  <script src="community.js?v=0.9.0"></script>
-  <script src="procedures.js?v=0.9.0"></script>
-  <script src="data.js?v=0.9.0"></script>
-  <script src="checks.js?v=0.9.0"></script>
-  <script src="app.js?v=0.9.0"></script>
-  <script src="tour.js?v=0.9.0"></script>
-  <script src="offline.js?v=0.9.0"></script>
+  <script src="theories.js?v=0.9.1"></script>
+  <script src="theory-links.js?v=0.9.1"></script>
+  <script src="disciplines.js?v=0.9.1"></script>
+  <script src="community.js?v=0.9.1"></script>
+  <script src="procedures.js?v=0.9.1"></script>
+  <script src="data.js?v=0.9.1"></script>
+  <script src="checks.js?v=0.9.1"></script>
+  <script src="app.js?v=0.9.1"></script>
+  <script src="tour.js?v=0.9.1"></script>
+  <script src="offline.js?v=0.9.1"></script>
 </body>
 </html>

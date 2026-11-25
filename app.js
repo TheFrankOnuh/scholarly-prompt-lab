@@ -3,7 +3,7 @@
   "use strict";
 
   const L = window.LAB;
-  const VERSION = "0.9.0";
+  const VERSION = "0.9.1";
   const KEY_DRAFT = "spl.draft.v1";
   const KEY_LOG = "spl.log.v1";
   const $ = (id) => document.getElementById(id);
@@ -103,6 +103,7 @@
     if (g && d.name && !g.items.includes(d.name)) g.items.push(d.name);
   });
   const REPO_ISSUES = "https://github.com/TheFrankOnuh/scholarly-prompt-lab/issues/new";
+  const EDITOR_EMAIL = "frankonuonyeka@gmail.com";     // where proposals go from scholars without a GitHub account
 
   /* ---------- discipline picker (searchable, add your own) ---------- */
   const KEY_DISC = "spl.mydisciplines.v1";
@@ -333,12 +334,20 @@
       fix.addEventListener("click", () => { $("proposeDlg").close(); editTheory(p.theory, true); });
       ul.append(el("li", {}, [fix]));
     }
-    $("proposeGitHub").disabled = $("proposeCopy").disabled = !!probs.length;
+    $("proposeGitHub").disabled = $("proposeCopy").disabled = $("proposeEmail").disabled = !!probs.length;
     $("proposeStatus").textContent = "";
     const d = $("proposeDlg"); if (typeof d.showModal === "function") d.showModal(); else d.setAttribute("open", "");
   }
   $("proposeClose").addEventListener("click", () => $("proposeDlg").close());
   $("proposeCopy").addEventListener("click", () => copy(proposalText(), "proposeStatus"));
+  $("proposeAddr").textContent = EDITOR_EMAIL;
+  $("proposeAddr").href = "mailto:" + EDITOR_EMAIL;
+  $("proposeEmail").addEventListener("click", () => {
+    const d = proposalData();
+    const subject = (d.proposal === "discipline" ? "Discipline proposal: " : "Theory proposal: ") + d.name;
+    window.location.href = "mailto:" + EDITOR_EMAIL + "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(proposalText());
+    $("proposeStatus").textContent = "Your email program should open with the proposal filled in. If nothing happens, use “Copy the proposal” and email it to " + EDITOR_EMAIL + ".";
+  });
   $("proposeGitHub").addEventListener("click", () => {
     const d = proposalData();
     const url = REPO_ISSUES + "?title=" + encodeURIComponent((d.proposal === "discipline" ? "Discipline proposal: " : "Theory proposal: ") + d.name) + "&body=" + encodeURIComponent(proposalText());
