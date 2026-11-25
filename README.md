@@ -80,7 +80,7 @@ Version 1.0.0 was checked with the axe-core automated checker (WCAG 2.0, 2.1 and
 
 ## Versions
 
-The version number lives in one file, `release.js`. `node tools/set-version.mjs <version>` updates it everywhere, and an automated test fails if the Lab, the citation file and this README disagree. Each release is archived on Zenodo with its own DOI.
+The version number lives in one file, `release.js`. `node tools/set-version.mjs <version>` updates it everywhere, and an automated test fails if the Lab, the citation file and this README disagree. Each release is archived on Zenodo with its own DOI. The [version history](CHANGELOG.md) lists what each version added and explains the numbering.
 
 ## Limitations
 
