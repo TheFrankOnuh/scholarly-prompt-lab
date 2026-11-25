@@ -30,9 +30,10 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ISSUE: ${{ github.event.issue.number }}
           ACTOR: ${{ github.actor }}
+          ACTOR_ID: ${{ github.actor_id }}
         run: |
           git config user.name "$ACTOR"
-          git config user.email "$ACTOR@users.noreply.github.com"
+          git config user.email "$ACTOR_ID+$ACTOR@users.noreply.github.com"
           git add community.js
           git commit -m "Add approved proposal from issue #${ISSUE}"
           git push

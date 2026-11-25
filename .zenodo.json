@@ -1,9 +1,11 @@
 {
   "title": "Scholarly Prompt Lab: The Prompt as Method",
   "upload_type": "software",
-  "description": "<p>A free, open-source, browser-based tool for designing, documenting and evaluating generative-AI prompts in digital humanities research. It turns a research question into a structured scholarly prompt using the proposed CONTEXT framework (Conceptual grounding, Operationalisation, Situated knowledge, Traceability, Evaluation, Cross-model examination, Transparency); generates four-condition prompt-sensitivity studies; and logs and scores model outputs on six criteria (factual accuracy, contextual fidelity, evidence traceability, freedom from misrepresentation, interpretive plurality, uncertainty calibration). Built with African, and particularly Nigerian, humanities scholarship in mind. Runs entirely in the browser: no AI model is called and no user files are uploaded.</p>",
+  "description": "<p>A free, open-source, browser-based tool for designing, documenting and evaluating generative-AI prompts in humanities and social science research. It turns a research question into a structured scholarly prompt using the proposed CONTEXT framework (Conceptual grounding, Operationalisation, Situated knowledge, Traceability, Evaluation, Cross-model examination, Transparency), with analytical procedures drawn from the researcher's discipline and chosen theoretical frameworks; generates four-condition prompt-sensitivity studies; checks every quotation in a model's output against the researcher's own sources; suggests evaluation scores that the researcher must confirm; and drafts a report of AI-assisted methods. It takes particular care with languages and knowledge traditions that are under-represented in AI training data. Runs entirely in the browser: no AI model is called and no user files are uploaded.</p>",
   "creators": [
-    { "name": "Onuh, Frank" }
+    {
+      "name": "Onuh, Frank"
+    }
   ],
   "license": "MIT",
   "access_right": "open",
@@ -12,10 +14,12 @@
     "prompt engineering",
     "generative AI",
     "research methods",
-    "African knowledge systems",
-    "Nigeria",
-    "decolonial methods",
-    "AI evaluation"
+    "humanities",
+    "social sciences",
+    "qualitative research",
+    "research integrity",
+    "AI evaluation",
+    "under-represented languages"
   ],
   "related_identifiers": [
     {

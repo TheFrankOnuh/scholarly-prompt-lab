@@ -3,7 +3,7 @@
   "use strict";
 
   const L = window.LAB;
-  const VERSION = "0.9.4";
+  const VERSION = "0.10.0";
   const KEY_DRAFT = "spl.draft.v1";
   const KEY_LOG = "spl.log.v1";
   const $ = (id) => document.getElementById(id);
@@ -14,6 +14,11 @@
     { n: 3, id: "context", name: "Context-grounded", adds: "Adds source material, cultural and historical context, and terminology." },
     { n: 4, id: "evidence", name: "Evidence-constrained", adds: "Adds the analytical procedure and every safeguard." }
   ];
+
+  // The prompt a researcher actually ran is the one they copied. It is kept, with the time, so the log records that prompt
+  // and not a later version of the design.
+  const copiedPrompts = {};
+  function rememberCopied(condition, text) { copiedPrompts[condition] = { text, at: new Date().toISOString() }; }
 
   /* ---------- storage (never required for the page to work) ---------- */
   const store = {
@@ -1005,7 +1010,7 @@
       const text = buildPrompt(s, c.n);
       const status = el("p", { class: "status", id: "st_" + c.id, role: "status" });
       const btn = el("button", { type: "button", text: "Copy condition " + c.n });
-      btn.addEventListener("click", () => copy(text, "st_" + c.id));
+      btn.addEventListener("click", () => { rememberCopied(c.id, text); copy(text, "st_" + c.id); });
       wrap.append(el("div", { class: "card" }, [
         el("h3", { text: c.n + ". " + c.name }),
         el("p", { class: "muted", text: c.adds }),
@@ -1097,6 +1102,10 @@
         findings: num(c.findings), alternatives: num(c.alternatives), debris: num(c.debris) } : null,
       secondModel: e.secondModel && typeof e.secondModel === "object" ? { model: str(e.secondModel.model), scores: e.secondModel.scores && typeof e.secondModel.scores === "object" ? e.secondModel.scores : {},
         errors: Array.isArray(e.secondModel.errors) ? e.secondModel.errors : [], adoptedFraming: !!e.secondModel.adoptedFraming, overall: str(e.secondModel.overall) } : null,
+      use: ["used", "revised", "prompted", "rejected", "data"].includes(e.use) ? e.use : "", useNote: str(e.useNote),
+      promptCopiedAt: str(e.promptCopiedAt), promptSource: ["copied", "copied-design-changed", "rebuilt"].includes(e.promptSource) ? e.promptSource : "",
+      design: e.design && typeof e.design === "object" ? { discipline: str(e.design.discipline), technique: str(e.design.technique),
+        theories: Array.isArray(e.design.theories) ? e.design.theories.map(str) : [], safeguards: Array.isArray(e.design.safeguards) ? e.design.safeguards.map(str) : [], sourceWords: num(e.design.sourceWords) } : null,
       question: str(e.question), prompt: packPrompt(str(e.prompt)), loggedAt: str(e.loggedAt), labVersion: str(e.labVersion)
     };
   }
@@ -1395,6 +1404,8 @@
     const s = readState();
     const cond = $("lgCondition").value;
     const c = CONDITIONS.find((x) => x.id === cond);
+    const snap = copiedPrompts[cond] || null;
+    const builtNow = buildPrompt(s, c ? c.n : 4);
     clearTimeout(checkTimer);
     if (!checks || $("lgOutput").value !== lastChecked) runChecks();     // never save checks that belong to an earlier version of the text
     const scores = {}, scoreStatus = {}, suggested = {};
@@ -1415,16 +1426,22 @@
         termsMissing: checks.termsMissing.length, missingDocs: checks.missingDocs, outsideFacts: checks.outsideFacts.map((f) => f.text),
         findings: checks.findings, alternatives: checks.alternatives, debris: checks.debris.length } : null,
       secondModel: aiEval ? { model: $("evModel").value.trim() || aiEval.model, scores: aiEval.scores, errors: aiEval.errors, adoptedFraming: aiEval.framing, overall: aiEval.overall } : null,
-      question: s.question, prompt: packPrompt(buildPrompt(s, c ? c.n : 4)), loggedAt: new Date().toISOString(), labVersion: VERSION
+      use: $("lgUse").value, useNote: $("lgUseNote").value.trim(),
+      question: s.question, prompt: packPrompt(snap ? snap.text : builtNow), promptCopiedAt: snap ? snap.at : "",
+      promptSource: snap ? (snap.text === builtNow ? "copied" : "copied-design-changed") : "rebuilt",
+      design: { discipline: s.discipline, technique: s.technique, theories: theoryLines(s).map((t) => t.n), safeguards: s.safeguards.slice(), sourceWords: s.sourceText.trim() ? s.sourceText.trim().split(/\s+/).length : 0 },
+      loggedAt: new Date().toISOString(), labVersion: VERSION
     });
     const saved = saveLog();
     renderLog();
     if (!saved) { flash("logStatus", "This browser's storage is full, so the entry is NOT safely saved. Export JSON now, then delete old entries."); return; }
-    $("lgOutput").value = ""; $("lgNotes").value = ""; $("lgSyco").checked = false;
+    const changed = snap && snap.text !== builtNow;
+    $("lgOutput").value = ""; $("lgNotes").value = ""; $("lgSyco").checked = false; $("lgUse").value = ""; $("lgUseNote").value = "";
     try { localStorage.removeItem(KEY_LOGFORM); } catch (e) { /* ignore */ }
     resetEvaluation();
     $("lgRun").value = (parseInt($("lgRun").value, 10) || 1) + 1;
-    flash("logStatus", "Saved with the exact prompt, the automatic checks, the errors list and the status of every score.");
+    flash("logStatus", snap ? (changed ? "Saved with the prompt you copied. Note: your design has changed since you copied it, and the copied version is the one recorded." : "Saved with the prompt you copied, the automatic checks, the errors list and the status of every score.")
+      : "Saved. You did not copy the prompt from the Lab in this session, so the prompt recorded is the one your design gives now.");
   });
 
   function csvCell(v) {
@@ -1440,12 +1457,12 @@
     const crit = L.criteria.map((c) => c.id);
     const head = ["id", "date", "model", "settings", "condition", "run", "evaluator"]
       .concat(crit, crit.map((c) => c + "_status"), crit.map((c) => c + "_checks_suggested"), crit.map((c) => c + "_second_model"),
-        ["second_model", "quotations", "quotes_exact", "quotes_near", "quotes_not_found", "outside_facts", "adopted_framing", "errors_found", "notes", "question", "prompt", "output"]);
+        ["use_of_output", "use_note", "prompt_source", "second_model", "quotations", "quotes_exact", "quotes_near", "quotes_not_found", "outside_facts", "adopted_framing", "errors_found", "notes", "question", "prompt", "output"]);
     const sg = (e, c, k) => (e.suggested && e.suggested[c] && e.suggested[c][k] && e.suggested[c][k].score != null ? e.suggested[c][k].score : "");
     const rows = log.map((e) => [e.id, e.date, e.model, e.settings, e.condition, e.run, e.evaluator]
       .concat(crit.map((c) => e.scores[c] || ""), crit.map((c) => (e.scoreStatus && e.scoreStatus[c]) || (e.scores[c] ? "manual" : "")),
         crit.map((c) => sg(e, c, "checks")), crit.map((c) => sg(e, c, "ai")),
-        [e.secondModel ? e.secondModel.model : "", e.checks ? e.checks.quotations : "", e.checks ? e.checks.exact : "", e.checks ? e.checks.near : "",
+        [e.use || "", e.useNote || "", e.promptSource || "", e.secondModel ? e.secondModel.model : "", e.checks ? e.checks.quotations : "", e.checks ? e.checks.exact : "", e.checks ? e.checks.near : "",
           e.checks ? e.checks.missing + (e.checks.termsMissing || 0) : "", e.checks ? e.checks.outsideFacts.join("; ") : "",
           e.sycophancy ? 1 : 0, e.errors || "", e.notes, e.question, fullPrompt(e), e.output]));
     download("prompt-lab-log-" + today() + ".csv", "﻿" + [head].concat(rows).map((r) => r.map(csvCell).join(",")).join("\r\n"), "text/csv;charset=utf-8");
@@ -1710,7 +1727,7 @@
     if (!confirm("Clear the whole form?")) return;
     $("example").value = ""; writeState(Object.assign({}, BLANK)); renderBuild();
   });
-  $("copyPrompt").addEventListener("click", () => copy($("prompt").textContent, "buildStatus"));
+  $("copyPrompt").addEventListener("click", () => { rememberCopied("custom", $("prompt").textContent); copy($("prompt").textContent, "buildStatus"); });
   $("goLog").addEventListener("click", () => {
     if (!$("lgOutput").value.trim()) $("lgCondition").value = "custom";
     showTab("tab-log");
@@ -1734,6 +1751,7 @@
     });
     try { history.replaceState(null, "", "#" + id.replace("tab-", "")); } catch (e) { /* ignore */ }
     if (id === "tab-study") renderStudy();
+    if (id === "tab-report" && window.LAB_REPORT) window.LAB_REPORT.show();
     if (id === "tab-log" && $("lgOutput").value.trim() && $("lgOutput").value !== lastChecked) runChecks();
   }
   tabs.forEach((t, i) => {
@@ -1764,7 +1782,7 @@
   renderBuild();
   renderLog();
   // keep an unsaved log form across reloads and app switches (phones often discard background tabs)
-  const LOGFORM_FIELDS = ["lgModel", "lgSettings", "lgOutput", "lgErrors", "lgNotes", "lgEvaluator", "evModel", "evReply"];
+  const LOGFORM_FIELDS = ["lgModel", "lgSettings", "lgOutput", "lgErrors", "lgNotes", "lgEvaluator", "evModel", "evReply", "lgUse", "lgUseNote"];
   const lf = store.get(KEY_LOGFORM, null);
   if (lf && typeof lf === "object") {
     LOGFORM_FIELDS.forEach((k) => { if (typeof lf[k] === "string") $(k).value = lf[k]; });
@@ -1782,4 +1800,6 @@
   });
   const hash = location.hash.replace("#", "");
   if (hash && $("tab-" + hash)) showTab("tab-" + hash);
+  // a small, read-only window onto the Lab's records for the report module
+  window.LAB_APP = { VERSION, L, CONDITIONS, readState, getLog: () => log, fullPrompt, coverage, harvard, theoryLines, condName, techniqueOf, conventionFor, download, copy, flash, today, countsScore };
 })();

@@ -10,7 +10,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="theme-color" content="#185c4a">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="styles.css?v=0.9.4">
+  <link rel="stylesheet" href="styles.css?v=0.10.0">
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to the main content</a>
@@ -24,13 +24,14 @@
         <button role="tab" aria-selected="true" aria-controls="panel-build" id="tab-build">Build</button>
         <button role="tab" aria-selected="false" aria-controls="panel-study" id="tab-study">Sensitivity study</button>
         <button role="tab" aria-selected="false" aria-controls="panel-log" id="tab-log">Log &amp; evaluate</button>
+        <button role="tab" aria-selected="false" aria-controls="panel-report" id="tab-report">Methods report</button>
         <button role="tab" aria-selected="false" aria-controls="panel-framework" id="tab-framework">CONTEXT framework</button>
       </nav>
     </div>
   </header>
 
   <main class="wrap" id="main" tabindex="-1">
-    <p class="notice"><strong>Private by design.</strong> Everything runs in your browser. Nothing you type or load is sent anywhere, and the Lab does not call any AI model: you copy the prompt into the system you are studying, then log what came back.</p>
+    <p class="notice"><strong>Private by design.</strong> Everything runs in your browser. Nothing you type or load is sent anywhere, and the Lab does not call any AI model: you copy the prompt into the AI system you are using, then log what came back.</p>
 
     <p class="notice warn" id="storageWarn" role="alert" hidden>This browser's storage is full, so recent work may not be saved. Use Export JSON in Log &amp; evaluate now, then delete old entries or remove very large source texts.</p>
 
@@ -226,12 +227,13 @@
           <div class="next-steps">
             <h3 class="h-small">What happens next</h3>
             <ol>
-              <li><strong>Run it.</strong> Copy the prompt and paste it into the AI system you are studying, in a new conversation. The Lab never sends it anywhere itself.</li>
+              <li><strong>Run it.</strong> Copy the prompt and paste it into the AI system you are using, in a new conversation. The Lab never sends it anywhere itself.</li>
               <li><strong>Log the answer.</strong> Paste the AI's response into Log &amp; evaluate. The Lab checks every quotation against your sources and lists errors for you to review.
                 <button type="button" class="ghost small-btn" id="goLog">Go to Log &amp; evaluate</button></li>
               <li><strong>Confirm the scores.</strong> Suggested scores are pre-filled with their reasons. Accept or change each one; only your confirmed scores count.</li>
               <li><strong>Test it.</strong> Run the same prompt again, try a second model, and compare framings in the Sensitivity study.
                 <button type="button" class="ghost small-btn" id="goStudy">Open Sensitivity study</button></li>
+              <li><strong>Report it.</strong> The Methods report tab drafts your methods section, AI-use statement and appendices from what you logged, for Word or PDF.</li>
             </ol>
           </div>
         </aside>
@@ -317,6 +319,18 @@
             <p class="status" id="evalStatus" role="status"></p>
           </details>
 
+          <label for="lgUse">What did you do with this output?</label>
+          <select id="lgUse">
+            <option value="">Not decided yet</option>
+            <option value="used">Used it as it stands</option>
+            <option value="revised">Used it after my own corrections</option>
+            <option value="prompted">Used it only as a starting point for my own analysis</option>
+            <option value="rejected">Rejected it</option>
+            <option value="data">Kept it as data about the AI system itself</option>
+          </select>
+          <label for="lgUseNote">What you changed, or why you rejected it <span class="muted">(optional; goes into your methods report)</span></label>
+          <input id="lgUseNote" placeholder="e.g. Corrected two misquotations; set aside Finding 6 as unsupported">
+
           <label for="lgErrors">Errors found <span class="muted">(filled automatically; review, delete or add)</span></label>
           <textarea id="lgErrors" rows="6" placeholder="Paste an output above and the Lab will list possible errors here."></textarea>
 
@@ -352,6 +366,47 @@
       <div class="card">
         <h2 class="h-small">Entries <span id="entryCount" class="muted"></span></h2>
         <div class="table-wrap"><table id="entries"></table></div>
+      </div>
+    </section>
+
+    <!-- REPORT -->
+    <section id="panel-report" role="tabpanel" aria-labelledby="tab-report" hidden>
+      <div class="grid report-grid">
+        <form id="reportForm" class="card" autocomplete="off">
+          <h2>AI methods report</h2>
+          <p class="hint">A draft of the methods section, AI-use statement and appendices for your thesis, article or report. It is written only from what you recorded in the Lab. Anything you did not record is marked <span class="gap">[To complete]</span> for you to fill in.</p>
+          <label for="rpTitle">Title of your study</label>
+          <input id="rpTitle" placeholder="e.g. Legitimation in the 2026 Independence Day address">
+          <label for="rpAuthor">Your name</label>
+          <input id="rpAuthor" autocomplete="name">
+          <label for="rpRole">How did you use AI in this study?</label>
+          <select id="rpRole">
+            <option value="assistant">As a research assistant: it helped me analyse my sources</option>
+            <option value="object">As the object of study: I examined what the AI system produces</option>
+            <option value="both">Both</option>
+          </select>
+          <label for="rpScope">Which logged outputs belong to this study?</label>
+          <select id="rpScope"></select>
+          <label for="rpUse">How the AI outputs informed your final analysis <span class="muted">(in your own words)</span></label>
+          <textarea id="rpUse" rows="4" placeholder="e.g. I used the AI's first-pass coding to locate passages, then re-read every passage myself. I accepted four of nine findings, revised three and rejected two."></textarea>
+          <label class="check"><input type="checkbox" id="rpSources"> <span>Include the full source texts in the prompts appendix <span class="muted">(can make the report very long)</span></span></label>
+          <div class="actions">
+            <button type="button" id="rpBuild">Rebuild the report from my records</button>
+          </div>
+          <p class="hint">Rebuilding replaces any edits you made in the preview. The report describes what was recorded; it does not certify the analysis. You remain responsible for its accuracy.</p>
+        </form>
+        <div class="card">
+          <div class="panel-head">
+            <h2 class="h-small" id="rpPreviewTitle">Preview <span class="muted">(you can edit it here)</span></h2>
+            <div class="actions">
+              <button type="button" id="rpWord">Download for Word</button>
+              <button type="button" class="ghost" id="rpPrint">Print or save as PDF</button>
+              <button type="button" class="ghost" id="rpCopyStmt">Copy the AI-use statement</button>
+            </div>
+          </div>
+          <p class="status" id="rpStatus" role="status"></p>
+          <div id="reportPreview" class="report" contenteditable="true" role="textbox" aria-multiline="true" aria-labelledby="rpPreviewTitle" spellcheck="true"></div>
+        </div>
       </div>
     </section>
 
@@ -415,15 +470,16 @@
     <p><span id="offlineStatus" role="status"></span> <button type="button" id="installBtn" class="ghost small-btn" hidden>Install the Lab on this device</button></p>
   </footer>
 
-  <script src="theories.js?v=0.9.4"></script>
-  <script src="theory-links.js?v=0.9.4"></script>
-  <script src="disciplines.js?v=0.9.4"></script>
-  <script src="community.js?v=0.9.4"></script>
-  <script src="procedures.js?v=0.9.4"></script>
-  <script src="data.js?v=0.9.4"></script>
-  <script src="checks.js?v=0.9.4"></script>
-  <script src="app.js?v=0.9.4"></script>
-  <script src="tour.js?v=0.9.4"></script>
-  <script src="offline.js?v=0.9.4"></script>
+  <script src="theories.js?v=0.10.0"></script>
+  <script src="theory-links.js?v=0.10.0"></script>
+  <script src="disciplines.js?v=0.10.0"></script>
+  <script src="community.js?v=0.10.0"></script>
+  <script src="procedures.js?v=0.10.0"></script>
+  <script src="data.js?v=0.10.0"></script>
+  <script src="checks.js?v=0.10.0"></script>
+  <script src="app.js?v=0.10.0"></script>
+  <script src="report.js?v=0.10.0"></script>
+  <script src="tour.js?v=0.10.0"></script>
+  <script src="offline.js?v=0.10.0"></script>
 </body>
 </html>
