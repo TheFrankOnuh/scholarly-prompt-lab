@@ -1,3 +1,5 @@
+<p><img src="assets/logo/wordmark.svg" alt="Scholarly Prompt Lab" width="420"></p>
+
 # Scholarly Prompt Lab
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24521711.svg)](https://doi.org/10.5281/zenodo.24521711)
@@ -83,7 +85,7 @@ Created by [Frank Onuh](https://www.linkedin.com/in/frank-onuh/).
 
 ## Licence
 
-Code: [MIT](LICENSE). Documentation and the CONTEXT framework guide: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Bundled libraries keep their own licences: PDF.js (Apache 2.0) and Mammoth (BSD 2-Clause); see [vendor/README.md](vendor/README.md).
+Code: [MIT](LICENSE). Documentation and the CONTEXT framework guide: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). The wordmark is set in DM Sans (SIL Open Font License) and stored as outlines. Bundled libraries keep their own licences: PDF.js (Apache 2.0) and Mammoth (BSD 2-Clause); see [vendor/README.md](vendor/README.md).
 
 If you use the Lab or the framework in research, please cite it:
 

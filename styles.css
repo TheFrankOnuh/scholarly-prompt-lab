@@ -563,3 +563,8 @@ legend { align-items: flex-start; gap: 12px; width: 100%; }
 .cite-flag { color: var(--warn); font-weight: 600; }
 .check-note { margin: 0; padding: 8px 12px; border-top: 1px solid var(--line); background: var(--surface); font-size: 0.84rem; }
 .check-note:empty { display: none; }
+
+/* ---------- wordmark ---------- */
+h1.brand { margin: 0; line-height: 0; }
+h1.brand img { display: block; height: 36px; width: auto; max-width: 100%; }
+@media (max-width: 640px) { h1.brand img { height: 30px; } }
