@@ -4,6 +4,6 @@
    until then reports cite the version number with the DOI that covers all versions. */
 self.LAB_RELEASE = {
   version: "0.12.0",
-  versionDoi: "",
+  versionDoi: "10.5281/zenodo.24525460",
   conceptDoi: "10.5281/zenodo.24521711"
 };
