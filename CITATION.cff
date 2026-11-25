@@ -8,6 +8,9 @@ authors:
 version: 0.3.1
 date-released: 2026-11-25
 license: MIT
+doi: 10.5281/zenodo.24521711
+url: "https://thefrankonuh.github.io/scholarly-prompt-lab/"
+repository-code: "https://github.com/TheFrankOnuh/scholarly-prompt-lab"
 keywords:
   - digital humanities
   - prompt engineering
