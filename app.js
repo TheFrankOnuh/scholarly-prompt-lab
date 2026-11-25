@@ -59,7 +59,7 @@
   L.disciplines.forEach((d) => $("discipline").append(option(d, d)));
   L.theories.forEach((t) => $("theoryPreset").append(option(t.value, t.label)));
   Object.keys(L.techniques).forEach((k) => $("technique").append(option(k, L.techniques[k].label)));
-  $("example").append(option("", "Blank design"));
+  $("example").append(option("", "Choose an example…"));
   L.examples.forEach((x) => $("example").append(option(x.id, x.title)));
   L.safeguards.forEach((g) => {
     $("safeguards").append(el("label", { class: "check" }, [
