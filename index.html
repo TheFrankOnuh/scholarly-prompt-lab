@@ -6,7 +6,7 @@
   <title>Scholarly Prompt Lab</title>
   <meta name="description" content="A free, open-source environment for designing, documenting and evaluating AI prompts in digital humanities research.">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23185c4a'/%3E%3Ctext x='16' y='22' font-size='16' text-anchor='middle' fill='white' font-family='Georgia'%3EP%3C/text%3E%3C/svg%3E">
-  <link rel="stylesheet" href="styles.css?v=0.3.1">
+  <link rel="stylesheet" href="styles.css?v=0.4.0">
 </head>
 <body>
   <header class="site-header">
@@ -55,9 +55,45 @@
             <select id="discipline" name="discipline"></select>
             <label for="question">Research question</label>
             <textarea id="question" name="question" rows="3" placeholder="e.g. How is indigenous political authority represented in colonial records?"></textarea>
-            <label for="theory">Theoretical orientation</label>
-            <select id="theoryPreset"></select>
-            <textarea id="theory" name="theory" rows="2" placeholder="Name the concepts that guide the inquiry"></textarea>
+            <div class="theory-head">
+              <span class="label-like" id="theoryLabel">Theoretical orientation</span>
+              <span class="muted small" id="theoryCount"></span>
+            </div>
+            <div id="theoryChips" class="chips" aria-label="Selected theories"></div>
+            <div class="picker" role="group" aria-labelledby="theoryLabel">
+              <div class="picker-search">
+                <input type="search" id="theorySearch" placeholder="Search theories, thinkers or ideas (e.g. framing, Hall, memory)" aria-label="Search theories" autocomplete="off">
+              </div>
+              <div class="field-tabs" id="theoryFields" role="group" aria-label="Filter by field"></div>
+              <div class="picker-list" id="theoryList" tabindex="-1"></div>
+              <div class="picker-foot">
+                <span class="muted small" id="theoryShowing"></span>
+                <button type="button" class="ghost small-btn" id="addTheoryBtn" aria-expanded="false" aria-controls="addTheoryForm">+ Add your own theory</button>
+              </div>
+              <div id="addTheoryForm" class="add-theory" hidden>
+                <div class="row">
+                  <div>
+                    <label for="ntName">Theory or concept name</label>
+                    <input id="ntName" placeholder="e.g. Ọ̀rọ̀ (Yoruba theory of the word)">
+                  </div>
+                  <div>
+                    <label for="ntThinkers">Key thinkers <span class="muted">(optional)</span></label>
+                    <input id="ntThinkers" placeholder="e.g. Your name, or the scholars you draw on">
+                  </div>
+                </div>
+                <label for="ntFocus">What should the analysis pay attention to?</label>
+                <textarea id="ntFocus" rows="2" placeholder="e.g. how elders' speech establishes the truth of a claim through proverbs and lineage"></textarea>
+                <label for="ntField">Field</label>
+                <select id="ntField"></select>
+                <div class="actions">
+                  <button type="button" id="ntSave">Save and select</button>
+                  <button type="button" class="ghost" id="ntCancel">Cancel</button>
+                </div>
+                <p class="hint">Your theories are saved in this browser and included when you export a design. To suggest one for everyone, use the share link that appears beside it.</p>
+              </div>
+            </div>
+            <label for="theoryNotes">How you are using theory <span class="muted">(optional notes for the model)</span></label>
+            <textarea id="theoryNotes" name="theoryNotes" rows="2" placeholder="e.g. Read framing through Igbo dual-sex political institutions"></textarea>
           </fieldset>
 
           <fieldset>
@@ -254,7 +290,8 @@
     <p>Open source under the MIT licence. Your work is saved only in this browser. Export it to keep it.</p>
   </footer>
 
-  <script src="data.js?v=0.3.1"></script>
-  <script src="app.js?v=0.3.1"></script>
+  <script src="theories.js?v=0.4.0"></script>
+  <script src="data.js?v=0.4.0"></script>
+  <script src="app.js?v=0.4.0"></script>
 </body>
 </html>

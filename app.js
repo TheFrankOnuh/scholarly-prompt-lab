@@ -3,7 +3,7 @@
   "use strict";
 
   const L = window.LAB;
-  const VERSION = "0.3.1";
+  const VERSION = "0.4.0";
   const KEY_DRAFT = "spl.draft.v1";
   const KEY_LOG = "spl.log.v1";
   const $ = (id) => document.getElementById(id);
@@ -57,7 +57,6 @@
 
   /* ---------- populate controls ---------- */
   L.disciplines.forEach((d) => $("discipline").append(option(d, d)));
-  L.theories.forEach((t) => $("theoryPreset").append(option(t.value, t.label)));
   Object.keys(L.techniques).forEach((k) => $("technique").append(option(k, L.techniques[k].label)));
   $("example").append(option("", "Choose an example…"));
   L.examples.forEach((x) => $("example").append(option(x.id, x.title)));
@@ -84,12 +83,186 @@
   });
   $("lgDate").value = today();
 
+  /* ---------- theory library and picker ---------- */
+  const KEY_THEORIES = "spl.mytheories.v1";
+  const TF = window.LAB_THEORY_FIELDS;
+  const MINE = { id: "mine", label: "Your theories" };
+  let myTheories = store.get(KEY_THEORIES, []);
+  if (!Array.isArray(myTheories)) myTheories = [];
+  let selectedTheories = [];
+  let theoryField = "all";
+  let theoryQuery = "";
+
+  function allTheories() { return myTheories.concat(window.LAB_THEORIES); }
+  function theoryById(id) { return allTheories().find((t) => t.id === id); }
+  function fieldLabel(id) { return id === "mine" ? MINE.label : (TF.find((f) => f.id === id) || {}).label || "Other"; }
+  function norm(x) { return (x || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, ""); }
+
+  [{ id: "all", label: "All fields" }, { id: "selected", label: "Selected" }, MINE].concat(TF).forEach((f) => {
+    const b = el("button", { type: "button", "data-field": f.id, text: f.label, "aria-pressed": f.id === "all" ? "true" : "false" });
+    b.addEventListener("click", () => { theoryField = f.id; renderTheoryPicker(); $("theoryList").scrollTop = 0; });
+    $("theoryFields").append(b);
+  });
+  [MINE].concat(TF).forEach((f) => $("ntField").append(option(f.id, f.label)));
+
+  function highlight(text, q) {
+    const frag = document.createDocumentFragment();
+    if (!q) { frag.append(text); return frag; }
+    const n = norm(text);
+    let i = 0, at;
+    while ((at = n.indexOf(q, i)) !== -1) {
+      frag.append(text.slice(i, at), el("mark", { text: text.slice(at, at + q.length) }));
+      i = at + q.length;
+    }
+    frag.append(text.slice(i));
+    return frag;
+  }
+
+  function shareUrl(t) {
+    const body = "Please consider adding this theory to the Scholarly Prompt Lab.\n\nName: " + t.n + "\nKey thinkers: " + (t.t || "") +
+      "\nWhat the analysis should attend to: " + t.a + "\nSuggested field: " + fieldLabel(t.f) + "\n\nWhy it matters for humanities research:\n";
+    return "https://github.com/TheFrankOnuh/scholarly-prompt-lab/issues/new?title=" + encodeURIComponent("Theory suggestion: " + t.n) + "&body=" + encodeURIComponent(body) + "&labels=theory";
+  }
+
+  function toggleTheory(id, on) {
+    const has = selectedTheories.includes(id);
+    if (on && !has) selectedTheories.push(id);
+    if (!on && has) selectedTheories = selectedTheories.filter((x) => x !== id);
+    renderTheoryPicker();
+    renderBuild();
+  }
+
+  function renderTheoryPicker() {
+    // chips
+    const chips = $("theoryChips"); chips.replaceChildren();
+    selectedTheories.forEach((id) => {
+      const t = theoryById(id); if (!t) return;
+      const x = el("button", { type: "button", "aria-label": "Remove " + t.n, title: "Remove", text: "×" });
+      x.addEventListener("click", () => toggleTheory(id, false));
+      chips.append(el("span", { class: "chip", title: t.n + (t.t ? " (" + t.t + ")" : "") }, [el("span", { text: t.n }), x]));
+    });
+    const total = allTheories().length;
+    $("theoryCount").textContent = selectedTheories.length ? selectedTheories.length + " selected" : total + " theories available";
+
+    // field tabs
+    document.querySelectorAll("#theoryFields button").forEach((b) => {
+      b.setAttribute("aria-pressed", b.dataset.field === theoryField ? "true" : "false");
+      if (b.dataset.field === "selected") b.textContent = "Selected (" + selectedTheories.length + ")";
+      if (b.dataset.field === "mine") { b.textContent = "Your theories (" + myTheories.length + ")"; }
+    });
+
+    // list
+    const q = norm(theoryQuery.trim());
+    const list = $("theoryList"); list.replaceChildren();
+    let shown = allTheories().filter((t) => {
+      if (theoryField === "selected" && !selectedTheories.includes(t.id)) return false;
+      if (theoryField !== "all" && theoryField !== "selected" && t.f !== theoryField) return false;
+      if (!q) return true;
+      return norm(t.n + " " + t.t + " " + t.a + " " + fieldLabel(t.f)).includes(q);
+    });
+    // when searching, rank name matches first
+    if (q) shown = shown.sort((a, b) => (norm(b.n).includes(q) ? 1 : 0) - (norm(a.n).includes(q) ? 1 : 0));
+    const groups = [];
+    const order = ["mine"].concat(TF.map((f) => f.id));
+    if (q) groups.push({ id: "results", label: "Results", items: shown });
+    else order.forEach((fid) => { const items = shown.filter((t) => t.f === fid); if (items.length) groups.push({ id: fid, label: fieldLabel(fid), items }); });
+
+    groups.forEach((g) => {
+      const box = el("div", { class: "picker-group" }, [el("h4", { text: g.label + " · " + g.items.length })]);
+      g.items.forEach((t) => {
+        const on = selectedTheories.includes(t.id);
+        const cb = el("input", { type: "checkbox", value: t.id });
+        cb.checked = on;
+        cb.addEventListener("change", () => toggleTheory(t.id, cb.checked));
+        const name = el("span", { class: "tn" }, [highlight(t.n, q)]);
+        if (t.custom) name.append(el("span", { class: "badge", text: "Yours" }));
+        const text = el("span", {}, [name, " ", t.t ? el("span", { class: "tt" }, [highlight(t.t, q)]) : "", el("span", { class: "ta" }, [highlight(t.a, q)])]);
+        const tools = el("span", { class: "tools" });
+        if (t.custom) {
+          const share = el("a", { href: shareUrl(t), target: "_blank", rel: "noopener", title: "Opens a pre-filled suggestion on GitHub (needs a GitHub account)", text: "Share" });
+          const del = el("button", { type: "button", text: "Delete" });
+          del.addEventListener("click", (e) => {
+            e.preventDefault();
+            if (!confirm("Delete your theory \"" + t.n + "\"? This removes it from this browser.")) return;
+            myTheories = myTheories.filter((x) => x.id !== t.id);
+            store.set(KEY_THEORIES, myTheories);
+            selectedTheories = selectedTheories.filter((x) => x !== t.id);
+            renderTheoryPicker(); renderBuild();
+          });
+          tools.append(share, del);
+        }
+        box.append(el("label", { class: "theory-row" + (on ? " on" : "") }, [cb, text, tools]));
+      });
+      list.append(box);
+    });
+    if (!shown.length) {
+      const empty = el("div", { class: "picker-empty" });
+      if (theoryField === "selected") empty.textContent = "No theories selected yet.";
+      else if (theoryField === "mine" && !q) empty.textContent = "You have not added any theories yet. Use \"+ Add your own theory\" below.";
+      else {
+        empty.append("No theory matches \"" + theoryQuery + "\". ");
+        const add = el("button", { type: "button", class: "ghost small-btn", text: "Add \"" + theoryQuery.trim() + "\" as your own" });
+        add.addEventListener("click", () => openAddTheory(theoryQuery.trim()));
+        empty.append(add);
+      }
+      list.append(empty);
+    }
+    $("theoryShowing").textContent = "Showing " + shown.length + " of " + total;
+  }
+
+  function openAddTheory(name) {
+    $("addTheoryForm").hidden = false;
+    $("addTheoryBtn").setAttribute("aria-expanded", "true");
+    if (name) $("ntName").value = name;
+    $("ntField").value = theoryField !== "all" && theoryField !== "selected" ? theoryField : "mine";
+    $("ntName").focus();
+  }
+  function closeAddTheory() {
+    $("addTheoryForm").hidden = true;
+    $("addTheoryBtn").setAttribute("aria-expanded", "false");
+    ["ntName", "ntThinkers", "ntFocus"].forEach((i) => ($(i).value = ""));
+  }
+  $("addTheoryBtn").addEventListener("click", () => ($("addTheoryForm").hidden ? openAddTheory("") : closeAddTheory()));
+  $("ntCancel").addEventListener("click", closeAddTheory);
+  $("ntSave").addEventListener("click", () => {
+    const n = $("ntName").value.trim(), a = $("ntFocus").value.trim();
+    if (!n) { $("ntName").focus(); $("ntName").setCustomValidity("Give the theory a name."); $("ntName").reportValidity(); return; }
+    if (!a) { $("ntFocus").focus(); $("ntFocus").setCustomValidity("Say what the analysis should pay attention to."); $("ntFocus").reportValidity(); return; }
+    const t = { id: "u-" + Date.now().toString(36), f: $("ntField").value, n, t: $("ntThinkers").value.trim(), a: a.replace(/\.$/, ""), custom: true };
+    myTheories.unshift(t);
+    store.set(KEY_THEORIES, myTheories);
+    selectedTheories.push(t.id);
+    closeAddTheory();
+    theoryQuery = ""; $("theorySearch").value = ""; theoryField = "selected";
+    renderTheoryPicker(); renderBuild();
+  });
+  ["ntName", "ntFocus"].forEach((i) => $(i).addEventListener("input", () => $(i).setCustomValidity("")));
+  let searchTimer;
+  $("theorySearch").addEventListener("input", () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => {
+      theoryQuery = $("theorySearch").value;
+      if (theoryQuery && theoryField === "selected") theoryField = "all";
+      renderTheoryPicker(); $("theoryList").scrollTop = 0;
+    }, 80);
+  });
+  $("theorySearch").addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && $("theorySearch").value) { e.preventDefault(); $("theorySearch").value = ""; theoryQuery = ""; renderTheoryPicker(); }
+    if (e.key === "Enter") e.preventDefault();
+  });
+
+  function theoryLines(s) {
+    return (s.theories || []).map(theoryById).filter(Boolean);
+  }
+
   /* ---------- state ---------- */
-  const FIELDS = ["discipline", "question", "theory", "technique", "procedure", "fewshot", "sourceDesc", "sourceText", "context", "terms", "output", "fields"];
+  const FIELDS = ["discipline", "question", "theoryNotes", "technique", "procedure", "fewshot", "sourceDesc", "sourceText", "context", "terms", "output", "fields"];
 
   function readState() {
     const s = {};
     FIELDS.forEach((f) => (s[f] = $(f).value));
+    s.theories = selectedTheories.slice();
+    s.theoryDefs = s.theories.map(theoryById).filter((t) => t && t.custom);
     s.safeguards = [...document.querySelectorAll("#safeguards input:checked")].map((i) => i.value);
     s.planCross = $("planCross").checked;
     s.planLog = $("planLog").checked;
@@ -99,6 +272,14 @@
   }
 
   function writeState(s) {
+    // older saved designs had a single free-text "theory" field
+    if (!s.theoryNotes && typeof s.theory === "string" && s.theory.trim()) s = Object.assign({}, s, { theoryNotes: s.theory });
+    // theories defined by someone else's exported design: add them to this browser's list
+    (s.theoryDefs || []).forEach((t) => {
+      if (t && t.id && t.n && t.a && !theoryById(t.id)) myTheories.push(Object.assign({}, t, { custom: true }));
+    });
+    store.set(KEY_THEORIES, myTheories);
+    selectedTheories = (s.theories || []).filter((id) => theoryById(id));
     FIELDS.forEach((f) => { if (s[f] !== undefined) $(f).value = s[f]; });
     if (!s.procedure) $("procedure").value = L.techniques[$("technique").value].steps.join("\n");
     document.querySelectorAll("#safeguards input").forEach((i) => (i.checked = (s.safeguards || []).includes(i.value)));
@@ -106,10 +287,10 @@
     $("planLog").checked = !!s.planLog;
     if (s.runs) $("runs").value = s.runs;
     if (s.models !== undefined) $("models").value = s.models;
-    $("theoryPreset").value = L.theories.some((t) => t.value === s.theory) ? s.theory : "";
+    renderTheoryPicker();
   }
 
-  const BLANK = { discipline: "History", question: "", theory: "", technique: "evidence-constrained", procedure: "", fewshot: "",
+  const BLANK = { discipline: "History", question: "", theories: [], theoryNotes: "", technique: "evidence-constrained", procedure: "", fewshot: "",
     sourceDesc: "", sourceText: "", context: "", terms: "", output: "table", fields: "", safeguards: ["quote", "nofab", "obs", "uncert", "alt"],
     planCross: false, planLog: false };
 
@@ -133,7 +314,17 @@
       out.push("ROLE: You are assisting a researcher in " + (s.discipline || "the humanities") + ". Treat your answer as material for scholarly checking, not as an authoritative account: it will be compared with independent evidence and expert judgement.");
     }
     out.push("RESEARCH QUESTION: " + q);
-    if (level >= 2 && s.theory.trim()) out.push("THEORETICAL ORIENTATION: " + s.theory.trim());
+    if (level >= 2) {
+      const th = theoryLines(s);
+      const notes = s.theoryNotes.trim();
+      if (th.length || notes) {
+        let block = "THEORETICAL ORIENTATION:";
+        if (th.length) block += (th.length > 1 ? " Use these frameworks together, and say where they point in different directions." : "") +
+          "\n" + th.map((t) => "- " + t.n + (t.t ? " (" + t.t + ")" : "") + ": attend to " + t.a + ".").join("\n");
+        if (notes) block += (th.length ? "\n" : " ") + notes;
+        out.push(block);
+      }
+    }
     if (level >= 3) {
       if (s.sourceDesc.trim()) out.push("SOURCE MATERIAL: " + s.sourceDesc.trim() + (s.sourceText.trim() ? " (supplied below)." : ""));
       if (s.context.trim()) out.push("CULTURAL, LINGUISTIC AND HISTORICAL CONTEXT: " + s.context.trim());
@@ -156,7 +347,7 @@
   function coverage(s) {
     const has = (id) => s.safeguards.includes(id);
     return [
-      { l: "C", name: "Conceptual", on: !!(s.question.trim() && s.theory.trim()), need: "a research question and a theoretical orientation" },
+      { l: "C", name: "Conceptual", on: !!(s.question.trim() && (s.theories.length || s.theoryNotes.trim())), need: "a research question and a theoretical orientation" },
       { l: "O", name: "Operational", on: lines(s.procedure).length >= 2, need: "at least two procedure steps" },
       { l: "N", name: "Situated", on: !!(s.context.trim() || s.terms.trim() || has("lang")), need: "cultural, linguistic or historical context" },
       { l: "T", name: "Traceable", on: has("quote") || (has("nofab") && !!s.sourceText.trim()), need: "a traceable-evidence safeguard" },
@@ -229,7 +420,7 @@
     md += "Generated " + today() + " with Scholarly Prompt Lab v" + VERSION + ".\n\n";
     md += "| Field | Value |\n|---|---|\n";
     const row = (k, v) => "| " + k + " | " + String(v || "—").replace(/\|/g, "\\|").replace(/\n/g, "<br>") + " |\n";
-    md += row("Discipline", s.discipline) + row("Theoretical orientation", s.theory) + row("Technique", L.techniques[s.technique].label);
+    md += row("Discipline", s.discipline) + row("Theoretical orientation", theoryLines(s).map((t) => t.n + (t.t ? " (" + t.t + ")" : "") + (t.custom ? " [researcher-defined]" : "")).concat(s.theoryNotes.trim() ? [s.theoryNotes.trim()] : []).join("\n")) + row("Technique", L.techniques[s.technique].label);
     md += row("Source material", s.sourceDesc) + row("Context", s.context) + row("Contested terminology", s.terms) + row("Output", s.output + ": " + (s.fields || "default fields")) + "\n";
     md += "## CONTEXT checklist\n\n" + cov.map((c) => "- [" + (c.on ? "x" : " ") + "] **" + c.l + " · " + c.name + "**" + (c.on ? "" : " (needs " + c.need + ")")).join("\n") + "\n\n";
     md += "## Prompt\n\n```text\n" + buildPrompt(s, 4) + "\n```\n\n";
@@ -535,11 +726,11 @@
   });
 
   /* ---------- events: build ---------- */
+  $("builder").addEventListener("submit", (e) => e.preventDefault());
   $("builder").addEventListener("input", renderBuild);
   $("builder").addEventListener("change", renderBuild);
   $("runs").addEventListener("input", renderBuild);
   $("models").addEventListener("input", renderBuild);
-  $("theoryPreset").addEventListener("change", () => { if ($("theoryPreset").value) $("theory").value = $("theoryPreset").value; renderBuild(); });
   let lastTechnique = null;
   $("technique").addEventListener("focus", () => (lastTechnique = $("technique").value));
   $("technique").addEventListener("change", () => {
@@ -578,7 +769,7 @@
   $("dlStudy").addEventListener("click", () => { const s = readState(); download(slug(s.question) + "-study-protocol.md", studyProtocol(s), "text/markdown;charset=utf-8"); });
 
   /* ---------- tabs ---------- */
-  const tabs = [...document.querySelectorAll('[role="tab"]')];
+  const tabs = [...document.querySelectorAll('.tabs [role="tab"]')];
   function showTab(id) {
     tabs.forEach((t) => {
       const on = t.id === id;

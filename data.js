@@ -8,18 +8,6 @@ window.LAB = {
     "Art history and visual culture", "Archival studies", "Film studies", "Anthropology", "Other"
   ],
 
-  theories: [
-    { label: "Choose a starting point (optional)", value: "" },
-    { label: "Critical discourse analysis", value: "Critical discourse analysis, with attention to agency, legitimation and representation of social actors" },
-    { label: "Postcolonial theory", value: "Postcolonial theory, with attention to how colonial knowledge constructed African societies" },
-    { label: "Decolonial / African epistemologies", value: "Decolonial and African epistemological perspectives, treating indigenous knowledge systems as sources of theory rather than only as data" },
-    { label: "Gender history", value: "A gendered and historically situated framework attentive to women's political institutions and agency" },
-    { label: "Thematic analysis", value: "Reflexive thematic analysis" },
-    { label: "Ethnography of communication", value: "Ethnography of communication, attentive to speech events, participants and cultural norms of interpretation" },
-    { label: "Narratology", value: "Narratology, with attention to narrator, focalisation and the ordering of events" },
-    { label: "Corpus linguistics", value: "Corpus linguistics: concordance, collocation and keyness, read qualitatively in context" },
-    { label: "Visual semiotics", value: "Visual semiotics and material-culture analysis" }
-  ],
 
   techniques: {
     "zero-shot": {
@@ -161,7 +149,8 @@ window.LAB = {
       title: "History: the 1929 Women's War in southeastern Nigeria",
       discipline: "History",
       question: "How did women's political institutions shape collective resistance to colonial taxation in the 1929 Women's War, and how do the terms \"riot\" and \"war\" shape its historical representation?",
-      theory: "A gendered and historically situated framework attentive to women's political institutions and agency",
+      theories: ["gender-history", "amadiume", "postcolonial", "archival-grain"],
+      theoryNotes: "Treat women's networks and collective sanctions as political institutions, not as disorder.",
       technique: "evidence-constrained",
       sourceDesc: "Selected primary and secondary sources supplied by the researcher (e.g. commission of inquiry testimony, scholarly histories)",
       context: "Igbo, Ibibio and neighbouring communities in the colonial Owerri and Calabar provinces, November–December 1929. Women's networks and collective sanctions (such as \"sitting on a man\") were political institutions, not disorder. Colonial records describe events through the warrant-chief system and the 1928 tax on men.",
@@ -175,7 +164,8 @@ window.LAB = {
       title: "Linguistics: what is lost when AI translates an Igbo proverb?",
       discipline: "Linguistics",
       question: "What cultural knowledge is retained or lost when the Igbo proverb \"Onye ajụjụ anaghị efu ụzọ\" is translated and explained?",
-      theory: "Ethnography of communication, attentive to speech events, participants and cultural norms of interpretation",
+      theories: ["ethnography-communication", "oral-literature-africa", "foreignisation"],
+      theoryNotes: "",
       technique: "comparative",
       sourceDesc: "The proverb, plus interpretations collected from competent Igbo speakers (to be compared with the model output afterwards, not shown to the model)",
       sourceText: "Onye ajụjụ anaghị efu ụzọ.",
@@ -190,7 +180,8 @@ window.LAB = {
       title: "Postcolonial studies: reading Lugard's The Dual Mandate (1922)",
       discipline: "History",
       question: "How does the passage represent African political authority and legitimacy?",
-      theory: "Postcolonial theory, with attention to how colonial knowledge constructed African societies",
+      theories: ["postcolonial", "colonial-library", "weber-authority", "cda"],
+      theoryNotes: "",
       technique: "context-grounded",
       sourceDesc: "An authenticated excerpt from Frederick Lugard, The Dual Mandate in British Tropical Africa (1922), with page reference",
       sourceText: "[DM-01, p. __] Paste the authenticated excerpt here.",
@@ -205,7 +196,8 @@ window.LAB = {
       title: "Media studies: political authority in Nigerian newspaper editorials",
       discipline: "Media and communication studies",
       question: "How is political authority represented in Nigerian newspaper editorials?",
-      theory: "Critical discourse analysis, with attention to agency, legitimation and representation of social actors",
+      theories: ["cda", "social-actors", "framing", "translanguaging"],
+      theoryNotes: "",
       technique: "evidence-constrained",
       sourceDesc: "Newspaper editorials supplied with this prompt, each with a document identifier",
       sourceText: "[ED-01] Paste editorial text here.\n[ED-02] ...",
@@ -220,7 +212,8 @@ window.LAB = {
       title: "Visual culture: AI images of the Benin Kingdom",
       discipline: "Art history and visual culture",
       question: "How do AI-generated images of a royal courtyard in the Benin Kingdom compare with archaeological findings, historical accounts and surviving artefacts?",
-      theory: "Visual semiotics and material-culture analysis",
+      theories: ["visual-semiotics", "object-biography", "restitution", "llm-critique"],
+      theoryNotes: "",
       technique: "multimodal",
       sourceDesc: "AI-generated images (labelled with the prompt that produced each) alongside documented references such as Benin bronze plaques and published archaeology",
       context: "Benin Kingdom (Edo), with a defined period chosen by the researcher. Generated images are experimental outputs and cannot serve as evidence of what the kingdom looked like. Many surviving artefacts were looted in 1897; note where reference images come from.",

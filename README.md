@@ -27,6 +27,8 @@ It was built with African, and particularly Nigerian, humanities scholarship in 
 | Scanned PDF (image of a page) | No | Needs text recognition (OCR) first. The Lab detects these and warns you. |
 | Plain text, Markdown, CSV, subtitles | Yes | |
 
+**Theory library.** Choose from 169 theories across twelve fields: communication and media; language and discourse; literature, orality and translation; history and memory; African, postcolonial and decolonial thought (including Ubuntu, Ibuanyidanda, oramedia and African feminisms); gender, race and intersectionality; philosophy and ethics; sociology, anthropology and cultural studies; visual, material and performance culture; religion; digital and data studies; and analytical approaches. Search by name, thinker or idea, filter by field, and combine several theories in one design. You can add your own theories: they are saved in your browser, travel with exported designs, and can be suggested for the shared library with one click.
+
 Five worked examples are included: the 1929 Women's War, an Igbo proverb, Lugard's *The Dual Mandate*, Nigerian newspaper editorials, and AI images of the Benin Kingdom.
 
 ## Privacy

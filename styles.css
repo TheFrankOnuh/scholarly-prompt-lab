@@ -61,7 +61,7 @@ main { padding: 20px 16px 40px; }
 }
 #panel-log .grid { margin-bottom: 18px; }
 
-fieldset { border: 0; border-top: 1px solid var(--line); margin: 0 0 6px; padding: 14px 0 4px; }
+fieldset { min-width: 0; border: 0; border-top: 1px solid var(--line); margin: 0 0 6px; padding: 14px 0 4px; }
 fieldset:first-child { border-top: 0; padding-top: 0; }
 legend { font-family: var(--serif); font-weight: 600; font-size: 1.08rem; padding: 0; display: flex; align-items: center; gap: 4px; }
 .letter {
@@ -102,6 +102,63 @@ button:hover, .button-like:hover { filter: brightness(1.08); }
 .start .actions { margin-top: 10px; }
 .flash-target { animation: flash 1.6s ease-out; }
 @keyframes flash { 0% { box-shadow: 0 0 0 4px var(--accent); } 100% { box-shadow: 0 0 0 0 transparent; } }
+/* ---------- theory picker ---------- */
+.label-like { font-weight: 600; font-size: 0.9rem; }
+.small { font-size: 0.82rem; }
+.theory-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin: 12px 0 6px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.chips:empty { display: none; }
+.chip {
+  display: inline-flex; align-items: center; gap: 4px; background: var(--accent); color: var(--accent-ink);
+  border-radius: 999px; padding: 3px 4px 3px 11px; font-size: 0.84rem; font-weight: 600; max-width: 100%;
+}
+.chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chip button {
+  background: transparent; border: 0; color: inherit; padding: 0; width: 22px; height: 22px; border-radius: 50%;
+  font-size: 1rem; line-height: 1; flex: none;
+}
+.chip button:hover { background: rgba(255, 255, 255, 0.2); filter: none; }
+.picker { border: 1px solid var(--line); border-radius: 10px; background: var(--bg); overflow: hidden; }
+.picker-search { padding: 8px; border-bottom: 1px solid var(--line); }
+.picker-search input { background: var(--surface); }
+.field-tabs {
+  display: flex; gap: 6px; overflow-x: auto; padding: 8px; border-bottom: 1px solid var(--line);
+  scrollbar-width: thin; scroll-snap-type: x proximity;
+}
+.field-tabs button {
+  flex: none; scroll-snap-align: start; background: var(--surface); color: var(--muted); border: 1px solid var(--line);
+  border-radius: 999px; padding: 4px 11px; font-size: 0.8rem; font-weight: 600; white-space: nowrap;
+}
+.field-tabs button[aria-pressed="true"] { background: var(--accent-soft); color: var(--ink); border-color: var(--accent); }
+.field-tabs button:hover { filter: none; color: var(--ink); }
+.picker-list { max-height: 320px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+.picker-group h4 {
+  position: sticky; top: 0; z-index: 1; margin: 0; padding: 6px 12px; font: 700 0.72rem/1.3 var(--sans);
+  letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); background: var(--code); border-bottom: 1px solid var(--line);
+}
+.theory-row {
+  display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: start; margin: 0;
+  padding: 9px 12px; border-bottom: 1px solid var(--line); cursor: pointer; font-weight: 400;
+}
+.theory-row:hover { background: var(--surface); }
+.theory-row.on { background: var(--accent-soft); }
+.theory-row input { width: auto; margin-top: 4px; }
+.theory-row .tn { font-weight: 600; font-size: 0.92rem; }
+.theory-row .tt { color: var(--accent); font-size: 0.8rem; font-weight: 600; }
+.theory-row .ta { display: block; color: var(--muted); font-size: 0.8rem; line-height: 1.4; margin-top: 2px; }
+.theory-row .tools { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
+.theory-row .tools a, .theory-row .tools button {
+  font-size: 0.74rem; padding: 1px 6px; border-radius: 4px; background: transparent; border: 1px solid var(--line);
+  color: var(--muted); text-decoration: none; font-weight: 600; white-space: nowrap;
+}
+.theory-row .tools button:hover, .theory-row .tools a:hover { color: var(--ink); filter: none; }
+.badge { display: inline-block; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; background: var(--warn-soft); color: var(--warn); border-radius: 4px; padding: 0 5px; margin-left: 4px; vertical-align: 1px; }
+mark { background: var(--warn-soft); color: inherit; border-radius: 2px; padding: 0 1px; }
+.picker-empty { padding: 18px 12px; color: var(--muted); font-size: 0.9rem; text-align: center; }
+.picker-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; padding: 8px 10px; border-top: 1px solid var(--line); background: var(--surface); }
+.small-btn { padding: 5px 10px; font-size: 0.84rem; }
+.add-theory { padding: 4px 12px 12px; border-top: 1px solid var(--line); background: var(--surface); }
+
 dialog#review {
   width: min(860px, calc(100vw - 32px)); max-height: calc(100vh - 32px); padding: 0; border: 1px solid var(--line);
   border-radius: var(--radius); background: var(--surface); color: var(--ink);
