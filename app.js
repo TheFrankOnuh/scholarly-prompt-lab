@@ -3,7 +3,7 @@
   "use strict";
 
   const L = window.LAB;
-  const VERSION = "0.10.0";
+  const VERSION = "0.10.1";
   const KEY_DRAFT = "spl.draft.v1";
   const KEY_LOG = "spl.log.v1";
   const $ = (id) => document.getElementById(id);
@@ -140,6 +140,30 @@
     const name = discInput.value.trim();
     openProposal({ kind: "discipline", name, group: "" });
   });
+  // a visible way to add a discipline, alongside typing it into the list
+  function closeDiscAdd() { $("discAddForm").hidden = true; $("discAddBtn").setAttribute("aria-expanded", "false"); $("discNew").value = ""; $("discNewNote").textContent = ""; }
+  $("discAddBtn").addEventListener("click", () => {
+    if (!$("discAddForm").hidden) { closeDiscAdd(); return; }
+    $("discAddForm").hidden = false; $("discAddBtn").setAttribute("aria-expanded", "true"); $("discNew").focus();
+  });
+  $("discCancel").addEventListener("click", closeDiscAdd);
+  function saveNewDiscipline(propose) {
+    const name = $("discNew").value.trim().replace(/\s+/g, " ");
+    if (name.length < 3) { $("discNewNote").textContent = "Type the name of the discipline first."; $("discNew").focus(); return; }
+    const existing = allDisciplines().flatMap((g) => g.items).find((d) => discNorm(d) === discNorm(name));
+    const mine = myDisciplines.some((d) => discNorm(d) === discNorm(name));
+    if (existing && !mine) {
+      chooseDiscipline(existing); closeDiscAdd();
+      flash("buildStatus", "\u201c" + existing + "\u201d is already in the list, so it has been selected for you.");
+      return;
+    }
+    addDiscipline(existing || name);
+    closeDiscAdd();
+    if (propose) openProposal({ kind: "discipline", name: existing || name, group: "" });
+  }
+  $("discSave").addEventListener("click", () => saveNewDiscipline(false));
+  $("discSaveProp").addEventListener("click", () => saveNewDiscipline(true));
+  $("discNew").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); saveNewDiscipline(false); } });
   function chooseDiscipline(v) {
     discInput.value = v;
     closeDisc();

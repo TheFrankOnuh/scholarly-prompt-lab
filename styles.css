@@ -553,3 +553,9 @@ legend { align-items: flex-start; gap: 12px; width: 100%; }
   body.printing-report .report-grid { display: block; }
   body.printing-report .gap { background: none; border: 1px solid #000; }
 }
+
+/* ---------- add your own discipline; report roles ---------- */
+.disc-tools { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 8px; font-size: 0.9rem; }
+.disc-add { margin-top: 10px; border: 1.5px solid var(--field); border-radius: 10px; padding: 4px 14px 12px; }
+.plain-set { border: 0; padding: 0; margin: 16px 0 0; }
+.plain-set legend { font: 600 0.95rem/1.4 var(--sans); display: block; margin-bottom: 6px; }

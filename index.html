@@ -10,7 +10,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="theme-color" content="#185c4a">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="styles.css?v=0.10.0">
+  <link rel="stylesheet" href="styles.css?v=0.10.1">
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to the main content</a>
@@ -64,6 +64,21 @@
             <div class="combo">
               <input id="discipline" name="discipline" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="discList" autocomplete="off" spellcheck="false" placeholder="Search or type your discipline">
               <div id="discList" class="combo-list" role="listbox" aria-label="Disciplines" hidden></div>
+            </div>
+            <div class="disc-tools">
+              <span class="muted">Not in the list?</span>
+              <button type="button" class="ghost small-btn" id="discAddBtn" aria-expanded="false" aria-controls="discAddForm">+ Add your own discipline</button>
+            </div>
+            <div id="discAddForm" class="add-theory disc-add" hidden>
+              <label for="discNew">Name of your discipline</label>
+              <input id="discNew" placeholder="e.g. Igbo studies; Maritime history; Disability studies">
+              <p class="hint" id="discNewNote" role="status"></p>
+              <div class="actions">
+                <button type="button" id="discSave">Save for my own use</button>
+                <button type="button" class="ghost" id="discSaveProp">Save and propose it for everyone</button>
+                <button type="button" class="ghost" id="discCancel">Cancel</button>
+              </div>
+              <p class="hint">Saved disciplines stay in this browser. Proposals are reviewed by the editor before they appear for everyone, and only disciplines in the humanities and social sciences are accepted.</p>
             </div>
             <p class="hint" id="discOwn" hidden>This is a discipline you added, saved in this browser. <button type="button" class="ghost small-btn" id="discPropose">Propose it for everyone</button> <span class="muted">(humanities and social sciences only)</span></p>
             <label for="question">Research question</label>
@@ -379,17 +394,15 @@
           <input id="rpTitle" placeholder="e.g. Legitimation in the 2026 Independence Day address">
           <label for="rpAuthor">Your name</label>
           <input id="rpAuthor" autocomplete="name">
-          <label for="rpRole">How did you use AI in this study?</label>
-          <select id="rpRole">
-            <option value="assistant">As a research assistant: it helped me analyse my sources</option>
-            <option value="object">As the object of study: I examined what the AI system produces</option>
-            <option value="both">Both</option>
-          </select>
+          <fieldset class="plain-set">
+            <legend class="label-like">How did you use AI in this study? <span class="muted">(tick all that apply)</span></legend>
+            <div class="checks" id="rpRoles"></div>
+          </fieldset>
           <label for="rpScope">Which logged outputs belong to this study?</label>
           <select id="rpScope"></select>
           <label for="rpUse">How the AI outputs informed your final analysis <span class="muted">(in your own words)</span></label>
           <textarea id="rpUse" rows="4" placeholder="e.g. I used the AI's first-pass coding to locate passages, then re-read every passage myself. I accepted four of nine findings, revised three and rejected two."></textarea>
-          <label class="check"><input type="checkbox" id="rpSources"> <span>Include the full source texts in the prompts appendix <span class="muted">(can make the report very long)</span></span></label>
+          <label class="check"><input type="checkbox" id="rpSources"> <span>Include the full source texts in the prompts appendix <span class="muted">(Note: this can make the report very long)</span></span></label>
           <div class="actions">
             <button type="button" id="rpBuild">Rebuild the report from my records</button>
           </div>
@@ -470,16 +483,16 @@
     <p><span id="offlineStatus" role="status"></span> <button type="button" id="installBtn" class="ghost small-btn" hidden>Install the Lab on this device</button></p>
   </footer>
 
-  <script src="theories.js?v=0.10.0"></script>
-  <script src="theory-links.js?v=0.10.0"></script>
-  <script src="disciplines.js?v=0.10.0"></script>
-  <script src="community.js?v=0.10.0"></script>
-  <script src="procedures.js?v=0.10.0"></script>
-  <script src="data.js?v=0.10.0"></script>
-  <script src="checks.js?v=0.10.0"></script>
-  <script src="app.js?v=0.10.0"></script>
-  <script src="report.js?v=0.10.0"></script>
-  <script src="tour.js?v=0.10.0"></script>
-  <script src="offline.js?v=0.10.0"></script>
+  <script src="theories.js?v=0.10.1"></script>
+  <script src="theory-links.js?v=0.10.1"></script>
+  <script src="disciplines.js?v=0.10.1"></script>
+  <script src="community.js?v=0.10.1"></script>
+  <script src="procedures.js?v=0.10.1"></script>
+  <script src="data.js?v=0.10.1"></script>
+  <script src="checks.js?v=0.10.1"></script>
+  <script src="app.js?v=0.10.1"></script>
+  <script src="report.js?v=0.10.1"></script>
+  <script src="tour.js?v=0.10.1"></script>
+  <script src="offline.js?v=0.10.1"></script>
 </body>
 </html>

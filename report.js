@@ -11,6 +11,22 @@
   var LAB_DOI = "https://doi.org/10.5281/zenodo.24521711";
   var USE_LABEL = { used: "Used as it stands", revised: "Used after the researcher's corrections", prompted: "Used only as a starting point for the researcher's own analysis", rejected: "Rejected", data: "Kept as data about the AI system", "": "Not recorded" };
 
+  // The ways researchers use generative AI. A study often involves several.
+  var ROLES = [
+    { id: "prelim", label: "Preliminary analysis: a first-pass reading of my sources, which I then checked", text: "to produce a first-pass analysis of the source material, which the researcher then checked against the sources" },
+    { id: "coding", label: "Coding or classifying material with my own coding scheme", text: "to apply the researcher's own coding scheme to the material, with the coding checked by the researcher" },
+    { id: "extract", label: "Extracting, summarising or organising information from sources", text: "to extract, summarise and organise information from the sources" },
+    { id: "translate", label: "Translation or transcription support", text: "to support translation or transcription, which the researcher checked against the original" },
+    { id: "challenge", label: "Testing my interpretation: alternative readings and counter-arguments", text: "to test the researcher's own interpretation, by generating alternative readings and counter-arguments" },
+    { id: "object", label: "As the object of study: examining what the AI system itself produces", text: "" },
+    { id: "writing", label: "Improving the wording of text I wrote myself", text: "to improve the wording of text written by the researcher" }
+  ];
+  function chosenRoles() {
+    var out = [];
+    ROLES.forEach(function (x) { var el = document.getElementById("rpRole_" + x.id); if (el && el.checked) out.push(x.id); });
+    return out;
+  }
+
   function esc(x) { return String(x == null ? "" : x).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
   function gap(text) { return '<span class="gap">[To complete: ' + esc(text) + "]</span>"; }
   function p(html) { return "<p>" + html + "</p>"; }
@@ -30,7 +46,7 @@
     return s;
   }
   function saveSettings() {
-    var s = { title: $("rpTitle").value, author: $("rpAuthor").value, role: $("rpRole").value, use: $("rpUse").value, sources: $("rpSources").checked, scope: $("rpScope").value };
+    var s = { title: $("rpTitle").value, author: $("rpAuthor").value, roles: chosenRoles(), use: $("rpUse").value, sources: $("rpSources").checked, scope: $("rpScope").value };
     try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) { /* ignore */ }
     return s;
   }
@@ -108,11 +124,14 @@
 
     // ---- 1. AI-use statement ----
     out.push("<h2>1. Statement on the use of generative AI</h2>");
-    var roleSentence = st.role === "object"
-      ? "Generative AI was the object of this study: the outputs of " + (sysNames.length ? plural(sysNames.length, "AI system") : "AI systems") + " were collected and analysed as data about how such systems respond. They were not used as evidence about the subject matter itself."
-      : st.role === "both"
-        ? "Generative AI was used in this study in two ways: as a research assistant, to produce a first-pass analysis of the sources that the researcher then checked; and as an object of study, with its outputs analysed as data about how such systems respond."
-        : "Generative AI was used in this study as a research assistant. It produced a first-pass analysis of the source material, which the researcher checked against the sources and interpreted. Its output was not treated as a finding in itself.";
+    var roles = st.roles || [];
+    var tool = ROLES.filter(function (x) { return x.text && roles.indexOf(x.id) !== -1; }).map(function (x) { return x.text; });
+    var asObject = roles.indexOf("object") !== -1;
+    var objectSentence = "Generative AI was " + (tool.length ? "also " : "") + "the object of " + (tool.length ? "study" : "this study") + ": the outputs of " + (sysNames.length ? plural(sysNames.length, "AI system") : "AI systems") + " were collected and analysed as data about how such systems respond, and were not used as evidence about the subject matter itself.";
+    var roleSentence = !roles.length
+      ? gap("how generative AI was used in this study. Tick the uses that apply in the form beside this preview")
+      : (tool.length ? "Generative AI was used in this study " + (tool.length === 1 ? tool[0] : "in " + ["two", "three", "four", "five", "six"][tool.length - 2] + " ways: " + tool.join("; ")) + ". Its output was not treated as a finding in itself." : "") +
+        (asObject ? (tool.length ? " " : "") + objectSentence : "");
     var stmt = roleSentence + " " +
       (n ? "The " + (sysNames.length === 1 ? "system used was " : "systems used were ") + esc(joinAnd(sysNames)) + (allDates.length ? ", " + (allDates[0] === allDates[allDates.length - 1] ? "on " + niceDate(allDates[0]) : "between " + niceDate(allDates[0]) + " and " + niceDate(allDates[allDates.length - 1])) : "") + ". " : "") +
       "Prompts were designed and documented with the Scholarly Prompt Lab (Onuh, 2026)" + (n ? ", and every prompt and output is recorded in the appendices" : "") + ". " +
@@ -260,7 +279,9 @@
   function show() {
     if (!shownOnce) {
       var st = settings();
-      $("rpTitle").value = st.title || ""; $("rpAuthor").value = st.author || ""; $("rpRole").value = st.role || "assistant"; $("rpUse").value = st.use || ""; $("rpSources").checked = !!st.sources;
+      $("rpTitle").value = st.title || ""; $("rpAuthor").value = st.author || ""; var saved = Array.isArray(st.roles) ? st.roles : st.role === "object" ? ["object"] : st.role === "both" ? ["prelim", "object"] : ["prelim"];
+      ROLES.forEach(function (x) { document.getElementById("rpRole_" + x.id).checked = saved.indexOf(x.id) !== -1; });
+      $("rpUse").value = st.use || ""; $("rpSources").checked = !!st.sources;
       shownOnce = true;
     }
     refreshScope();
@@ -273,7 +294,13 @@
     if (edited && !confirm("Rebuild the report? The edits you made in the preview will be replaced.")) return;
     render(); A.flash("rpStatus", "Report rebuilt from your records.");
   });
-  ["rpTitle", "rpAuthor", "rpRole", "rpUse", "rpSources", "rpScope"].forEach(function (id) {
+  ROLES.forEach(function (x) {
+    var cb = document.createElement("input"); cb.type = "checkbox"; cb.id = "rpRole_" + x.id;
+    var lab = document.createElement("label"); lab.className = "check"; lab.append(cb, x.label);
+    $("rpRoles").append(lab);
+    cb.addEventListener("change", function () { saveSettings(); if (!edited) render(); });
+  });
+  ["rpTitle", "rpAuthor", "rpUse", "rpSources", "rpScope"].forEach(function (id) {
     $(id).addEventListener("change", function () { saveSettings(); if (!edited) render(); });
   });
 
