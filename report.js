@@ -8,7 +8,9 @@
   if (!A) return;
   var $ = function (id) { return document.getElementById(id); };
   var KEY = "spl.report.v1";
-  var LAB_DOI = "https://doi.org/10.5281/zenodo.24521711";
+  var REL = A.RELEASE || {};
+  // cite the DOI of exactly this version when it is known; otherwise the DOI that covers all versions
+  var LAB_DOI = "https://doi.org/" + (REL.versionDoi || REL.conceptDoi || "10.5281/zenodo.24521711");
   var USE_LABEL = { used: "Used as it stands", revised: "Used after the researcher's corrections", prompted: "Used only as a starting point for the researcher's own analysis", rejected: "Rejected", data: "Kept as data about the AI system", "": "Not recorded" };
 
   // The ways researchers use generative AI. A study often involves several.
@@ -120,7 +122,7 @@
 
     // ---- title block ----
     out.push("<h1>" + (st.title.trim() ? esc(st.title.trim()) : gap("title of your study")) + "</h1>");
-    out.push('<p class="meta">Report of AI-assisted methods' + (st.author.trim() ? " · " + esc(st.author.trim()) : "") + " · prepared " + niceDate(A.today()) + " with the Scholarly Prompt Lab, version " + esc(A.VERSION) + "</p>");
+    out.push('<p class="meta">Report of AI-assisted methods' + (st.author.trim() ? " · " + esc(st.author.trim()) : "") + " · prepared " + niceDate(A.today()) + " with the Scholarly Prompt Lab, version " + esc(A.VERSION) + " (" + esc(LAB_DOI) + ")</p>");
     if (!n) out.push(p(gap("no AI outputs are logged for this study yet. Run your prompt in the AI system you are using, then record the output in Log & evaluate. Until then this report describes only the design of the prompt.")));
 
     // ---- 1. AI-use statement ----
@@ -170,6 +172,9 @@
     if (d.context.trim() || d.terms.trim()) out.push(p("The prompt gave the AI system this context" + (d.terms.trim() ? " and flagged contested terminology" : "") + ": " + esc([d.context.trim(), d.terms.trim() ? "Contested terms: " + d.terms.trim() : ""].filter(Boolean).join(" ")) + ""));
     var sg = L.safeguards.filter(function (x) { return d.safeguards.indexOf(x.id) !== -1; });
     if (sg.length) out.push(p("The AI system was instructed to work to these standards:") + list(sg.map(function (x) { return "<strong>" + esc(x.group) + ".</strong> " + esc(tech.sources === "none" && x.noSource ? x.noSource : x.text); })));
+    var shas = {}; entries.forEach(function (e) { if (e.design && e.design.sourceSha256) shas[e.design.sourceSha256] = (shas[e.design.sourceSha256] || 0) + 1; });
+    var shaKeys = Object.keys(shas);
+    if (shaKeys.length) out.push(p("To identify the exact source text analysed, the Lab recorded its SHA-256 fingerprint when each output was logged: " + shaKeys.map(function (k) { return "<code>" + k + "</code> (" + plural(shas[k], "output") + ")"; }).join("; ") + ". The same text always produces the same fingerprint." + (shaKeys.length > 1 ? " More than one fingerprint means the source text changed between runs." : "")));
     out.push(p("The prompt covers " + covered + " of the 7 elements of the CONTEXT framework for scholarly prompting (Appendix E). The full prompt is given in Appendix A."));
 
     out.push("<h3>2.3 Runs</h3>");

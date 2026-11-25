@@ -9,12 +9,20 @@
     // opened as a downloaded file, or an old browser: the Lab still works, just without the offline copy
     return;
   }
+  function askStatus() {
+    navigator.serviceWorker.ready.then(function (reg) { if (reg.active) reg.active.postMessage({ type: "status" }); });
+  }
+  navigator.serviceWorker.addEventListener("message", function (e) {
+    var d = e.data || {};
+    if (d.type !== "status") return;
+    if (!d.missing.length) say("Saved on this device (version " + d.version + ", " + d.files + " files checked): the Lab opens without an internet connection.");
+    else say("Not yet fully saved for offline use: " + d.missing.length + " of " + d.files + " files are missing. Stay online and reload the page to finish.");
+  });
+  navigator.serviceWorker.addEventListener("controllerchange", askStatus);
   window.addEventListener("load", function () {
-    navigator.serviceWorker.register("sw.js").then(function () {
-      return navigator.serviceWorker.ready;
-    }).then(function () {
-      say("Saved on this device: the Lab now opens without an internet connection.");
-    }).catch(function () { /* offline support is optional */ });
+    navigator.serviceWorker.register("sw.js").then(askStatus).catch(function () {
+      say("Offline use could not be set up in this browser. The Lab still works while you are online.");
+    });
   });
 
   var deferred = null;

@@ -44,6 +44,8 @@ The Lab runs entirely in the browser. It sends nothing to any server, calls no A
 
 This matters for research involving oral histories, interview transcripts or unpublished archives: nothing leaves your machine unless you paste it into an AI system yourself.
 
+The Lab has no server, no accounts and no tracking, and it never contacts an AI system. Everything you type or load stays in your browser's storage on your device. Your material leaves the device only when you send it: when you paste a prompt into an AI system (that provider then holds it under its own terms), when you propose a theory or discipline through GitHub or email, or when you share a file you exported. Browser storage is not encrypted by the Lab, so on a shared computer export your work and clear the site's data when you finish.
+
 ## Use it
 
 - **Online:** <https://thefrankonuh.github.io/scholarly-prompt-lab/>
@@ -65,6 +67,18 @@ This matters for research involving oral histories, interview transcripts or unp
 | **T** | Transparency | Could another scholar reproduce or audit what I did? |
 
 The full guide is in [docs/CONTEXT-framework.md](docs/CONTEXT-framework.md). The framework is offered as a proposal, open to evaluation and refinement.
+
+## Integrity of sources
+
+When you log an output, the Lab records a SHA-256 fingerprint of the exact source text analysed and prints it in the methods report, so a reader can confirm which text a result refers to. Every prompt tells the AI system that source text is material to analyse and not instructions to follow, and the Lab warns you when a source contains wording that reads like an instruction to an AI.
+
+## Accessibility
+
+Version 0.12.0 was checked with the axe-core automated checker (WCAG 2.0, 2.1 and 2.2, levels A and AA, plus best-practice rules) on all five tabs in light and dark mode, with no failures remaining, and with a check that every control can be reached by keyboard. Automated checks cannot find every barrier, and the Lab has not yet been tested by people who use screen readers. If you meet a barrier, please [open an issue](https://github.com/TheFrankOnuh/scholarly-prompt-lab/issues).
+
+## Versions
+
+The version number lives in one file, `release.js`. `node tools/set-version.mjs <version>` updates it everywhere, and an automated test fails if the Lab, the citation file and this README disagree. Each release is archived on Zenodo with its own DOI.
 
 ## Limitations
 
@@ -89,6 +103,6 @@ Code: [MIT](LICENSE). Documentation and the CONTEXT framework guide: [CC BY 4.0]
 
 If you use the Lab or the framework in research, please cite it:
 
-> Onuh, F. (2026). *Scholarly Prompt Lab: The Prompt as Method* (Version 0.5.0) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.24521711
+> Onuh, F. (2026). *Scholarly Prompt Lab: The Prompt as Method* (Version 0.12.0) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.24521711
 
 The DOI above always points to the latest version. Each release also has its own DOI on [Zenodo](https://doi.org/10.5281/zenodo.24521711). See also [CITATION.cff](CITATION.cff).

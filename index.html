@@ -10,7 +10,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="theme-color" content="#185c4a">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="styles.css?v=0.11.1">
+  <link rel="stylesheet" href="styles.css?v=0.12.0">
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to the main content</a>
@@ -381,7 +381,7 @@
       </div>
       <div class="card">
         <h2 class="h-small">Entries <span id="entryCount" class="muted"></span></h2>
-        <div class="table-wrap"><table id="entries"></table></div>
+        <div class="table-wrap" tabindex="0" role="region" aria-label="Logged entries: scroll sideways to see every column"><table id="entries"></table></div>
       </div>
     </section>
 
@@ -480,20 +480,31 @@
 
   <footer class="wrap footer">
     <p class="built-by">Created by <a href="https://www.linkedin.com/in/frank-onuh/" target="_blank" rel="noopener author">Frank Onuh</a>. <a href="https://www.linkedin.com/in/frank-onuh/" target="_blank" rel="noopener">Connect on LinkedIn</a> · <a href="https://doi.org/10.5281/zenodo.24521711" target="_blank" rel="noopener">Cite the Lab</a> · <a href="https://github.com/TheFrankOnuh/scholarly-prompt-lab" target="_blank" rel="noopener">Source code</a></p>
-    <p>Open source under the MIT licence. Your work is saved only in this browser. Export it to keep it.</p>
+    <p>Open source under the MIT licence. Your work is saved only in this browser. Export it to keep it. <span id="labVersion"></span></p>
+    <details class="privacy" id="privacy">
+      <summary>Privacy: what stays on your device, and what does not</summary>
+      <ul>
+        <li><strong>Stays on your device:</strong> everything you type or load, including your sources, prompts, logged outputs, scores and reports. They are kept in this browser's own storage. The Lab has no server, no accounts and no tracking, and it never contacts an AI system.</li>
+        <li><strong>Leaves your device only when you send it:</strong> when you paste a prompt, with its source text, into an AI system, that system's provider receives it under its own terms. Check those terms before pasting unpublished, confidential or personal material.</li>
+        <li><strong>Also leaves when you choose:</strong> a theory or discipline you propose is sent by you, through GitHub (which makes it public) or by email, and a file you export goes wherever you save or share it.</li>
+        <li><strong>Not encrypted:</strong> browser storage is not encrypted by the Lab. On a shared computer, export your work and clear the site's data when you finish. Anyone using this browser profile can open what is saved here.</li>
+        <li><strong>Not a backup:</strong> clearing your browser's data deletes your work. Export it regularly.</li>
+      </ul>
+    </details>
     <p><span id="offlineStatus" role="status"></span> <button type="button" id="installBtn" class="ghost small-btn" hidden>Install the Lab on this device</button></p>
   </footer>
 
-  <script src="theories.js?v=0.11.1"></script>
-  <script src="theory-links.js?v=0.11.1"></script>
-  <script src="disciplines.js?v=0.11.1"></script>
-  <script src="community.js?v=0.11.1"></script>
-  <script src="procedures.js?v=0.11.1"></script>
-  <script src="data.js?v=0.11.1"></script>
-  <script src="checks.js?v=0.11.1"></script>
-  <script src="app.js?v=0.11.1"></script>
-  <script src="report.js?v=0.11.1"></script>
-  <script src="tour.js?v=0.11.1"></script>
-  <script src="offline.js?v=0.11.1"></script>
+  <script src="release.js?v=0.12.0"></script>
+  <script src="theories.js?v=0.12.0"></script>
+  <script src="theory-links.js?v=0.12.0"></script>
+  <script src="disciplines.js?v=0.12.0"></script>
+  <script src="community.js?v=0.12.0"></script>
+  <script src="procedures.js?v=0.12.0"></script>
+  <script src="data.js?v=0.12.0"></script>
+  <script src="checks.js?v=0.12.0"></script>
+  <script src="app.js?v=0.12.0"></script>
+  <script src="report.js?v=0.12.0"></script>
+  <script src="tour.js?v=0.12.0"></script>
+  <script src="offline.js?v=0.12.0"></script>
 </body>
 </html>

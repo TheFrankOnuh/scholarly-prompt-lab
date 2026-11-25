@@ -9,7 +9,7 @@ Every citation was searched for in public library catalogues (Crossref, Open Lib
 | Result | Citations | How it is shown in the Lab |
 |---|---|---|
 | Confirmed: title, author and year | 383 | No mark |
-| Title and author found; the catalogues do not list this edition's year (often a first edition or a translation) | 42 | Marked “edition year not confirmed” |
+| Title and author found; the catalogues do not list this edition's year (often a first edition or a translation) | 42 | Marked “Edition awaiting confirmation” |
 | Not found in the catalogues searched, kept because it is the entry's only key work | 2 | Marked “not found in catalogues” |
 
 Catalogue coverage is uneven. Books from smaller publishers, including many African imprints, book chapters and reports are often missing. A mark therefore means “check this before citing”, not “this is wrong”. A catalogue match confirms that a work exists with that title, author and year; it does not confirm page ranges, and it does not judge the description of the framework.

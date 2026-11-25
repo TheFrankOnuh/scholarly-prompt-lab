@@ -237,7 +237,7 @@ body.tour-on main { padding-bottom: 260px; }
 .field-tabs button[aria-pressed="true"] { background: var(--accent-soft); color: var(--ink); border-color: var(--accent); }
 .field-tabs button:hover { filter: none; color: var(--ink); }
 .picker-list { max-height: 320px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
-.picker-group h4 {
+.picker-group h3 {
   position: sticky; top: 0; z-index: 1; margin: 0; padding: 6px 12px; font: 700 0.72rem/1.3 var(--sans);
   letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); background: var(--code); border-bottom: 1px solid var(--line);
 }
@@ -426,7 +426,7 @@ button:disabled, button:disabled:hover { opacity: 1; background: var(--code); co
 .seg button:hover { background: var(--accent-soft); color: var(--ink); }
 .seg button[aria-pressed="true"] { background: var(--btn); color: var(--btn-ink); }
 .picker-list { max-height: 380px; }
-.picker-group h4 { padding: 8px 14px; font-size: 0.74rem; color: var(--ink); background: var(--code); }
+.picker-group h3 { padding: 8px 14px; font-size: 0.74rem; color: var(--ink); background: var(--code); }
 .theory-row { padding: 12px 14px; gap: 12px; }
 .theory-row:hover { background: var(--code); }
 .theory-row.on { background: var(--accent-soft); box-shadow: inset 4px 0 0 var(--accent); }
@@ -568,3 +568,13 @@ legend { align-items: flex-start; gap: 12px; width: 100%; }
 h1.brand { margin: 0; line-height: 0; }
 h1.brand img { display: block; height: 36px; width: auto; max-width: 100%; }
 @media (max-width: 640px) { h1.brand img { height: 30px; } }
+
+/* ---------- scoring descriptors, privacy ---------- */
+.rubric { margin-top: 4px; font-size: 0.84rem; }
+.rubric summary { cursor: pointer; color: var(--accent); font-weight: 600; min-height: 28px; display: inline-flex; align-items: center; }
+.rubric ul { margin: 4px 0 0; padding-left: 18px; color: var(--muted); display: grid; gap: 3px; }
+.privacy { margin-top: 10px; border: 1.5px solid var(--line); border-radius: 10px; padding: 6px 14px; background: var(--surface); color: var(--ink); }
+.privacy summary { cursor: pointer; font-weight: 600; min-height: 40px; display: flex; align-items: center; }
+.privacy ul { margin: 4px 0 10px; padding-left: 20px; display: grid; gap: 8px; }
+.report code { font-size: 0.78rem; word-break: break-all; background: #f1efe8; color: #17201c; }
+.table-wrap:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
