@@ -9,7 +9,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="theme-color" content="#185c4a">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="styles.css?v=0.6.1">
+  <link rel="stylesheet" href="styles.css?v=0.6.2">
 </head>
 <body>
   <header class="site-header">
@@ -30,6 +30,8 @@
   <main class="wrap">
     <p class="notice">Everything runs in your browser. Nothing you type is sent anywhere, and the Lab does not call any AI model: you copy the prompt into the system you are studying, then log what came back.</p>
 
+    <p class="notice warn" id="storageWarn" role="alert" hidden>This browser's storage is full, so recent work may not be saved. Use Export JSON in Log &amp; evaluate now, then delete old entries or remove very large source texts.</p>
+
     <!-- BUILD -->
     <section id="panel-build" role="tabpanel" aria-labelledby="tab-build">
       <div class="start card">
@@ -39,7 +41,7 @@
           <div class="actions">
             <button type="button" id="startOwn">Start my own research</button>
             <button type="button" class="ghost" id="tourStart">Take the 2-minute demo</button>
-            <label class="ghost button-like" for="sourceFiles">Load your own files</label>
+            <button type="button" class="ghost" data-pick="sourceFiles">Load your own files</button>
           </div>
         </div>
         <div class="start-example">
@@ -100,7 +102,7 @@
                 <p class="hint">Your theories are saved in this browser and included when you export a design. To suggest one for everyone, use the share link that appears beside it.</p>
               </div>
             </div>
-            <div id="theoryRecs" class="recs" aria-live="polite" hidden></div>
+            <div id="theoryRecs" class="recs" hidden></div>
             <label for="theoryNotes">How you are using theory <span class="muted">(optional notes for the model)</span></label>
             <textarea id="theoryNotes" name="theoryNotes" rows="2" placeholder="e.g. Read framing through Igbo dual-sex political institutions"></textarea>
           </fieldset>
@@ -125,8 +127,8 @@
             <label for="sourceText">Source text <span class="muted">(optional: paste the corpus the model must stay within)</span></label>
             <textarea id="sourceText" name="sourceText" rows="4" placeholder="[DOC-01] ...&#10;[DOC-02] ..."></textarea>
             <div class="upload-row">
-              <label class="ghost button-like" for="sourceFiles">Load your own files</label>
-              <input type="file" id="sourceFiles" accept=".pdf,.docx,.doc,.txt,.md,.csv,.tsv,.json,.xml,.html,.srt,.vtt,text/*,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" multiple hidden>
+              <button type="button" class="ghost" data-pick="sourceFiles">Load your own files</button>
+              <input type="file" id="sourceFiles" aria-label="Load your own files" tabindex="-1" accept=".pdf,.docx,.doc,.txt,.md,.csv,.tsv,.json,.xml,.html,.srt,.vtt,text/*,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" multiple hidden>
               <span class="hint" id="sourceInfo">PDF, Word (.docx) or text files. You check the extracted text before it is used. Each file is tagged DOC-01, DOC-02… Files are read in your browser and never uploaded.</span>
             </div>
             <label for="context">Cultural, linguistic and historical context</label>
@@ -238,7 +240,8 @@
           <label for="lgOutput">Model output <span class="muted">(paste the AI's full response)</span></label>
           <textarea id="lgOutput" rows="8" required></textarea>
 
-          <div id="autoChecks" class="auto-checks" aria-live="polite"></div>
+          <div id="autoChecks" class="auto-checks"></div>
+          <p class="vh" id="checksAnnounce" role="status"></p>
 
           <div class="eval-head">
             <h3 class="h-small">Evaluation <span class="muted">(1 = poor, 5 = strong)</span></h3>
@@ -293,8 +296,8 @@
             <button type="button" id="expJson" class="ghost">Export JSON</button>
             <button type="button" id="expCsv" class="ghost">Export CSV</button>
             <button type="button" id="expMd" class="ghost">Export report (.md)</button>
-            <label class="ghost button-like" for="impJson">Import JSON</label>
-            <input type="file" id="impJson" accept="application/json" hidden>
+            <button type="button" class="ghost" data-pick="impJson">Import JSON</button>
+            <input type="file" id="impJson" aria-label="Import JSON" tabindex="-1" accept="application/json" hidden>
           </div>
         </aside>
       </div>
@@ -339,13 +342,13 @@
     <p><span id="offlineStatus" role="status"></span> <button type="button" id="installBtn" class="ghost small-btn" hidden>Install the Lab on this device</button></p>
   </footer>
 
-  <script src="theories.js?v=0.6.1"></script>
-  <script src="theory-links.js?v=0.6.1"></script>
-  <script src="disciplines.js?v=0.6.1"></script>
-  <script src="data.js?v=0.6.1"></script>
-  <script src="checks.js?v=0.6.1"></script>
-  <script src="app.js?v=0.6.1"></script>
-  <script src="tour.js?v=0.6.1"></script>
-  <script src="offline.js?v=0.6.1"></script>
+  <script src="theories.js?v=0.6.2"></script>
+  <script src="theory-links.js?v=0.6.2"></script>
+  <script src="disciplines.js?v=0.6.2"></script>
+  <script src="data.js?v=0.6.2"></script>
+  <script src="checks.js?v=0.6.2"></script>
+  <script src="app.js?v=0.6.2"></script>
+  <script src="tour.js?v=0.6.2"></script>
+  <script src="offline.js?v=0.6.2"></script>
 </body>
 </html>

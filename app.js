@@ -3,7 +3,7 @@
   "use strict";
 
   const L = window.LAB;
-  const VERSION = "0.6.1";
+  const VERSION = "0.6.2";
   const KEY_DRAFT = "spl.draft.v1";
   const KEY_LOG = "spl.log.v1";
   const $ = (id) => document.getElementById(id);
@@ -18,8 +18,15 @@
   /* ---------- storage (never required for the page to work) ---------- */
   const store = {
     get(k, fallback) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : fallback; } catch (e) { return fallback; } },
-    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* ignore */ } }
+    set(k, v) {
+      try { localStorage.setItem(k, JSON.stringify(v)); return true; }
+      catch (e) { storageFull(); return false; }
+    }
   };
+  function storageFull() {
+    const w = document.getElementById("storageWarn");
+    if (w) w.hidden = false;
+  }
 
   /* ---------- helpers ---------- */
   function el(tag, attrs, children) {
@@ -133,7 +140,7 @@
           });
           opt.append(del);
         }
-        discList.append(opt); discOptions.push({ el: opt, value: d });
+        discList.append(opt); discOptions.push({ el: opt, value: d, mine: !!g.mine });
       });
     });
     if (typed && !discExists(typed)) {
@@ -144,7 +151,7 @@
     }
     if (!discOptions.length) discList.append(el("div", { class: "combo-empty", text: "Type a discipline name to add it." }));
     discList.hidden = false; discInput.setAttribute("aria-expanded", "true");
-    setActive(discOptions.length ? 0 : -1);
+    setActive(showAll ? discOptions.findIndex((o) => o.value && discNorm(o.value) === discNorm(discInput.value)) : (discOptions.length ? 0 : -1));
   }
   discInput.addEventListener("focus", () => { discInput.select(); renderDisc(true); });
   discInput.addEventListener("click", () => { if (discList.hidden) renderDisc(true); });
@@ -157,11 +164,17 @@
       setActive((discActive + (e.key === "ArrowDown" ? 1 : discOptions.length - 1)) % discOptions.length);
     } else if (e.key === "Enter") {
       e.preventDefault();
+      if (discList.hidden) return;
       const o = discOptions[discActive];
       if (o && o.add) addDiscipline(discInput.value);
       else if (o) chooseDiscipline(o.value);
       else if (discInput.value.trim()) addDiscipline(discInput.value);
     } else if (e.key === "Escape") { closeDisc(); }
+    else if (e.key === "Delete" && discOptions[discActive] && discOptions[discActive].mine) {
+      e.preventDefault();
+      const gone = discOptions[discActive].value;
+      myDisciplines = myDisciplines.filter((x) => x !== gone); store.set(KEY_DISC, myDisciplines); renderDisc(true);
+    }
   });
   discInput.addEventListener("blur", () => {
     setTimeout(() => {
@@ -196,11 +209,21 @@
   function highlight(text, q) {
     const frag = document.createDocumentFragment();
     if (!q) { frag.append(text); return frag; }
-    const n = norm(text);
-    let i = 0, at;
-    while ((at = n.indexOf(q, i)) !== -1) {
-      frag.append(text.slice(i, at), el("mark", { text: text.slice(at, at + q.length) }));
-      i = at + q.length;
+    // normalise one visible character at a time, remembering where each came from in the original
+    let n = ""; const map = [];
+    for (const m of text.matchAll(/\P{M}\p{M}*/gu)) {
+      const piece = norm(m[0]);
+      for (let k = 0; k < piece.length; k++) { n += piece[k]; map.push(m.index); }
+      if (!piece.length) continue;
+    }
+    map.push(text.length);
+    const endOf = (ni) => { let e = map[ni]; while (e < text.length && /\p{M}/u.test(text[e])) e++; return e; };
+    let i = 0, at, from = 0;
+    while ((at = n.indexOf(q, from)) !== -1) {
+      const a = map[at], b = endOf(at + q.length);
+      if (a > i) frag.append(text.slice(i, a));
+      frag.append(el("mark", { text: text.slice(a, b) }));
+      i = b; from = at + q.length;
     }
     frag.append(text.slice(i));
     return frag;
@@ -258,11 +281,20 @@
   }
 
   function renderTheoryPicker() {
+    const active = document.activeElement;
+    const fk = active && active.dataset && $("builder").contains(active) ? active.dataset.fk : null;
+    renderTheoryPickerInner();
+    if (fk) {
+      const again = [...document.querySelectorAll("[data-fk]")].find((n) => n.dataset.fk === fk);
+      (again || $("theorySearch")).focus({ preventScroll: true });
+    }
+  }
+  function renderTheoryPickerInner() {
     // chips
     const chips = $("theoryChips"); chips.replaceChildren();
     selectedTheories.forEach((id) => {
       const t = theoryById(id); if (!t) return;
-      const x = el("button", { type: "button", "aria-label": "Remove " + t.n, title: "Remove", text: "×" });
+      const x = el("button", { type: "button", "aria-label": "Remove " + t.n, title: "Remove", text: "×", "data-fk": "chip:" + id });
       x.addEventListener("click", () => toggleTheory(id, false));
       chips.append(el("span", { class: "chip", title: t.n + (t.t ? " (" + t.t + ")" : "") }, [el("span", { text: t.n }), x]));
     });
@@ -296,7 +328,7 @@
       const box = el("div", { class: "picker-group" }, [el("h4", { text: g.label + " · " + g.items.length })]);
       g.items.forEach((t) => {
         const on = selectedTheories.includes(t.id);
-        const cb = el("input", { type: "checkbox", value: t.id });
+        const cb = el("input", { type: "checkbox", value: t.id, "data-fk": "cb:" + t.id });
         cb.checked = on;
         cb.addEventListener("change", () => toggleTheory(t.id, cb.checked));
         const name = el("span", { class: "tn" }, [highlight(t.n, q)]);
@@ -306,7 +338,7 @@
         const tools = el("span", { class: "tools" });
         if (t.works && t.works.length) {
           const open = openDetails.has(t.id);
-          const det = el("button", { type: "button", "aria-expanded": open ? "true" : "false", text: open ? "Hide" : "Sources" });
+          const det = el("button", { type: "button", "aria-expanded": open ? "true" : "false", text: open ? "Hide" : "Sources", "data-fk": "src:" + t.id });
           det.addEventListener("click", (e) => { e.preventDefault(); if (openDetails.has(t.id)) openDetails.delete(t.id); else openDetails.add(t.id); renderTheoryPicker(); });
           tools.append(det);
         }
@@ -473,19 +505,20 @@
     const m = cueRe(stem).exec(text);
     return m ? m[0].replace(/^[^\p{L}]/u, "") : stem;
   }
-  let matCache = { key: null, text: "", counts: new Map() };
-  function materialCount(stem, text) {
-    const key = text.length + ":" + text.slice(0, 200) + text.slice(-200);
-    if (matCache.key !== key) matCache = { key, text: norm(text), counts: new Map() };
+  // The source text can be very large, so its cue counts are kept until the source itself changes.
+  let matCache = { raw: null, text: "", counts: new Map() };
+  function materialCount(stem, sourceText, small) {
+    if (matCache.raw !== sourceText) matCache = { raw: sourceText, text: norm(sourceText), counts: new Map() };
     if (!matCache.counts.has(stem)) matCache.counts.set(stem, (matCache.text.match(cueRe(stem)) || []).length);
-    return matCache.counts.get(stem);
+    return matCache.counts.get(stem) + (small ? (small.match(cueRe(stem)) || []).length : 0);
   }
-  let recsHidden = false;
+  let recsHidden = false, recsSig = "";
   function recommend(s) {
     if (selectedTheories.length > 1) return { mode: null, items: [] };
     const base = selectedTheories.length === 1 ? theoryById(selectedTheories[0]) : null;
     const q = norm([s.question, s.terms].join(" "));
     const material = [s.sourceText, s.context, s.sourceDesc].join("\n");
+    const smallMat = norm(s.context + "\n" + s.sourceDesc);
     if (!base && q.trim().length < 12 && material.trim().length < 40) return { mode: null, items: [] };
     const baseWords = base ? contentWords(base.n + " " + base.a) : new Set();
     const items = [];
@@ -499,7 +532,7 @@
       const inQ = [], inM = [];
       cues.forEach((c) => {
         if (inQ.length < 3 && cueRe(c).test(q)) inQ.push(matchedWord(c, q));
-        else if (inM.length < 3 && material.length > 40) { const n = materialCount(c, material); if (n >= 2) inM.push(matchedWord(c, matCache.text) + " (" + n + "×)"); }
+        else if (inM.length < 3 && material.length > 40) { const n = materialCount(c, s.sourceText, smallMat); if (n >= 2) inM.push(matchedWord(c, matCache.text + " " + smallMat) + " (" + n + "×)"); }
       });
       if (inQ.length) { score += 2 * inQ.length; anchored = true; why.push("Your question mentions: " + inQ.join(", ")); }
       if (inM.length) { score += inM.length; anchored = true; why.push("Your material mentions: " + inM.join(", ")); }
@@ -524,6 +557,9 @@
     const box = $("theoryRecs");
     if (recsHidden) { box.hidden = true; return; }
     const r = recommend(s);
+    const sig = r.mode + "|" + (r.base ? r.base.id : "") + "|" + r.items.map((x) => x.t.id + ":" + x.why.join(";")).join("|");
+    if (sig === recsSig && !box.hidden === !!(r.mode && r.items.length)) return;     // nothing changed: leave it alone
+    recsSig = sig;
     box.replaceChildren();
     if (!r.mode || !r.items.length) { box.hidden = true; return; }
     box.hidden = false;
@@ -536,7 +572,7 @@
     box.append(head);
     r.items.forEach(({ t, why }) => {
       const add = el("button", { type: "button", class: "small-btn", text: "+ Add" });
-      add.addEventListener("click", () => toggleTheory(t.id, true));
+      add.addEventListener("click", () => { toggleTheory(t.id, true); $("theorySearch").focus({ preventScroll: true }); });
       box.append(el("div", { class: "rec" }, [
         el("div", {}, [el("strong", { text: t.n }), t.t ? el("span", { class: "tt", text: " " + t.t }) : "", el("span", { class: "why", text: why.join(" · ") })]),
         add
@@ -557,12 +593,33 @@
     FIELDS.forEach((f) => (s[f] = $(f).value));
     s.theories = selectedTheories.slice();
     s.theoryDefs = s.theories.map(theoryById).filter((t) => t && t.custom);
+    s.exampleId = $("example").value;
     s.safeguards = [...document.querySelectorAll("#safeguards input:checked")].map((i) => i.value);
     s.planCross = $("planCross").checked;
     s.planLog = $("planLog").checked;
     s.runs = $("runs").value;
     s.models = $("models").value;
     return s;
+  }
+
+  function normaliseDesign(d) {
+    // designs come from older versions, other people's exports and hand-edited files: never trust their shape
+    const o = Object.assign({}, BLANK);
+    if (!d || typeof d !== "object") return o;
+    Object.keys(BLANK).concat(["runs", "models", "theory", "exampleId"]).forEach((k) => { if (d[k] !== undefined && d[k] !== null) o[k] = d[k]; });
+    ["discipline", "question", "theoryNotes", "technique", "procedure", "fewshot", "sourceDesc", "sourceText", "context", "terms", "output", "fields"].forEach((k) => { o[k] = typeof o[k] === "string" ? o[k] : String(o[k] == null ? "" : o[k]); });
+    if (!L.techniques[o.technique]) o.technique = BLANK.technique;
+    if (!["table", "json", "csv", "prose"].includes(o.output)) o.output = "table";
+    o.theories = Array.isArray(d.theories) ? d.theories.filter((x) => typeof x === "string") : [];
+    o.safeguards = Array.isArray(d.safeguards) ? d.safeguards.filter((x) => typeof x === "string") : BLANK.safeguards.slice();
+    o.theoryDefs = Array.isArray(d.theoryDefs) ? d.theoryDefs.filter((t) => t && typeof t === "object" && typeof t.id === "string" && typeof t.n === "string" && typeof t.a === "string")
+      .map((t) => ({ id: t.id, f: typeof t.f === "string" ? t.f : "mine", n: t.n, t: typeof t.t === "string" ? t.t : "", a: t.a, custom: true })) : [];
+    if (!o.discipline.trim()) o.discipline = "History";
+    return o;
+  }
+  function matchingExample() {
+    const q = $("question").value.trim();
+    return q ? L.examples.find((e) => e.question.trim() === q) : null;
   }
 
   function writeState(s) {
@@ -672,7 +729,14 @@
     store.set(KEY_DRAFT, s);
     renderRecs(s);
     updateSourceInfo();
-    renderStudy(s);
+    if (!$("panel-study").hidden) renderStudy(s);
+  }
+  let buildTimer;
+  function scheduleBuild(e) {
+    // typing in the theory search, the add-theory form or the discipline box does not change the design
+    if (e && e.target && e.target.closest && e.target.closest(".picker, .combo")) return;
+    clearTimeout(buildTimer);
+    buildTimer = setTimeout(renderBuild, 160);
   }
 
   /* ---------- render: study ---------- */
@@ -738,8 +802,62 @@
   }
 
   /* ---------- log ---------- */
-  let log = store.get(KEY_LOG, []);
-  if (!Array.isArray(log)) log = [];
+  const KEY_SRC = "spl.sources.v1";
+  const KEY_LOGFORM = "spl.logform.v1";
+  let sources = store.get(KEY_SRC, {});
+  if (!sources || typeof sources !== "object" || Array.isArray(sources)) sources = {};
+  function srcHash(t) { let h = 0x811c9dc5; for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 0x01000193); } return (h >>> 0).toString(16).padStart(8, "0") + "-" + t.length.toString(36); }
+  const SRC_BLOCK = /<<<BEGIN SOURCE>>>\n([\s\S]*?)\n<<<END SOURCE>>>/;
+  // A prompt embeds the whole source text. Keeping one copy per logged entry fills the browser's storage,
+  // so the source is stored once and each entry points to it.
+  function packPrompt(prompt) {
+    const m = SRC_BLOCK.exec(prompt || "");
+    if (!m || m[1].length < 400 || /^\[\[SOURCE [0-9a-z-]+\]\]$/.test(m[1])) return prompt || "";
+    const h = srcHash(m[1]);
+    sources[h] = m[1];
+    return prompt.replace(SRC_BLOCK, () => "<<<BEGIN SOURCE>>>\n[[SOURCE " + h + "]]\n<<<END SOURCE>>>");
+  }
+  function fullPrompt(e) {
+    return (e.prompt || "").replace(/\[\[SOURCE ([0-9a-z-]+)\]\]/, (all, h) => (Object.prototype.hasOwnProperty.call(sources, h) ? sources[h] : "[source text is not stored on this device]"));
+  }
+  const CRIT_IDS = L.criteria.map((c) => c.id);
+  function normaliseEntry(e) {
+    if (!e || typeof e !== "object" || Array.isArray(e)) return null;
+    const str = (v) => (typeof v === "string" ? v : v == null ? "" : String(v));
+    const pick = (obj, fn) => { const o = {}; if (obj && typeof obj === "object") CRIT_IDS.forEach((k) => { if (Object.prototype.hasOwnProperty.call(obj, k)) { const v = fn(obj[k]); if (v !== undefined) o[k] = v; } }); return o; };
+    const sug = (v) => { if (!v || typeof v !== "object") return undefined; const o = {}; ["checks", "ai"].forEach((k) => { const x = v[k]; if (x && typeof x === "object") o[k] = { score: Number.isInteger(x.score) && x.score >= 1 && x.score <= 5 ? x.score : null, reason: str(x.reason), model: str(x.model) }; }); return o; };
+    const c = e.checks && typeof e.checks === "object" ? e.checks : null;
+    const num = (v) => (Number.isFinite(+v) ? +v : 0);
+    return {
+      id: str(e.id) || Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
+      condition: CONDITIONS.some((x) => x.id === e.condition) ? e.condition : "custom",
+      run: parseInt(e.run, 10) || 1, model: str(e.model), date: str(e.date), settings: str(e.settings), output: str(e.output),
+      scores: pick(e.scores, (v) => (/^[1-5]$/.test(String(v)) ? String(v) : undefined)),
+      scoreStatus: e.scoreStatus && typeof e.scoreStatus === "object" ? pick(e.scoreStatus, (v) => (["suggested", "confirmed", "manual"].includes(v) ? v : undefined)) : null,
+      suggested: e.suggested && typeof e.suggested === "object" ? pick(e.suggested, sug) : null,
+      evaluator: str(e.evaluator), sycophancy: !!e.sycophancy, notes: str(e.notes), errors: str(e.errors),
+      checks: c ? { sourceWords: num(c.sourceWords), quotations: num(c.quotations), exact: num(c.exact), near: num(c.near), missing: num(c.missing), termsMissing: num(c.termsMissing),
+        missingDocs: Array.isArray(c.missingDocs) ? c.missingDocs.map(str) : [], outsideFacts: Array.isArray(c.outsideFacts) ? c.outsideFacts.map(str) : [],
+        findings: num(c.findings), alternatives: num(c.alternatives), debris: num(c.debris) } : null,
+      secondModel: e.secondModel && typeof e.secondModel === "object" ? { model: str(e.secondModel.model), scores: e.secondModel.scores && typeof e.secondModel.scores === "object" ? e.secondModel.scores : {},
+        errors: Array.isArray(e.secondModel.errors) ? e.secondModel.errors : [], adoptedFraming: !!e.secondModel.adoptedFraming, overall: str(e.secondModel.overall) } : null,
+      question: str(e.question), prompt: packPrompt(str(e.prompt)), loggedAt: str(e.loggedAt), labVersion: str(e.labVersion)
+    };
+  }
+  function loadLog() { const raw = store.get(KEY_LOG, []); return (Array.isArray(raw) ? raw : []).map(normaliseEntry).filter(Boolean); }
+  let log = loadLog();
+  function saveLog() {
+    // drop stored sources that no entry points to any more
+    const used = new Set();
+    log.forEach((e) => { const m = /\[\[SOURCE ([0-9a-z-]+)\]\]/.exec(e.prompt || ""); if (m) used.add(m[1]); });
+    Object.keys(sources).forEach((h) => { if (!used.has(h)) delete sources[h]; });
+    const ok1 = store.set(KEY_SRC, sources), ok2 = store.set(KEY_LOG, log);
+    return ok1 && ok2;
+  }
+  window.addEventListener("storage", (ev) => {
+    // another tab saved entries: pick them up instead of overwriting them later
+    if (ev.key === KEY_LOG || ev.key === KEY_SRC) { sources = store.get(KEY_SRC, {}) || {}; log = loadLog(); renderLog(); }
+  });
 
   function condName(id) { const c = CONDITIONS.find((x) => x.id === id); return c ? c.n + ". " + c.name : "Build tab prompt"; }
   function countsScore(e, id) {
@@ -873,16 +991,17 @@
       box.append(d);
     }
     const note = el("p", { class: "ac-note", text: "Checked in your browser against the source text in the Build tab (" + r.sourceWords.toLocaleString() + " words). These checks find things to look at; they do not judge interpretations. " });
-    if ($("lgErrors").value.trim() && $("lgErrors").value.trim() !== lastAutoErrors.trim()) {
-      const b = el("button", { type: "button", class: "ghost small-btn", text: "Replace Errors found with these results" });
-      b.addEventListener("click", () => { refreshErrors(true); renderChecks(); });
-      note.append(b);
-    }
+    const b = el("button", { type: "button", class: "ghost small-btn", text: "Reset \u201cErrors found\u201d to these results" });
+    b.addEventListener("click", () => { if ($("lgErrors").value.trim() === lastAutoErrors.trim() || confirm("Replace what is in \u201cErrors found\u201d, including anything you typed there?")) refreshErrors(true); });
+    note.append(b);
+    if (r.formatNote) box.append(el("p", { class: "ac-note", text: r.formatNote }));
     box.append(note);
   }
 
+  let lastChecked = null;
   function runChecks() {
     const out = $("lgOutput").value;
+    lastChecked = out;
     if (!out.trim()) {
       checks = null; renderChecks();
       L.criteria.forEach((c) => { if (sugs[c.id]) delete sugs[c.id].checks; });
@@ -904,7 +1023,6 @@
   let checkTimer;
   $("lgOutput").addEventListener("input", () => { clearTimeout(checkTimer); checkTimer = setTimeout(runChecks, 400); });
   $("lgCondition").addEventListener("change", runChecks);
-  $("lgErrors").addEventListener("input", () => { if (checks) renderChecks(); });
 
   /* second-model evaluation */
   $("copyEvalPrompt").addEventListener("click", () => {
@@ -941,7 +1059,6 @@
   function mean(arr) { return arr.length ? (arr.reduce((a, b) => a + b, 0) / arr.length) : null; }
 
   function renderLog() {
-    store.set(KEY_LOG, log);
     $("entryCount").textContent = "(" + log.length + ")";
     const t = $("entries"); t.replaceChildren();
     if (!log.length) {
@@ -953,11 +1070,11 @@
         const scores = L.criteria.map((c) => c.label.split(" ")[0].slice(0, 4) + " " + (e.scores[c.id] ? e.scores[c.id] + (countsScore(e, c.id) ? "" : "?") : "–")).join(" · ");
         const del = el("button", { type: "button", class: "ghost", text: "Delete" });
         del.addEventListener("click", () => {
-          if (confirm("Delete this entry? This cannot be undone unless you exported it.")) { log = log.filter((x) => x.id !== e.id); renderLog(); }
+          if (confirm("Delete this entry? This cannot be undone unless you exported it.")) { log = log.filter((x) => x.id !== e.id); saveLog(); renderLog(); }
         });
         const flags = el("td");
         if (e.sycophancy) flags.append(el("span", { class: "flag", text: "adopted framing" }), " ");
-        if (e.checks && (e.checks.missing || e.checks.near || e.checks.termsMissing)) flags.append(el("span", { class: "flag", text: (e.checks.missing + e.checks.near + e.checks.termsMissing) + " quote issues" }), " ");
+        if (e.checks && (e.checks.missing || e.checks.near || e.checks.termsMissing)) flags.append(el("span", { class: "flag", text: ((e.checks.missing || 0) + (e.checks.near || 0) + (e.checks.termsMissing || 0)) + " quote issues" }), " ");
         if (e.scoreStatus && Object.values(e.scoreStatus).includes("suggested")) flags.append(el("span", { class: "flag", text: "unconfirmed scores" }));
         body.append(el("tr", {}, [
           el("td", { text: e.date }), el("td", { text: e.model }), el("td", { text: condName(e.condition) }),
@@ -969,7 +1086,7 @@
     }
     // summary
     const sum = $("summary"); sum.replaceChildren();
-    const groups = {};
+    const groups = Object.create(null);
     log.forEach((e) => (groups[e.condition] = groups[e.condition] || []).push(e));
     const keys = Object.keys(groups);
     if (!keys.length) { sum.append(el("p", { class: "muted", text: "Averages per condition appear here once you log scored outputs." })); return; }
@@ -1022,7 +1139,8 @@
     const s = readState();
     const cond = $("lgCondition").value;
     const c = CONDITIONS.find((x) => x.id === cond);
-    if (!checks) runChecks();
+    clearTimeout(checkTimer);
+    if (!checks || $("lgOutput").value !== lastChecked) runChecks();     // never save checks that belong to an earlier version of the text
     const scores = {}, scoreStatus = {}, suggested = {};
     L.criteria.forEach((cr) => {
       const v = $("sc_" + cr.id).value;
@@ -1041,19 +1159,26 @@
         termsMissing: checks.termsMissing.length, missingDocs: checks.missingDocs, outsideFacts: checks.outsideFacts.map((f) => f.text),
         findings: checks.findings, alternatives: checks.alternatives, debris: checks.debris.length } : null,
       secondModel: aiEval ? { model: $("evModel").value.trim() || aiEval.model, scores: aiEval.scores, errors: aiEval.errors, adoptedFraming: aiEval.framing, overall: aiEval.overall } : null,
-      question: s.question, prompt: buildPrompt(s, c ? c.n : 4), loggedAt: new Date().toISOString(), labVersion: VERSION
+      question: s.question, prompt: packPrompt(buildPrompt(s, c ? c.n : 4)), loggedAt: new Date().toISOString(), labVersion: VERSION
     });
+    const saved = saveLog();
     renderLog();
+    if (!saved) { flash("logStatus", "This browser's storage is full, so the entry is NOT safely saved. Export JSON now, then delete old entries."); return; }
     $("lgOutput").value = ""; $("lgNotes").value = ""; $("lgSyco").checked = false;
+    try { localStorage.removeItem(KEY_LOGFORM); } catch (e) { /* ignore */ }
     resetEvaluation();
     $("lgRun").value = (parseInt($("lgRun").value, 10) || 1) + 1;
     flash("logStatus", "Saved with the exact prompt, the automatic checks, the errors list and the status of every score.");
   });
 
-  function csvCell(v) { v = String(v == null ? "" : v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
+  function csvCell(v) {
+    v = String(v == null ? "" : v);
+    if (/^[=+\-@\t\r]/.test(v)) v = "'" + v;        // stop spreadsheets reading text as a formula
+    return /[",\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+  }
 
   $("expJson").addEventListener("click", () => {
-    download("prompt-lab-log-" + today() + ".json", JSON.stringify({ tool: "Scholarly Prompt Lab", version: VERSION, exportedAt: new Date().toISOString(), design: readState(), entries: log }, null, 2), "application/json");
+    download("prompt-lab-log-" + today() + ".json", JSON.stringify({ tool: "Scholarly Prompt Lab", version: VERSION, exportedAt: new Date().toISOString(), design: readState(), entries: log.map((e) => Object.assign({}, e, { prompt: fullPrompt(e) })) }, null, 2), "application/json");
   });
   $("expCsv").addEventListener("click", () => {
     const crit = L.criteria.map((c) => c.id);
@@ -1066,7 +1191,7 @@
         crit.map((c) => sg(e, c, "checks")), crit.map((c) => sg(e, c, "ai")),
         [e.secondModel ? e.secondModel.model : "", e.checks ? e.checks.quotations : "", e.checks ? e.checks.exact : "", e.checks ? e.checks.near : "",
           e.checks ? e.checks.missing + (e.checks.termsMissing || 0) : "", e.checks ? e.checks.outsideFacts.join("; ") : "",
-          e.sycophancy ? 1 : 0, e.errors || "", e.notes, e.question, e.prompt, e.output]));
+          e.sycophancy ? 1 : 0, e.errors || "", e.notes, e.question, fullPrompt(e), e.output]));
     download("prompt-lab-log-" + today() + ".csv", "﻿" + [head].concat(rows).map((r) => r.map(csvCell).join(",")).join("\r\n"), "text/csv;charset=utf-8");
   });
   $("expMd").addEventListener("click", () => {
@@ -1095,7 +1220,7 @@
       md += "- Adopted the prompt's framing without testing it: " + (e.sycophancy ? "yes" : "no") + "\n";
       if (e.notes) md += "- Notes: " + e.notes + "\n";
       if (e.errors) md += "\n**Errors found (reviewed by the researcher)**\n\n```text\n" + e.errors + "\n```\n";
-      md += "\n**Prompt**\n\n```text\n" + e.prompt + "\n```\n\n**Output**\n\n```text\n" + e.output + "\n```\n\n";
+      md += "\n**Prompt**\n\n```text\n" + fullPrompt(e) + "\n```\n\n**Output**\n\n```text\n" + e.output + "\n```\n\n";
     });
     download("prompt-lab-report-" + today() + ".md", md, "text/markdown;charset=utf-8");
   });
@@ -1106,17 +1231,16 @@
       const entries = Array.isArray(data) ? data : data.entries;
       if (!Array.isArray(entries)) throw new Error("no entries");
       const ids = new Set(log.map((e) => e.id));
-      let added = 0;
-      entries.forEach((e) => {
-        if (e && typeof e === "object" && e.id && !ids.has(e.id)) {
-          log.push(Object.assign({ scores: {}, output: "", model: "", date: "", condition: "custom", run: 1 }, e)); added++;
-        }
-      });
-      if (data.design && confirm("This file also contains a research design. Load it into the Build tab? (Your current design will be replaced.)")) {
-        writeState(data.design); renderBuild();
-      }
+      const incoming = entries.map(normaliseEntry).filter((e) => e && !ids.has(e.id));
+      const design = data && !Array.isArray(data) && data.design && typeof data.design === "object" ? normaliseDesign(data.design) : null;
+      log = log.concat(incoming);
+      const saved = saveLog();
       renderLog();
-      flash("logStatus", "Imported " + added + " new entr" + (added === 1 ? "y" : "ies") + ".");
+      if (design && confirm("This file also contains a research design. Load it into the Build tab? (Your current design will be replaced.)")) {
+        $("example").value = "";
+        writeState(design); renderBuild();
+      }
+      flash("logStatus", "Imported " + incoming.length + " new entr" + (incoming.length === 1 ? "y" : "ies") + "." + (saved ? "" : " Storage is full: export JSON now."));
     } catch (e) { flash("logStatus", "That file is not a Prompt Lab export."); }
     ev.target.value = "";
   });
@@ -1219,7 +1343,7 @@
     return res;
   }
 
-  let pending = [];
+  let pending = [], readRun = 0;
   function renderReview(loading) {
     const list = $("reviewList"); list.replaceChildren();
     if (loading) { list.append(el("p", { class: "muted", text: loading })); $("reviewAdd").disabled = true; return; }
@@ -1258,22 +1382,29 @@
     const files = [...ev.target.files];
     ev.target.value = "";
     if (!files.length) return;
+    const myRun = ++readRun;
     pending = [];
     openDialog();
     for (let i = 0; i < files.length; i++) {
       renderReview("Reading " + files[i].name + " (" + (i + 1) + " of " + files.length + ")…");
-      pending.push(await extractFile(files[i]));
+      const res = await extractFile(files[i]);
+      if (myRun !== readRun) return;       // the researcher cancelled, or chose other files, while this one was being read
+      pending.push(res);
     }
     renderReview();
   });
-  $("reviewCancel").addEventListener("click", () => { pending = []; closeDialog(); });
+  $("reviewCancel").addEventListener("click", () => { readRun++; pending = []; closeDialog(); });
+  $("review").addEventListener("close", () => { readRun++; pending = []; });
   $("reviewAdd").addEventListener("click", () => {
     const chosen = pending.filter((r) => r.include && r.text.trim());
     if (!chosen.length) return;
-    if ($("example").value) {
-      // Loading your own files starts your own design instead of adding to a worked example.
+    if (matchingExample()) {
+      // The form still holds an untouched worked example: loading your own files starts your own design.
       $("example").value = "";
       writeState(Object.assign({}, BLANK, { planCross: $("planCross").checked, planLog: $("planLog").checked }));
+    } else {
+      // The researcher has typed their own design: keep every word of it and only add the files.
+      $("example").value = "";
     }
     let text = $("sourceText").value.replace(/\s+$/, "");
     let n = nextDocNumber(text);
@@ -1292,8 +1423,9 @@
 
   /* ---------- events: build ---------- */
   $("builder").addEventListener("submit", (e) => e.preventDefault());
-  $("builder").addEventListener("input", renderBuild);
-  $("builder").addEventListener("change", renderBuild);
+  $("builder").addEventListener("input", scheduleBuild);
+  $("builder").addEventListener("change", scheduleBuild);
+  document.querySelectorAll("[data-pick]").forEach((b) => b.addEventListener("click", () => $(b.dataset.pick).click()));
   $("runs").addEventListener("input", renderBuild);
   $("models").addEventListener("input", renderBuild);
   let lastTechnique = null;
@@ -1308,6 +1440,11 @@
     renderBuild();
   });
   $("example").addEventListener("change", () => {
+    const hasOwnWork = $("question").value.trim() && !matchingExample();
+    if (hasOwnWork && !confirm("Replace your current design with " + ($("example").value ? "this example" : "a blank form") + "? Download your research design first if you want to keep it.")) {
+      $("example").value = "";
+      return;
+    }
     const x = L.examples.find((e) => e.id === $("example").value);
     const s = Object.assign({}, BLANK, x || {}, { planCross: $("planCross").checked, planLog: $("planLog").checked });
     if (!x) s.procedure = "";
@@ -1330,7 +1467,7 @@
   });
   $("copyPrompt").addEventListener("click", () => copy($("prompt").textContent, "buildStatus"));
   $("goLog").addEventListener("click", () => {
-    $("lgCondition").value = "custom";
+    if (!$("lgOutput").value.trim()) $("lgCondition").value = "custom";
     showTab("tab-log");
     runChecks();
     $("lgOutput").scrollIntoView({ behavior: "smooth", block: "center" });
@@ -1351,7 +1488,8 @@
       $(t.getAttribute("aria-controls")).hidden = !on;
     });
     try { history.replaceState(null, "", "#" + id.replace("tab-", "")); } catch (e) { /* ignore */ }
-    if (id === "tab-log" && $("lgOutput").value.trim()) runChecks();
+    if (id === "tab-study") renderStudy();
+    if (id === "tab-log" && $("lgOutput").value.trim() && $("lgOutput").value !== lastChecked) runChecks();
   }
   tabs.forEach((t, i) => {
     t.addEventListener("click", () => showTab(t.id));
@@ -1363,11 +1501,40 @@
   });
 
   /* ---------- init ---------- */
+  try {
+    // a demo that was interrupted (refresh, closed tab) left the sample in place: put the researcher's own design back
+    const b = localStorage.getItem("spl.tourBackup");
+    if (b !== null) {
+      const o = JSON.parse(b);
+      if (o && typeof o.draft === "string") localStorage.setItem(KEY_DRAFT, o.draft); else localStorage.removeItem(KEY_DRAFT);
+      localStorage.removeItem("spl.tourBackup");
+      localStorage.removeItem(KEY_LOGFORM);
+    }
+  } catch (e) { /* ignore */ }
   const draft = store.get(KEY_DRAFT, null);
-  writeState(Object.assign({}, BLANK, draft || L.examples[0], draft ? {} : { procedure: L.techniques[L.examples[0].technique].steps.join("\n") }));
-  if (!draft) $("example").value = L.examples[0].id;
+  const firstVisit = !draft || typeof draft !== "object";
+  writeState(firstVisit ? Object.assign({}, BLANK, L.examples[0], { procedure: L.techniques[L.examples[0].technique].steps.join("\n") }) : normaliseDesign(draft));
+  const fromExample = matchingExample();
+  if (fromExample) $("example").value = fromExample.id;
   renderBuild();
   renderLog();
+  // keep an unsaved log form across reloads and app switches (phones often discard background tabs)
+  const LOGFORM_FIELDS = ["lgModel", "lgSettings", "lgOutput", "lgErrors", "lgNotes", "lgEvaluator", "evModel", "evReply"];
+  const lf = store.get(KEY_LOGFORM, null);
+  if (lf && typeof lf === "object") {
+    LOGFORM_FIELDS.forEach((k) => { if (typeof lf[k] === "string") $(k).value = lf[k]; });
+    if (typeof lf.lgCondition === "string" && [...$("lgCondition").options].some((o) => o.value === lf.lgCondition)) $("lgCondition").value = lf.lgCondition;
+    if ($("lgOutput").value.trim()) runChecks();
+  }
+  let lfTimer;
+  $("logForm").addEventListener("input", () => {
+    clearTimeout(lfTimer);
+    lfTimer = setTimeout(() => {
+      const o = { lgCondition: $("lgCondition").value };
+      LOGFORM_FIELDS.forEach((k) => (o[k] = $(k).value));
+      if (LOGFORM_FIELDS.some((k) => o[k].trim())) store.set(KEY_LOGFORM, o); else { try { localStorage.removeItem(KEY_LOGFORM); } catch (e) { /* ignore */ } }
+    }, 600);
+  });
   const hash = location.hash.replace("#", "");
   if (hash && $("tab-" + hash)) showTab("tab-" + hash);
 })();

@@ -110,8 +110,17 @@
   }
 
   function start() {
+    var out = $("lgOutput");
+    if (out && out.value.trim()) {
+      alert("You have an unsaved model output in Log & evaluate. Save or clear it first, then start the demo: the demo uses that form.");
+      return;
+    }
     lastFocus = document.activeElement;
-    try { saved = { draft: localStorage.getItem("spl.draft.v1") }; } catch (e) { saved = { draft: null }; }
+    try {
+      saved = { draft: localStorage.getItem("spl.draft.v1") };
+      // kept on the device, so a refresh or a closed tab in the middle of the demo cannot lose the researcher's design
+      localStorage.setItem("spl.tourBackup", JSON.stringify(saved));
+    } catch (e) { saved = { draft: null }; }
     steps.forEach(function (s) { s.done = false; });
     document.body.classList.add("tour-on");
     build();
@@ -128,6 +137,8 @@
     try {
       if (saved && saved.draft !== null) localStorage.setItem("spl.draft.v1", saved.draft);
       else localStorage.removeItem("spl.draft.v1");
+      localStorage.removeItem("spl.tourBackup");
+      localStorage.removeItem("spl.logform.v1");
       sessionStorage.setItem("spl.tourDone", "1");
     } catch (e) { /* ignore */ }
     location.hash = "#build";

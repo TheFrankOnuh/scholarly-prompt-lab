@@ -29,18 +29,17 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
 
-  // Network first, so people online always get the newest version; fall back to the saved copy when offline or slow.
+  // Network first, so people online always get the newest version of every file together.
+  // The saved copy is used only when the network request fails, which is what happens offline.
   event.respondWith((async () => {
     const cache = await caches.open(CACHE);
-    const cached = await cache.match(req, { ignoreSearch: true });
-    const network = fetch(req).then((res) => {
+    try {
+      const res = await fetch(req);
       if (res && res.ok) cache.put(url.origin + url.pathname, res.clone());
       return res;
-    });
-    if (!cached) return network.catch(() => new Response("Offline and not yet saved on this device.", { status: 503, headers: { "Content-Type": "text/plain" } }));
-    // if the network takes longer than 3 seconds, show the saved copy and keep updating in the background
-    const timeout = new Promise((resolve) => setTimeout(() => resolve(null), 3000));
-    const first = await Promise.race([network.catch(() => null), timeout]);
-    return first && first.ok ? first : cached;
+    } catch (e) {
+      const cached = await cache.match(req, { ignoreSearch: true });
+      return cached || new Response("Offline and not yet saved on this device.", { status: 503, headers: { "Content-Type": "text/plain" } });
+    }
   })());
 });
