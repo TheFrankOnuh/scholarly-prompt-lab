@@ -8,7 +8,8 @@ const src = fs.readFileSync(path.join(__dirname, "..", "counter.js"), "utf8");
 // load a copy of the counter with a site name set, so what it would send can be inspected
 function load(code) {
   const ctx = {};
-  new Function("self", src.replace('var CODE = "";', 'var CODE = "' + code + '";'))(ctx);
+  const set = src.replace(/var CODE = "[^"]*";/, 'var CODE = "' + code + '";');
+  new Function("self", set)(ctx);
   return ctx.LAB_COUNTER;
 }
 const live = (o) => Object.assign({
@@ -20,6 +21,10 @@ test("the counter reads nothing the researcher types, loads or stores", () => {
   for (const banned of ["localStorage", "sessionStorage", "indexedDB", "document.cookie", "getElementById", "querySelector", ".value", "LAB_APP", "caches"]) {
     assert.ok(!src.includes(banned), "counter.js must not use " + banned);
   }
+});
+
+test("the counter is set to the Lab's own GoatCounter site", () => {
+  assert.match(src, /var CODE = "scholarly-prompt-lab";/);
 });
 
 test("with no site name set, nothing is ever sent", () => {

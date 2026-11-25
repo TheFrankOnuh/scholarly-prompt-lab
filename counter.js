@@ -8,7 +8,7 @@
    CODE is the name of the Lab's GoatCounter site. While it is empty, nothing is ever sent. */
 (function (root) {
   "use strict";
-  var CODE = "";
+  var CODE = "scholarly-prompt-lab";
   var CAMPAIGN = /^(ref|utm_source|utm_medium|utm_campaign)$/;
 
   function visitUrl(env) {
