@@ -12,6 +12,7 @@ To cite the Lab, use the DOI that always opens the latest version: [10.5281/zeno
 
 - Revised text for the CONTEXT framework: its introduction, the seven dimensions, the four roles of AI in humanities research and the closing statement, in the Lab, the README and the framework guide.
 - The framework is no longer described as a proposal.
+- Revised introduction to the Methods report tab.
 
 ## 1.2.0, November 2026
 
