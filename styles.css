@@ -670,15 +670,25 @@ dialog.drawer .dmeta { color: var(--muted); font-size: 0.9rem; margin: 0 0 8px; 
 .tab-intro p { margin: 0; }
 .step-nav-end button:last-child { margin-left: 0; }
 
-/* ---------- privacy statement: appears on hover or focus ---------- */
-.privacy { position: relative; margin-top: 10px; display: inline-block; max-width: 100%; }
-.privacy-trigger { background: transparent; color: var(--ink); border: 1.5px solid var(--line); border-radius: 10px; font-weight: 600; min-height: 44px; padding: 8px 14px; text-align: left; }
-.privacy-trigger:hover { filter: none; border-color: var(--accent); }
-.privacy-panel { display: none; position: absolute; left: 0; bottom: calc(100% + 8px); z-index: 30; width: min(620px, calc(100vw - 32px));
-  padding: 14px 18px; background: var(--surface); color: var(--ink); border: 1.5px solid var(--field); border-radius: 12px; box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18); }
-.privacy-panel::after { content: ""; position: absolute; left: 0; right: 0; top: 100%; height: 10px; }
-.privacy.show .privacy-panel { display: block; }
+/* ---------- privacy statement: a disclosure the researcher opens and closes ---------- */
+.privacy { margin-top: 10px; max-width: 100%; }
+.privacy-trigger { display: inline-flex; align-items: center; gap: 10px; background: transparent; color: var(--ink); border: 0; border-radius: 8px; font-weight: 600;
+  min-height: 44px; padding: 8px 4px; text-align: left; }
+.privacy-trigger:hover { filter: none; color: var(--accent); }
+.disclosure { width: 9px; height: 9px; flex: none; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: translateY(-2px) rotate(45deg); }
+.privacy-trigger[aria-expanded="true"] .disclosure { transform: translateY(2px) rotate(225deg); }
+.privacy-panel { margin: 4px 0 8px; max-width: 680px; padding: 12px 16px; background: var(--surface); color: var(--ink); border-radius: 12px; }
+.privacy-panel p { margin: 0 0 8px; }
 .privacy-panel ul { margin: 0; padding-left: 20px; display: grid; gap: 8px; font-size: 0.9rem; }
+@media (prefers-reduced-motion: no-preference) {
+  .disclosure { transition: transform 0.2s ease; animation: spl-nudge 1.4s ease 1.2s 2; }
+  .privacy-trigger[aria-expanded="true"] .disclosure { animation: none; }
+  @keyframes spl-nudge { 0%, 60%, 100% { translate: 0 0; } 30% { translate: 0 3px; } }
+  /* the install option: two soft pulses of its outline after the page loads, then still */
+  #installBtn.attention { animation: spl-invite 1.6s ease-out 2; }
+  @keyframes spl-invite { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 45%, transparent); } 100% { box-shadow: 0 0 0 10px transparent; } }
+}
+#installHelp:empty { display: none; }
 
 /* ---------- methods report: writing subcategories and the list of logged outputs ---------- */
 .sub-checks { margin: 0 0 4px 30px; padding-left: 12px; border-left: 2px solid var(--line); }

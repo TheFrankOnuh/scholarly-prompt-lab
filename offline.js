@@ -26,17 +26,36 @@
   });
 
   var deferred = null;
+  var help = document.getElementById("installHelp");
+  var installed = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone === true;
+  // Some browsers offer their own install prompt; others install only from their menu, and some cannot install at all.
+  function guidance() {
+    var ua = navigator.userAgent;
+    var ios = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    if (ios) return "To install, tap the Share button, then Add to Home Screen.";
+    if (/Firefox\//.test(ua) && !/Android/.test(ua)) return "This browser cannot install web apps. To install the Lab, open it in Chrome, Edge or Safari. You can also bookmark this page.";
+    if (/Safari\//.test(ua) && !/Chrome|Chromium|Edg\//.test(ua)) return "To install, choose File, then Add to Dock.";
+    if (/Android/.test(ua)) return "To install, open your browser's menu and choose Install app or Add to Home screen.";
+    return "To install, open your browser's menu and choose Install. If the option is missing, the Lab may already be installed on this device.";
+  }
+  if (btn && !installed) {
+    btn.hidden = false;
+    // one brief, gentle signal after the page settles; none for people who ask for reduced motion
+    setTimeout(function () { btn.classList.add("attention"); }, 1500);
+    btn.addEventListener("animationend", function () { btn.classList.remove("attention"); });
+  }
   window.addEventListener("beforeinstallprompt", function (e) {
     e.preventDefault();
     deferred = e;
-    if (btn) btn.hidden = false;
+    if (btn && !installed) btn.hidden = false;
   });
   if (btn) btn.addEventListener("click", function () {
-    if (!deferred) return;
+    if (!deferred) { if (help) help.textContent = guidance(); return; }
+    if (help) help.textContent = "";
     deferred.prompt();
     deferred.userChoice.then(function () { deferred = null; btn.hidden = true; });
   });
-  window.addEventListener("appinstalled", function () { if (btn) btn.hidden = true; say("Installed. Open it from your home screen or apps list, online or offline."); });
+  window.addEventListener("appinstalled", function () { if (btn) btn.hidden = true; if (help) help.textContent = ""; say("Installed. Open it from your home screen or apps list, online or offline."); });
   window.addEventListener("offline", function () { say("You are offline. The Lab keeps working, and your work stays saved in this browser."); });
   window.addEventListener("online", function () { say("Back online."); });
 })();

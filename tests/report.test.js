@@ -83,4 +83,7 @@ test("the selected logged outputs are kept, and sensible when nothing has been c
   assert.deepEqual(R.pickOutputs(log, { scope: "all" }, "Q1"), ["a", "b", "c"], "an earlier report that used every output");
   assert.deepEqual(R.pickOutputs(log, {}, "Q3"), ["a", "b", "c"], "no match: every output");
   assert.deepEqual(R.pickOutputs([], {}, "Q1"), []);
+  // outputs logged after the choice was saved are included; outputs the researcher unticked stay out
+  const later = log.concat([{ id: "d", question: "Q1" }]);
+  assert.deepEqual(R.pickOutputs(later, { outputs: ["a"], seen: ["a", "b", "c"] }, "Q1"), ["a", "d"]);
 });

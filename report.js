@@ -69,11 +69,16 @@
   }
 
   // Which logged outputs belong to the study. A saved choice is kept, minus outputs since deleted.
+  // Outputs logged after the choice was saved are added, so new runs are not left out by accident,
+  // while outputs the researcher unticked stay unticked.
   // With no saved choice (a first visit, or a report set up in an earlier version), the outputs for the current
   // research question are chosen, or every output if none matches or the earlier report used every output.
   function pickOutputs(log, st, question) {
     var ids = log.map(function (e) { return e.id; });
-    if (Array.isArray(st.outputs)) return st.outputs.filter(function (id) { return ids.indexOf(id) !== -1; });
+    if (Array.isArray(st.outputs)) {
+      var seen = Array.isArray(st.seen) ? st.seen : null;
+      return ids.filter(function (id) { return st.outputs.indexOf(id) !== -1 || (seen && seen.indexOf(id) === -1); });
+    }
     var q = String(question || "").trim();
     var mine = log.filter(function (e) { return String(e.question || "").trim() === q; }).map(function (e) { return e.id; });
     if (st.scope === "all" || !mine.length) return ids;
@@ -89,7 +94,7 @@
   var REL = A.RELEASE || {};
   // cite the DOI of exactly this version when it is known; otherwise the DOI that covers all versions
   var LAB_DOI = "https://doi.org/" + (REL.versionDoi || REL.conceptDoi || "10.5281/zenodo.24521711");
-  var USE_LABEL = { used: "Used as it stands", revised: "Used after the researcher's corrections", prompted: "Used only as a starting point for the researcher's own analysis", rejected: "Rejected", data: "Kept as data about the AI system", "": "Not recorded" };
+  var USE_LABEL = { used: "Used without modification", revised: "Used after the researcher's corrections", prompted: "Used to inform the researcher's own analysis", rejected: "Rejected", data: "Retained as research data about the AI system", "": "Decision pending" };
 
   function chosenRoles() {
     var out = [];
@@ -116,7 +121,7 @@
     return s;
   }
   function saveSettings() {
-    var s = { title: $("rpTitle").value, author: $("rpAuthor").value, roles: chosenRoles(), rolesVersion: 2, use: $("rpUse").value, sources: $("rpSources").checked, outputs: chosenOutputs() };
+    var s = { title: $("rpTitle").value, author: $("rpAuthor").value, roles: chosenRoles(), rolesVersion: 2, use: $("rpUse").value, sources: $("rpSources").checked, outputs: chosenOutputs(), seen: A.getLog().map(function (e) { return e.id; }) };
     try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) { /* ignore */ }
     return s;
   }
@@ -293,8 +298,8 @@
     if (n === 1) lim.push("The prompt was run once. A repeat run might give a different output.");
     else if (n > 1 && Object.keys(byCond).length === 1 && sysNames.length === 1) lim.push("All runs used the same system and prompt condition, so the effect of the prompt's wording was not tested.");
     if (withChecks.length) lim.push("The automatic checks only compare the output with the source text that was loaded. They cannot detect errors of fact that lie outside those sources, or judge interpretation.");
-    if (n && !second.length && Object.keys(evaluators).length < 2) lim.push("The outputs were evaluated by a single evaluator. No independent second evaluation was carried out.");
-    if (second.length) lim.push("The second-system evaluation is itself the output of an AI system and carries the same risks.");
+    if (n && Object.keys(evaluators).length < 2) lim.push("The outputs were evaluated by a single evaluator. No independent second evaluation by another researcher was carried out.");
+    if (second.length) lim.push("The second-system evaluation is itself the output of an AI system and carries the same risks. It is not an independent validation of the analysis.");
     lim.push("The versions of AI systems change over time, so the same prompt may not reproduce these outputs later. The prompts and outputs are therefore recorded in full.");
     out.push(list(lim.map(esc)));
 
@@ -317,12 +322,12 @@
       return [String(i + 1), niceDate(e.date), esc(e.model), esc(A.condName(e.condition)), String(e.run)].concat(L.criteria.map(function (c) { return e.scores[c.id] ? e.scores[c.id] + (A.countsScore(e, c.id) ? "" : " (unconfirmed)") : "–"; }), [esc(USE_LABEL[e.use || ""]) + (e.useNote ? ": " + esc(e.useNote) : "")]);
     })));
 
-    out.push("<h2>Appendix C. Errors found and outputs</h2>");
+    out.push("<h2>Appendix C. Identified errors and outputs</h2>");
     if (!n) out.push(p("No outputs logged."));
     entries.forEach(function (e, i) {
       out.push("<h3>C" + (i + 1) + ". " + esc(e.model) + ", " + niceDate(e.date) + ", " + esc(A.condName(e.condition)) + ", run " + e.run + "</h3>");
       if (e.checks && e.checks.sourceWords) out.push(p("Quotations checked: " + e.checks.quotations + " (" + e.checks.exact + " exact, " + e.checks.near + " differing in wording, " + (e.checks.missing + (e.checks.termsMissing || 0)) + " not found)."));
-      out.push(p("<strong>Errors found, as reviewed by the researcher:</strong>") + (e.errors ? "<pre>" + esc(e.errors) + "</pre>" : p("None recorded.")));
+      out.push(p("<strong>Identified errors, as reviewed by the researcher:</strong>") + (e.errors ? "<pre>" + esc(e.errors) + "</pre>" : p("None recorded.")));
       if (e.notes) out.push(p("<strong>Researcher's notes:</strong> " + esc(e.notes)));
       out.push(p("<strong>Output of the AI system:</strong>") + "<pre>" + esc(e.output) + "</pre>");
     });

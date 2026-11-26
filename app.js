@@ -88,7 +88,7 @@
     for (let i = 1; i <= 5; i++) sel.append(option(String(i), String(i)));
     $("criteria").append(el("div", { class: "criterion" }, [
       el("span", {}, [c.label, " ", el("span", { id: "st_" + c.id }), el("small", { text: c.help }),
-        el("details", { class: "rubric" }, [el("summary", { text: "What 1, 3 and 5 mean" }),
+        el("details", { class: "rubric" }, [el("summary", { text: "Scoring guidance" }),
           el("ul", {}, [el("li", {}, [el("strong", { text: "1: " }), c.rubric[0] + "."]), el("li", {}, [el("strong", { text: "3: " }), c.rubric[1] + "."]), el("li", {}, [el("strong", { text: "5: " }), c.rubric[2] + "."])])])]), sel,
       el("div", { class: "sugs", id: "sug_" + c.id })
     ]));
@@ -1306,9 +1306,9 @@
       d.append(ul);
       box.append(d);
     }
-    const note = el("p", { class: "ac-note", text: "Checked in your browser against the source text in the Build tab (" + r.sourceWords.toLocaleString() + " words). These checks find things to look at; they do not judge interpretations. " });
-    const b = el("button", { type: "button", class: "ghost small-btn", text: "Reset \u201cErrors found\u201d to these results" });
-    b.addEventListener("click", () => { if ($("lgErrors").value.trim() === lastAutoErrors.trim() || confirm("Replace what is in \u201cErrors found\u201d, including anything you typed there?")) refreshErrors(true); });
+    const note = el("p", { class: "ac-note", text: "Checked in your browser against the source text in the Build tab (" + r.sourceWords.toLocaleString() + " words). A matching quotation shows only that the same words appear in your source. It does not establish that a claim is accurate or that an interpretation is sound. " });
+    const b = el("button", { type: "button", class: "ghost small-btn", text: "Reset \u201cIdentified errors\u201d to these results" });
+    b.addEventListener("click", () => { if ($("lgErrors").value.trim() === lastAutoErrors.trim() || confirm("Replace what is in \u201cIdentified errors\u201d, including anything you typed there?")) refreshErrors(true); });
     note.append(b);
     if (r.formatNote) box.append(el("p", { class: "ac-note", text: r.formatNote }));
     box.append(note);
@@ -1406,7 +1406,7 @@
     const groups = Object.create(null);
     log.forEach((e) => (groups[e.condition] = groups[e.condition] || []).push(e));
     const keys = Object.keys(groups);
-    if (!keys.length) { sum.append(el("p", { class: "muted", text: "Averages per condition appear here once you log scored outputs." })); return; }
+    if (!keys.length) { sum.append(el("p", { class: "muted", text: "Mean evaluation scores for each research condition appear once confirmed scores have been recorded." })); return; }
     const tbl = el("table");
     tbl.append(el("tr", {}, ["Condition", "n"].concat(L.criteria.map((c) => c.label), ["Adopted framing"]).map((h) => el("th", { text: h }))));
     keys.sort().forEach((k) => {
@@ -1554,7 +1554,7 @@
       if (e.secondModel) md += "- Second-model evaluator: " + (e.secondModel.model || "—") + "\n";
       md += "- Adopted the prompt's framing without testing it: " + (e.sycophancy ? "yes" : "no") + "\n";
       if (e.notes) md += "- Notes: " + e.notes + "\n";
-      if (e.errors) md += "\n**Errors found (reviewed by the researcher)**\n\n```text\n" + e.errors + "\n```\n";
+      if (e.errors) md += "\n**Identified errors (reviewed by the researcher)**\n\n```text\n" + e.errors + "\n```\n";
       md += "\n**Prompt**\n\n```text\n" + fullPrompt(e) + "\n```\n\n**Output**\n\n```text\n" + e.output + "\n```\n\n";
     });
     download("prompt-lab-report-" + today() + ".md", md, "text/markdown;charset=utf-8");

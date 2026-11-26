@@ -3,7 +3,7 @@
       and the Log & evaluate tab (four steps).
    2. On small screens, the Build tab's prompt panel as a sheet fixed to the bottom of the screen.
    3. In the Sensitivity study, each condition's prompt shows its first lines until opened in full.
-   4. The privacy statement in the footer appears when the pointer rests on it or it receives keyboard focus.
+   4. The privacy statement in the footer opens and closes when the researcher selects it.
    Nothing here reads or stores research content. Only the chosen layout and step are remembered. */
 (function () {
   "use strict";
@@ -228,17 +228,14 @@
   }
   if (conds) { new MutationObserver(foldPrompts).observe(conds, { childList: true }); foldPrompts(); }
 
-  /* ---------- 4. privacy statement: shown on hover or keyboard focus ---------- */
-  // It stays open while the pointer is over it, so it can be read and selected, and Escape closes it.
-  var pv = $("privacy"), pvBtn = $("privacyBtn"), pvTimer, pvClosed = false;
-  function pvShow(on) { if (!pv) return; clearTimeout(pvTimer); pv.classList.toggle("show", on); pvBtn.setAttribute("aria-expanded", on ? "true" : "false"); }
-  if (pv && pvBtn) {
-    pv.addEventListener("mouseenter", function () { pvClosed = false; pvShow(true); });
-    pv.addEventListener("mouseleave", function () { clearTimeout(pvTimer); pvTimer = setTimeout(function () { if (!pv.contains(document.activeElement)) pvShow(false); }, 250); });
-    pv.addEventListener("focusin", function () { if (!pvClosed) pvShow(true); });
-    pv.addEventListener("focusout", function (e) { if (!pv.contains(e.relatedTarget)) { pvClosed = false; pvShow(false); } });
-    pvBtn.addEventListener("click", function () { pvClosed = false; pvShow(!pv.classList.contains("show")); });   // touch screens have no hover
-    document.addEventListener("keydown", function (e) { if (e.key === "Escape" && pv.classList.contains("show")) { pvClosed = true; pvShow(false); pvBtn.focus(); } });
+  /* ---------- 4. privacy statement: opened and closed by the researcher ---------- */
+  var pvBtn = $("privacyBtn"), pvPanel = $("privacyPanel");
+  function pvShow(on) { if (!pvBtn || !pvPanel) return; pvPanel.hidden = !on; pvBtn.setAttribute("aria-expanded", on ? "true" : "false"); }
+  if (pvBtn && pvPanel) {
+    pvBtn.addEventListener("click", function () { pvShow(pvPanel.hidden); });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && !pvPanel.hidden && $("privacy").contains(document.activeElement)) { pvShow(false); pvBtn.focus(); }
+    });
   }
 
   window.LAB_STEPS = {

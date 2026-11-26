@@ -10,7 +10,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="theme-color" content="#185c4a">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="styles.css?v=1.2.3">
+  <link rel="stylesheet" href="styles.css?v=1.2.4">
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to the main content</a>
@@ -295,7 +295,7 @@
         <form id="logForm" class="card" autocomplete="off">
           <h2 class="vh">Log a model output</h2>
           <fieldset class="log-step">
-            <legend><span class="step-no" aria-hidden="true">1</span><span class="leg-text"><span class="leg-title">Record the run</span><span class="ctx-tag">The AI system, the date and its answer</span></span></legend>
+            <legend><span class="step-no" aria-hidden="true">1</span><span class="leg-text"><span class="leg-title">Record the run</span><span class="ctx-tag">Document the AI system, its settings and the generated output.</span></span></legend>
           <div class="row">
             <div>
               <label for="lgCondition">Condition</label>
@@ -323,56 +323,57 @@
           </fieldset>
 
           <fieldset class="log-step">
-            <legend><span class="step-no" aria-hidden="true">2</span><span class="leg-text"><span class="leg-title">Check the quotations</span><span class="ctx-tag">Every quotation compared with your sources</span></span></legend>
-          <p class="hint check-empty">Paste the AI's answer in step 1 and the Lab checks every quotation in it against your sources.</p>
+            <legend><span class="step-no" aria-hidden="true">2</span><span class="leg-text"><span class="leg-title">Quotation verification</span><span class="ctx-tag">Compare AI-generated quotations against your source material.</span></span></legend>
+          <p class="hint check-empty">Paste the AI-generated output in Step 1 to check its quotations against the source material.</p>
           <div id="autoChecks" class="auto-checks" data-step-content></div>
           <p class="vh" id="checksAnnounce" role="status"></p>
           </fieldset>
 
           <fieldset class="log-step">
-            <legend><span class="step-no" aria-hidden="true">3</span><span class="leg-text"><span class="leg-title">Score the answer</span><span class="ctx-tag">Six criteria, confirmed by you</span></span></legend>
+            <legend><span class="step-no" aria-hidden="true">3</span><span class="leg-text"><span class="leg-title">Evaluate the output</span><span class="ctx-tag">Assess the output against six scholarly criteria.</span></span></legend>
           <div class="eval-head">
-            <h3 class="h-small">Evaluation <span class="muted">(1 = poor, 5 = strong)</span></h3>
+            <h3 class="h-small">Evaluation scale <span class="muted">(1 = poor, 5 = strong)</span></h3>
             <button type="button" class="ghost small-btn" id="confirmAll" hidden>Confirm all suggestions</button>
           </div>
-          <p class="hint">Scores marked <span class="sbadge sug">Suggested</span> come from the automatic checks or a second model. Confirm or change each one. Only confirmed scores count in the summary, and any disagreement with the suggestion is recorded.</p>
+          <p class="hint">Suggested scores are generated through automated checks or second-model evaluation. Review each suggestion and confirm or revise it. Only confirmed scores contribute to the summary. Changes to suggested scores are retained in the evaluation record.</p>
           <div id="criteria" class="criteria"></div>
 
           <details class="second-model" id="secondModel">
-            <summary>Second-model evaluation <span class="muted">(optional, for accuracy, context and misrepresentation)</span></summary>
+            <summary>Second-model evaluation <span class="muted">(Optional: supplementary assessment of factual accuracy, contextual fidelity and freedom from misrepresentation)</span></summary>
             <ol class="steps-small">
-              <li>Copy the evaluator prompt and paste it into a <strong>different</strong> AI system from the one that produced the output.
-                <div class="actions"><button type="button" class="ghost small-btn" id="copyEvalPrompt">Copy evaluator prompt</button></div>
+              <li>Copy the evaluation prompt and submit it to an AI system different from the one that generated the original output.
+                <div class="actions"><button type="button" class="ghost small-btn" id="copyEvalPrompt">Copy evaluation prompt</button></div>
               </li>
               <li>
                 <label for="evModel">Evaluator model and version</label>
                 <input id="evModel" placeholder="e.g. the second system's exact name and version">
               </li>
               <li>
-                <label for="evReply">Paste the evaluator's reply</label>
+                <label for="evReply">Evaluator response</label>
                 <textarea id="evReply" rows="4" placeholder='{"scores": {...}, "errors": [...]}'></textarea>
                 <div class="actions"><button type="button" class="small-btn" id="applyEval">Apply evaluation</button></div>
               </li>
             </ol>
+            <p class="hint">Second-model assessments require scholarly review.</p>
             <p class="status" id="evalStatus" role="status"></p>
           </details>
           </fieldset>
 
           <fieldset class="log-step">
-            <legend><span class="step-no" aria-hidden="true">4</span><span class="leg-text"><span class="leg-title">Review and save</span><span class="ctx-tag">Errors found, how you used the output, and notes</span></span></legend>
-          <label for="lgUse">What did you do with this output?</label>
+            <legend><span class="step-no" aria-hidden="true">4</span><span class="leg-text"><span class="leg-title">Review and save</span><span class="ctx-tag">Document your assessment of the output and how it informed your research.</span></span></legend>
+          <label for="lgUse">How did you use this output?</label>
           <select id="lgUse" data-counts="yes">
-            <option value="">Not decided yet</option>
-            <option value="used">Used it as it stands</option>
-            <option value="revised">Used it after my own corrections</option>
-            <option value="prompted">Used it only as a starting point for my own analysis</option>
-            <option value="rejected">Rejected it</option>
-            <option value="data">Kept it as data about the AI system itself</option>
+            <option value="">Decision pending</option>
+            <option value="used">Used without modification</option>
+            <option value="revised">Used after my corrections</option>
+            <option value="prompted">Used to inform my own analysis</option>
+            <option value="rejected">Rejected</option>
+            <option value="data">Retained as research data about the AI system</option>
           </select>
-          <label for="lgUseNote">What you changed, or why you rejected it <span class="muted">(optional; goes into your methods report)</span></label>
+          <label for="lgUseNote">Revisions and reasons for rejection <span class="muted">(optional; included in the methods report)</span></label>
           <input id="lgUseNote" placeholder="e.g. Corrected two misquotations; set aside Finding 6 as unsupported">
 
-          <label for="lgErrors">Errors found <span class="muted">(filled automatically; review, delete or add)</span></label>
+          <label for="lgErrors">Identified errors <span class="muted">(review automatically identified errors and add or remove entries as necessary)</span></label>
           <textarea id="lgErrors" rows="6" placeholder="Paste an output above and the Lab will list possible errors here."></textarea>
 
           <div class="row">
@@ -381,10 +382,10 @@
               <input id="lgEvaluator" placeholder="Initials or role, e.g. Igbo linguist">
             </div>
             <div>
-              <label class="check spaced"><input type="checkbox" id="lgSyco"> Output adopted my framing without testing it</label>
+              <label class="check spaced"><input type="checkbox" id="lgSyco"> Uncritical adoption of the researcher's framing</label>
             </div>
           </div>
-          <label for="lgNotes">Notes and disagreements between evaluators</label>
+          <label for="lgNotes">Evaluation notes and disagreements</label>
           <textarea id="lgNotes" rows="3"></textarea>
           <div class="actions">
             <button type="submit">Save entry</button>
@@ -527,8 +528,8 @@
     <p class="built-by">Created by <a href="https://www.linkedin.com/in/frank-onuh/" target="_blank" rel="noopener author">Frank Onuh</a>. <a href="https://www.linkedin.com/in/frank-onuh/" target="_blank" rel="noopener">Connect on LinkedIn</a> · <a href="https://doi.org/10.5281/zenodo.24521711" target="_blank" rel="noopener">Cite the Lab</a> · <a href="https://github.com/TheFrankOnuh/scholarly-prompt-lab" target="_blank" rel="noopener">Source code</a></p>
     <p>Open source under the MIT licence. Your work is saved only in this browser. Export it to keep it. <span id="labVersion"></span></p>
     <div class="privacy" id="privacy">
-      <button type="button" class="privacy-trigger" id="privacyBtn" aria-expanded="false" aria-controls="privacyPanel">Privacy and data storage</button>
-      <div class="privacy-panel" id="privacyPanel" role="region" aria-label="Privacy and data storage">
+      <button type="button" class="privacy-trigger" id="privacyBtn" aria-expanded="false" aria-controls="privacyPanel">Privacy and data storage<span class="disclosure" aria-hidden="true"></span></button>
+      <div class="privacy-panel" id="privacyPanel" role="region" aria-label="Privacy and data storage" hidden>
       <p>Scholarly Prompt Lab is local-first. No account is required.</p>
       <ul>
         <li><strong>Local storage:</strong> Your sources, prompts, evaluations and reports remain in your browser. The Lab does not send research data to external servers or AI providers.</li>
@@ -539,23 +540,23 @@
       </ul>
       </div>
     </div>
-    <p><span id="offlineStatus" role="status"></span> <button type="button" id="installBtn" class="ghost small-btn" hidden>Install the Lab on this device</button></p>
+    <p><span id="offlineStatus" role="status"></span> <button type="button" id="installBtn" class="ghost small-btn" hidden>Install the Lab on this device</button> <span class="hint" id="installHelp" role="status"></span></p>
   </footer>
 
-  <script src="release.js?v=1.2.3"></script>
-  <script src="theories.js?v=1.2.3"></script>
-  <script src="theory-links.js?v=1.2.3"></script>
-  <script src="disciplines.js?v=1.2.3"></script>
-  <script src="community.js?v=1.2.3"></script>
-  <script src="procedures.js?v=1.2.3"></script>
-  <script src="data.js?v=1.2.3"></script>
-  <script src="checks.js?v=1.2.3"></script>
-  <script src="app.js?v=1.2.3"></script>
-  <script src="ui.js?v=1.2.3"></script>
-  <script src="report.js?v=1.2.3"></script>
-  <script src="tour.js?v=1.2.3"></script>
-  <script src="projects.js?v=1.2.3"></script>
-  <script src="offline.js?v=1.2.3"></script>
-  <script src="counter.js?v=1.2.3"></script>
+  <script src="release.js?v=1.2.4"></script>
+  <script src="theories.js?v=1.2.4"></script>
+  <script src="theory-links.js?v=1.2.4"></script>
+  <script src="disciplines.js?v=1.2.4"></script>
+  <script src="community.js?v=1.2.4"></script>
+  <script src="procedures.js?v=1.2.4"></script>
+  <script src="data.js?v=1.2.4"></script>
+  <script src="checks.js?v=1.2.4"></script>
+  <script src="app.js?v=1.2.4"></script>
+  <script src="ui.js?v=1.2.4"></script>
+  <script src="report.js?v=1.2.4"></script>
+  <script src="tour.js?v=1.2.4"></script>
+  <script src="projects.js?v=1.2.4"></script>
+  <script src="offline.js?v=1.2.4"></script>
+  <script src="counter.js?v=1.2.4"></script>
 </body>
 </html>

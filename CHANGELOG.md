@@ -8,6 +8,16 @@ This page lists every version of the Scholarly Prompt Lab, newest first.
 
 To cite the Lab, use the DOI that always opens the latest version: [10.5281/zenodo.24521711](https://doi.org/10.5281/zenodo.24521711).
 
+## 1.2.4, November 2026
+
+- Log & evaluate: revised wording for all four steps (Record the run, Quotation verification, Evaluate the output, Review and save), the six evaluation criteria, second-model evaluation and the options for how an output was used. Stored values are unchanged, so earlier entries read correctly.
+- "What 1, 3 and 5 mean" is now "Scoring guidance".
+- The quotation checks now say that a matching quotation shows only that the words appear in the source, and does not establish that a claim is accurate.
+- The methods report no longer treats a second AI system's evaluation as independent review.
+- Methods report: outputs logged after the selection was saved are now included automatically. Outputs the researcher unticked stay out.
+- The privacy statement opens and closes when selected, with a small animated indicator, and no longer has a border.
+- Install the Lab on this device is shown wherever the Lab can be installed, draws attention with one brief animation (none when reduced motion is requested), and gives instructions in browsers that install only from their own menu.
+
 ## 1.2.3, November 2026
 
 - Methods report: eleven ways of using AI, including literature discovery and review, research design and instrument development, comparative analysis, and research writing and editing. Writing assistance is disclosed in three separate kinds: language and copyediting, structural and argumentative revision, and content generation and drafting. Choices saved by earlier versions are kept.
