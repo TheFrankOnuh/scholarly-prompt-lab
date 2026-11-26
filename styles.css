@@ -679,3 +679,12 @@ dialog.drawer .dmeta { color: var(--muted); font-size: 0.9rem; margin: 0 0 8px; 
 .privacy-panel::after { content: ""; position: absolute; left: 0; right: 0; top: 100%; height: 10px; }
 .privacy.show .privacy-panel { display: block; }
 .privacy-panel ul { margin: 0; padding-left: 20px; display: grid; gap: 8px; font-size: 0.9rem; }
+
+/* ---------- methods report: writing subcategories and the list of logged outputs ---------- */
+.sub-checks { margin: 0 0 4px 30px; padding-left: 12px; border-left: 2px solid var(--line); }
+.out-picker { margin-top: 6px; border: 1.5px solid var(--field); border-radius: 10px; background: var(--surface); }
+.out-picker > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; padding: 8px 14px; font-weight: 600; }
+.out-picker[open] > summary { border-bottom: 1px solid var(--line); }
+.out-picker .out-actions { padding: 8px 14px 0; margin: 0; }
+.out-picker #rpOutputs { padding: 4px 14px 12px; max-height: 280px; overflow-y: auto; }
+.out-empty { margin-top: 6px; }

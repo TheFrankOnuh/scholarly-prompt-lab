@@ -8,6 +8,11 @@ This page lists every version of the Scholarly Prompt Lab, newest first.
 
 To cite the Lab, use the DOI that always opens the latest version: [10.5281/zenodo.24521711](https://doi.org/10.5281/zenodo.24521711).
 
+## 1.2.3, November 2026
+
+- Methods report: eleven ways of using AI, including literature discovery and review, research design and instrument development, comparative analysis, and research writing and editing. Writing assistance is disclosed in three separate kinds: language and copyediting, structural and argumentative revision, and content generation and drafting. Choices saved by earlier versions are kept.
+- Methods report: the logged outputs that belong to the study are now chosen one by one from a list, and the choice is saved with the report and the project. This replaces a two-option menu that stayed empty when the Lab was opened directly on the Methods report tab.
+
 ## 1.2.2, November 2026
 
 - Revised text for three parts of the Build tab: Testing and record-keeping, the note under the analytical procedure, and Research design.

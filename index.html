@@ -10,7 +10,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="theme-color" content="#185c4a">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="styles.css?v=1.2.2">
+  <link rel="stylesheet" href="styles.css?v=1.2.3">
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to the main content</a>
@@ -422,11 +422,22 @@
           <label for="rpAuthor">Your name</label>
           <input id="rpAuthor" autocomplete="name">
           <fieldset class="plain-set">
-            <legend class="label-like">How did you use AI in this study? <span class="muted">(tick all that apply)</span></legend>
+            <legend class="label-like">How did you use AI in this study? <span class="muted">(Select all that apply)</span></legend>
             <div class="checks" id="rpRoles"></div>
           </fieldset>
-          <label for="rpScope">Which logged outputs belong to this study?</label>
-          <select id="rpScope"></select>
+          <fieldset class="plain-set" id="rpOutSet">
+            <legend class="label-like">Select logged outputs for this study</legend>
+            <p class="hint">Select the recorded AI outputs you wish to include in this study.</p>
+            <details class="out-picker" id="rpOutPicker">
+              <summary id="rpOutSummary">0 of 0 selected</summary>
+              <div class="actions out-actions">
+                <button type="button" class="ghost small-btn" id="rpOutAll">Select all</button>
+                <button type="button" class="ghost small-btn" id="rpOutNone">Clear selection</button>
+              </div>
+              <div class="checks" id="rpOutputs"></div>
+            </details>
+            <p class="hint out-empty" id="rpOutEmpty" hidden>No logged outputs available. Add outputs in the Log &amp; evaluate tab.</p>
+          </fieldset>
           <label for="rpUse">How the AI outputs informed your final analysis <span class="muted">(in your own words)</span></label>
           <textarea id="rpUse" rows="4" placeholder="e.g. I used the AI's first-pass coding to locate passages, then re-read every passage myself. I accepted four of nine findings, revised three and rejected two."></textarea>
           <label class="check"><input type="checkbox" id="rpSources"> <span>Include the full source texts in the prompts appendix <span class="muted">(Note: this can make the report very long)</span></span></label>
@@ -531,20 +542,20 @@
     <p><span id="offlineStatus" role="status"></span> <button type="button" id="installBtn" class="ghost small-btn" hidden>Install the Lab on this device</button></p>
   </footer>
 
-  <script src="release.js?v=1.2.2"></script>
-  <script src="theories.js?v=1.2.2"></script>
-  <script src="theory-links.js?v=1.2.2"></script>
-  <script src="disciplines.js?v=1.2.2"></script>
-  <script src="community.js?v=1.2.2"></script>
-  <script src="procedures.js?v=1.2.2"></script>
-  <script src="data.js?v=1.2.2"></script>
-  <script src="checks.js?v=1.2.2"></script>
-  <script src="app.js?v=1.2.2"></script>
-  <script src="ui.js?v=1.2.2"></script>
-  <script src="report.js?v=1.2.2"></script>
-  <script src="tour.js?v=1.2.2"></script>
-  <script src="projects.js?v=1.2.2"></script>
-  <script src="offline.js?v=1.2.2"></script>
-  <script src="counter.js?v=1.2.2"></script>
+  <script src="release.js?v=1.2.3"></script>
+  <script src="theories.js?v=1.2.3"></script>
+  <script src="theory-links.js?v=1.2.3"></script>
+  <script src="disciplines.js?v=1.2.3"></script>
+  <script src="community.js?v=1.2.3"></script>
+  <script src="procedures.js?v=1.2.3"></script>
+  <script src="data.js?v=1.2.3"></script>
+  <script src="checks.js?v=1.2.3"></script>
+  <script src="app.js?v=1.2.3"></script>
+  <script src="ui.js?v=1.2.3"></script>
+  <script src="report.js?v=1.2.3"></script>
+  <script src="tour.js?v=1.2.3"></script>
+  <script src="projects.js?v=1.2.3"></script>
+  <script src="offline.js?v=1.2.3"></script>
+  <script src="counter.js?v=1.2.3"></script>
 </body>
 </html>

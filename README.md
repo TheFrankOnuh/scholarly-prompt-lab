@@ -108,6 +108,6 @@ Code: [MIT](LICENSE). Documentation and the CONTEXT framework guide: [CC BY 4.0]
 
 If you use the Lab or the framework in research, please cite it:
 
-> Onuh, F. (2026). *Scholarly Prompt Lab: The Prompt as Method* (Version 1.2.2) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.24521711
+> Onuh, F. (2026). *Scholarly Prompt Lab: The Prompt as Method* (Version 1.2.3) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.24521711
 
 The DOI above always points to the latest version. Each release also has its own DOI on [Zenodo](https://doi.org/10.5281/zenodo.24521711). See also [CITATION.cff](CITATION.cff).

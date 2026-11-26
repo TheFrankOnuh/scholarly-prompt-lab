@@ -4,6 +4,84 @@
    It never says the analysis is verified; it reports which checks were run and what they found. */
 (function () {
   "use strict";
+
+  /* ---------- how AI was used: categories (shared with the tests) ---------- */
+  // Each category has the label shown to the researcher and the phrase used in the AI-use statement.
+  // The three writing subcategories belong to "Research writing and editing" and are recorded separately.
+  var ROLES = [
+    { id: "prelim", label: "Preliminary analysis: Initial examination of source material, followed by my review.", text: "to carry out an initial examination of the source material, which the researcher then reviewed" },
+    { id: "aicoding", label: "Preliminary coding: Initial coding of research material, which I reviewed and revised.", text: "to carry out an initial coding of the research material, which the researcher then reviewed and revised" },
+    { id: "coding", label: "Coding and classification: Application of my established coding scheme.", text: "to apply the researcher's established coding scheme to the material, with the coding checked by the researcher" },
+    { id: "extract", label: "Information processing: Extraction, summarisation or organisation of source material.", text: "to extract, summarise or organise information from the source material" },
+    { id: "translate", label: "Translation or transcription: Assistance with language translation or transcription.", text: "to assist with translation or transcription, which the researcher checked against the original" },
+    { id: "challenge", label: "Interpretive examination: Exploration of alternative readings and counterarguments to assess my interpretation.", text: "to explore alternative readings and counterarguments in order to assess the researcher's interpretation" },
+    { id: "object", label: "Object of study: Examination of the AI system and its outputs.", text: "" },
+    { id: "litreview", label: "Literature discovery and review: Identification, comparison and synthesis of relevant scholarship, with independent verification of sources.", text: "to identify, compare and synthesise relevant scholarship, with every source verified independently by the researcher" },
+    { id: "design", label: "Research design and instrument development: Assistance with developing research questions, analytical frameworks, interview guides or coding schemes.", text: "to assist with developing research questions, analytical frameworks, interview guides or coding schemes" },
+    { id: "compare", label: "Comparative analysis: Examination of patterns, differences and relationships across documents, datasets, languages or research contexts.", text: "to examine patterns, differences and relationships across documents, datasets, languages or research contexts" },
+    { id: "writing", label: "Research writing and editing: Assistance with drafting, revising or editing scholarly texts under my supervision.", text: "" },
+    { id: "writing_lang", parent: "writing", label: "Language and copyediting: Assistance with grammar, spelling, punctuation, clarity and academic language.", text: "language and copyediting (grammar, spelling, punctuation, clarity and academic language)" },
+    { id: "writing_struct", parent: "writing", label: "Structural and argumentative revision: Assistance with organising scholarly arguments, improving coherence and refining the structure of researcher-authored texts.", text: "structural and argumentative revision of texts written by the researcher (organising arguments, improving coherence and refining structure)" },
+    { id: "writing_draft", parent: "writing", label: "Content generation and drafting: Generation of substantive academic text, including passages or sections subsequently reviewed and revised by me.", text: "the generation of substantive academic text, including passages or sections that the researcher subsequently reviewed and revised" }
+  ];
+  var ROLE_IDS = ROLES.map(function (x) { return x.id; });
+  var NUM = ["two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven"];
+
+  // Saved choices from earlier versions are kept: the old "improving the wording of text I wrote myself"
+  // is language and copyediting under research writing and editing.
+  function normaliseRoles(saved) {
+    var out = [];
+    (Array.isArray(saved) ? saved : []).forEach(function (r) {
+      if (r === "writing_old") r = "writing_lang";
+      if (ROLE_IDS.indexOf(r) !== -1 && out.indexOf(r) === -1) out.push(r);
+    });
+    ROLES.forEach(function (x) { if (x.parent && out.indexOf(x.id) !== -1 && out.indexOf(x.parent) === -1) out.push(x.parent); });
+    return ROLE_IDS.filter(function (id) { return out.indexOf(id) !== -1; });
+  }
+  function legacyRoles(st) {
+    if (Array.isArray(st.roles)) {
+      // version 1.2.2 and earlier stored "writing" for the single option about improving one's own wording
+      var v = st.rolesVersion === 2 ? st.roles : st.roles.map(function (r) { return r === "writing" ? "writing_old" : r; });
+      return normaliseRoles(v);
+    }
+    return st.role === "object" ? ["object"] : st.role === "both" ? ["prelim", "object"] : ["prelim"];
+  }
+
+  // The sentences of the AI-use statement that describe how AI was used. gap() marks what the researcher must complete.
+  function useSentences(roles, sysCount, gap, plural) {
+    roles = normaliseRoles(roles);
+    if (!roles.length) return gap("how generative AI was used in this study. Tick the uses that apply in the form beside this preview");
+    var tool = ROLES.filter(function (x) { return x.text && !x.parent && roles.indexOf(x.id) !== -1; }).map(function (x) { return x.text; });
+    var parts = [];
+    if (tool.length) parts.push("Generative AI was used in this study " + (tool.length === 1 ? tool[0] : "in " + NUM[tool.length - 2] + " ways: " + tool.join("; ")) + ". Its output was not treated as a finding in itself.");
+    if (roles.indexOf("writing") !== -1) {
+      var w = ROLES.filter(function (x) { return x.parent === "writing" && roles.indexOf(x.id) !== -1; }).map(function (x) { return x.text; });
+      var joined = w.length < 2 ? w.join("") : w.slice(0, -1).join("; ") + "; and " + w[w.length - 1];
+      parts.push(w.length
+        ? "In research writing and editing, carried out under the researcher's supervision, generative AI was used for " + joined + "."
+        : "Generative AI assisted with drafting, revising or editing scholarly texts under the researcher's supervision. " + gap("which kinds of writing assistance were used: language and copyediting, structural and argumentative revision, or content generation and drafting"));
+    }
+    if (roles.indexOf("object") !== -1) {
+      var other = parts.length > 0;
+      parts.push("Generative AI was " + (other ? "also " : "") + "the object of " + (other ? "study" : "this study") + ": the outputs of " + (sysCount ? plural(sysCount, "AI system") : "AI systems") + " were collected and analysed as data about how such systems respond, and were not used as evidence about the subject matter itself.");
+    }
+    return parts.join(" ");
+  }
+
+  // Which logged outputs belong to the study. A saved choice is kept, minus outputs since deleted.
+  // With no saved choice (a first visit, or a report set up in an earlier version), the outputs for the current
+  // research question are chosen, or every output if none matches or the earlier report used every output.
+  function pickOutputs(log, st, question) {
+    var ids = log.map(function (e) { return e.id; });
+    if (Array.isArray(st.outputs)) return st.outputs.filter(function (id) { return ids.indexOf(id) !== -1; });
+    var q = String(question || "").trim();
+    var mine = log.filter(function (e) { return String(e.question || "").trim() === q; }).map(function (e) { return e.id; });
+    if (st.scope === "all" || !mine.length) return ids;
+    return mine;
+  }
+
+  window.LAB_REPORT_DATA = { ROLES: ROLES, normaliseRoles: normaliseRoles, legacyRoles: legacyRoles, useSentences: useSentences, pickOutputs: pickOutputs };
+
   var A = window.LAB_APP;
   if (!A) return;
   var $ = function (id) { return document.getElementById(id); };
@@ -13,21 +91,10 @@
   var LAB_DOI = "https://doi.org/" + (REL.versionDoi || REL.conceptDoi || "10.5281/zenodo.24521711");
   var USE_LABEL = { used: "Used as it stands", revised: "Used after the researcher's corrections", prompted: "Used only as a starting point for the researcher's own analysis", rejected: "Rejected", data: "Kept as data about the AI system", "": "Not recorded" };
 
-  // The ways researchers use generative AI. A study often involves several.
-  var ROLES = [
-    { id: "prelim", label: "Preliminary analysis: a first-pass reading of my sources, which I then checked", text: "to produce a first-pass analysis of the source material, which the researcher then checked against the sources" },
-    { id: "aicoding", label: "Preliminary coding: the AI did the first round of coding, which I reviewed and revised", text: "to carry out a first round of coding of the material, which the researcher then reviewed and revised" },
-    { id: "coding", label: "Coding or classifying material with my own coding scheme", text: "to apply the researcher's own coding scheme to the material, with the coding checked by the researcher" },
-    { id: "extract", label: "Extracting, summarising or organising information from sources", text: "to extract, summarise and organise information from the sources" },
-    { id: "translate", label: "Translation or transcription support", text: "to support translation or transcription, which the researcher checked against the original" },
-    { id: "challenge", label: "Testing my interpretation: alternative readings and counter-arguments", text: "to test the researcher's own interpretation, by generating alternative readings and counter-arguments" },
-    { id: "object", label: "As the object of study: examining what the AI system itself produces", text: "" },
-    { id: "writing", label: "Improving the wording of text I wrote myself", text: "to improve the wording of text written by the researcher" }
-  ];
   function chosenRoles() {
     var out = [];
     ROLES.forEach(function (x) { var el = document.getElementById("rpRole_" + x.id); if (el && el.checked) out.push(x.id); });
-    return out;
+    return normaliseRoles(out);
   }
 
   function esc(x) { return String(x == null ? "" : x).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
@@ -49,15 +116,19 @@
     return s;
   }
   function saveSettings() {
-    var s = { title: $("rpTitle").value, author: $("rpAuthor").value, roles: chosenRoles(), use: $("rpUse").value, sources: $("rpSources").checked, scope: $("rpScope").value };
+    var s = { title: $("rpTitle").value, author: $("rpAuthor").value, roles: chosenRoles(), rolesVersion: 2, use: $("rpUse").value, sources: $("rpSources").checked, outputs: chosenOutputs() };
     try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) { /* ignore */ }
     return s;
   }
 
-  function entriesFor(scope, design) {
-    var log = A.getLog();
-    if (scope === "question") return log.filter(function (e) { return (e.question || "").trim() === design.question.trim(); });
-    return log.slice();
+  // the outputs ticked in the list, in the order of the log
+  function chosenOutputs() {
+    var out = [];
+    Array.prototype.forEach.call(document.querySelectorAll("#rpOutputs input[type=checkbox]"), function (cb) { if (cb.checked) out.push(cb.value); });
+    return out;
+  }
+  function entriesFor(ids) {
+    return A.getLog().filter(function (e) { return ids.indexOf(e.id) !== -1; });
   }
 
   function stripSources(prompt, keep) {
@@ -73,7 +144,8 @@
     var st = saveSettings();
     var d = A.readState();
     var L = A.L;
-    var entries = entriesFor(st.scope, d);
+    var entries = entriesFor(st.outputs || []);
+    var logged = A.getLog().length;
     var th = A.theoryLines(d);
     var tech = A.techniqueOf(d);
     var conv = A.conventionFor(d.discipline);
@@ -123,18 +195,13 @@
     // ---- title block ----
     out.push("<h1>" + (st.title.trim() ? esc(st.title.trim()) : gap("title of your study")) + "</h1>");
     out.push('<p class="meta">Report of AI-assisted methods' + (st.author.trim() ? " · " + esc(st.author.trim()) : "") + " · prepared " + niceDate(A.today()) + " with the Scholarly Prompt Lab, version " + esc(A.VERSION) + " (" + esc(LAB_DOI) + ")</p>");
-    if (!n) out.push(p(gap("no AI outputs are logged for this study yet. Run your prompt in the AI system you are using, then record the output in Log & evaluate. Until then this report describes only the design of the prompt.")));
+    if (!n) out.push(p(gap(logged
+      ? "no logged outputs are selected for this study. Select them under \u201cSelect logged outputs for this study\u201d. Until then this report describes only the design of the prompt."
+      : "no AI outputs are logged for this study yet. Run your prompt in the AI system you are using, then record the output in Log & evaluate. Until then this report describes only the design of the prompt.")));
 
     // ---- 1. AI-use statement ----
     out.push("<h2>1. Statement on the use of generative AI</h2>");
-    var roles = st.roles || [];
-    var tool = ROLES.filter(function (x) { return x.text && roles.indexOf(x.id) !== -1; }).map(function (x) { return x.text; });
-    var asObject = roles.indexOf("object") !== -1;
-    var objectSentence = "Generative AI was " + (tool.length ? "also " : "") + "the object of " + (tool.length ? "study" : "this study") + ": the outputs of " + (sysNames.length ? plural(sysNames.length, "AI system") : "AI systems") + " were collected and analysed as data about how such systems respond, and were not used as evidence about the subject matter itself.";
-    var roleSentence = !roles.length
-      ? gap("how generative AI was used in this study. Tick the uses that apply in the form beside this preview")
-      : (tool.length ? "Generative AI was used in this study " + (tool.length === 1 ? tool[0] : "in " + ["two", "three", "four", "five", "six", "seven"][tool.length - 2] + " ways: " + tool.join("; ")) + ". Its output was not treated as a finding in itself." : "") +
-        (asObject ? (tool.length ? " " : "") + objectSentence : "");
+    var roleSentence = useSentences(st.roles || [], sysNames.length, gap, plural);
     var stmt = roleSentence + " " +
       (n ? "The " + (sysNames.length === 1 ? "system used was " : "systems used were ") + esc(joinAnd(sysNames)) + (allDates.length ? ", " + (allDates[0] === allDates[allDates.length - 1] ? "on " + niceDate(allDates[0]) : "between " + niceDate(allDates[0]) + " and " + niceDate(allDates[allDates.length - 1])) : "") + ". " : "") +
       "Prompts were designed and documented with the Scholarly Prompt Lab (Onuh, 2026)" + (n ? ", and every prompt and output is recorded in the appendices" : "") + ". " +
@@ -274,28 +341,48 @@
     return out.join("\n");
   }
 
-  function refreshScope() {
-    var d = A.readState(), log = A.getLog();
-    var mine = log.filter(function (e) { return (e.question || "").trim() === d.question.trim(); }).length;
-    var sel = $("rpScope"), cur = sel.value || settings().scope || "";
-    sel.replaceChildren();
-    [["question", "Outputs logged for my current research question(s) (" + mine + ")"], ["all", "Every output in my log (" + log.length + ")"]].forEach(function (o) {
-      var op = document.createElement("option"); op.value = o[0]; op.textContent = o[1]; sel.append(op);
-    });
-    sel.value = cur === "all" || cur === "question" ? cur : (mine || !log.length ? "question" : "all");
+  // Every logged output, each with a tick box. The choice is saved with the report settings (and with the project),
+  // so it survives refreshing or reopening the Lab.
+  function outputLabel(e, i) {
+    var bits = [e.date ? niceDate(e.date) : "Date not recorded", (e.model || "").trim() || "AI system not recorded", A.condName(e.condition), "Run " + (e.run || 1)];
+    return (i + 1) + ". " + bits.join(" · ");
   }
+  function refreshOutputs() {
+    var d = A.readState(), log = A.getLog();
+    var chosen = pickOutputs(log, settings(), d.question);
+    var box = $("rpOutputs");
+    box.replaceChildren();
+    log.forEach(function (e, i) {
+      var cb = document.createElement("input"); cb.type = "checkbox"; cb.value = e.id; cb.id = "rpOut_" + e.id; cb.checked = chosen.indexOf(e.id) !== -1;
+      var lab = document.createElement("label"); lab.className = "check"; lab.htmlFor = cb.id;
+      var txt = document.createElement("span"); txt.textContent = outputLabel(e, i);
+      lab.append(cb, txt);
+      box.append(lab);
+      cb.addEventListener("change", outputsChanged);
+    });
+    $("rpOutEmpty").hidden = log.length > 0;
+    $("rpOutPicker").hidden = !log.length;
+    summariseOutputs();
+  }
+  function summariseOutputs() {
+    var all = document.querySelectorAll("#rpOutputs input[type=checkbox]").length;
+    var on = chosenOutputs().length;
+    $("rpOutSummary").textContent = on + " of " + all + " selected";
+  }
+  function outputsChanged() { summariseOutputs(); saveSettings(); if (!edited) render(); }
 
   var edited = false, shownOnce = false;
   function render() { $("reportPreview").innerHTML = build(); edited = false; }
   function show() {
     if (!shownOnce) {
       var st = settings();
-      $("rpTitle").value = st.title || ""; $("rpAuthor").value = st.author || ""; var saved = Array.isArray(st.roles) ? st.roles : st.role === "object" ? ["object"] : st.role === "both" ? ["prelim", "object"] : ["prelim"];
+      $("rpTitle").value = st.title || ""; $("rpAuthor").value = st.author || ""; var saved = legacyRoles(st);
       ROLES.forEach(function (x) { document.getElementById("rpRole_" + x.id).checked = saved.indexOf(x.id) !== -1; });
       $("rpUse").value = st.use || ""; $("rpSources").checked = !!st.sources;
       shownOnce = true;
     }
-    refreshScope();
+    refreshOutputs();
+    saveSettings();
     if (!edited) render();
     else A.flash("rpStatus", "You have edited the preview, so it was not refreshed. Press “Rebuild the report from my records” to update it.");
   }
@@ -305,13 +392,25 @@
     if (edited && !confirm("Rebuild the report? The edits you made in the preview will be replaced.")) return;
     render(); A.flash("rpStatus", "Report rebuilt from your records.");
   });
+  var subBox = null;
   ROLES.forEach(function (x) {
     var cb = document.createElement("input"); cb.type = "checkbox"; cb.id = "rpRole_" + x.id;
     var lab = document.createElement("label"); lab.className = "check"; lab.append(cb, x.label);
-    $("rpRoles").append(lab);
-    cb.addEventListener("change", function () { saveSettings(); if (!edited) render(); });
+    if (x.parent) {
+      // the writing subcategories sit under their category and can each be ticked on their own
+      if (!subBox) { subBox = document.createElement("div"); subBox.className = "checks sub-checks"; subBox.setAttribute("role", "group"); subBox.setAttribute("aria-label", "Research writing and editing"); $("rpRoles").append(subBox); }
+      subBox.append(lab);
+    } else $("rpRoles").append(lab);
+    cb.addEventListener("change", function () {
+      var parent = x.parent ? document.getElementById("rpRole_" + x.parent) : null;
+      if (parent && cb.checked) parent.checked = true;   // a subcategory implies its category
+      if (x.id === "writing" && !cb.checked) ROLES.forEach(function (y) { if (y.parent === "writing") document.getElementById("rpRole_" + y.id).checked = false; });
+      saveSettings(); if (!edited) render();
+    });
   });
-  ["rpTitle", "rpAuthor", "rpUse", "rpSources", "rpScope"].forEach(function (id) {
+  $("rpOutAll").addEventListener("click", function () { Array.prototype.forEach.call(document.querySelectorAll("#rpOutputs input[type=checkbox]"), function (c) { c.checked = true; }); outputsChanged(); });
+  $("rpOutNone").addEventListener("click", function () { Array.prototype.forEach.call(document.querySelectorAll("#rpOutputs input[type=checkbox]"), function (c) { c.checked = false; }); outputsChanged(); });
+  ["rpTitle", "rpAuthor", "rpUse", "rpSources"].forEach(function (id) {
     $(id).addEventListener("change", function () { saveSettings(); if (!edited) render(); });
   });
 
@@ -339,4 +438,6 @@
   });
 
   window.LAB_REPORT = { show: show, build: build };
+  // The Lab may open directly on this tab (for example after a refresh): it was shown before this file loaded.
+  if ($("panel-report") && !$("panel-report").hidden) show();
 })();
