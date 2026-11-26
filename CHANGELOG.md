@@ -10,6 +10,8 @@ To cite the Lab, use the DOI that always opens the latest version: [10.5281/zeno
 
 ## 1.2.0, November 2026
 
+DOI: [10.5281/zenodo.24569839](https://doi.org/10.5281/zenodo.24569839)
+
 The rest of the interface, after the Build tab.
 
 - Log & evaluate is now four steps with the same progress rail: record the run, check the quotations, score the answer, and review and save. If a required field on an earlier step is empty, the Lab opens that step and points to the field. The list of saved entries appears once there is one.
@@ -20,6 +22,8 @@ The rest of the interface, after the Build tab.
 - Checked with the axe-core accessibility checker on every step and tab, in light and dark mode and on a phone-sized screen, with no failures.
 
 ## 1.1.0, November 2026
+
+Published on the site only, not archived separately. Its changes are archived in 1.2.0.
 
 A redesign of the Build tab in response to feedback about the interface.
 
