@@ -77,7 +77,7 @@
     L.safeguards.filter((g) => (g.group || "") === grp).forEach((g) => {
       box.append(el("label", { class: "check", title: g.text }, [el("input", { type: "checkbox", value: g.id, "data-ctx": g.ctx }), g.label]));
     });
-    $("safeguards").append(el("div", { class: "sg-group" }, [el("h4", { text: grp }), box]));
+    $("safeguards").append(el("div", { class: "sg-group" }, [el("h3", { text: grp }), box]));
   });
   $("lgCondition").append(option("custom", "Prompt from the Build tab"));
   CONDITIONS.forEach((c) => $("lgCondition").append(option(c.id, "Study condition " + c.n + ": " + c.name)));
@@ -330,7 +330,6 @@
     const body = "Entry: " + t.n + " (id: " + t.id + ")\n\nWhat is wrong (citation detail, attribution, description, missing debate):\n\n\nCorrect information and a source for it:\n";
     return "https://github.com/TheFrankOnuh/scholarly-prompt-lab/issues/new?title=" + encodeURIComponent("Theory entry correction: " + t.n) + "&body=" + encodeURIComponent(body) + "&labels=theory";
   }
-  const openDetails = new Set();
 
   /* ---------- proposing a theory or discipline for everyone ---------- */
   let proposal = null;
@@ -476,9 +475,8 @@
           t.type ? el("span", { class: "ttype", text: TYPE_LABEL[t.type] || t.type }) : "", el("span", { class: "ta" }, [highlight(t.a, q)])]);
         const tools = el("span", { class: "tools" });
         if (t.works && t.works.length) {
-          const open = openDetails.has(t.id);
-          const det = el("button", { type: "button", "aria-expanded": open ? "true" : "false", text: open ? "Hide" : "Sources", "data-fk": "src:" + t.id });
-          det.addEventListener("click", (e) => { e.preventDefault(); if (openDetails.has(t.id)) openDetails.delete(t.id); else openDetails.add(t.id); renderTheoryPicker(); });
+          const det = el("button", { type: "button", "aria-haspopup": "dialog", text: "Sources", "aria-label": "Sources for " + t.n, "data-fk": "src:" + t.id });
+          det.addEventListener("click", (e) => { e.preventDefault(); showSources(t, det); });
           tools.append(det);
         }
         if (t.custom) {
@@ -498,23 +496,41 @@
           tools.append(edit, share, del);
         }
         box.append(el("label", { class: "theory-row" + (on ? " on" : "") }, [cb, text, tools]));
-        if (openDetails.has(t.id) && t.works) {
-          const d = el("div", { class: "theory-detail" });
-          d.append(el("h5", { text: "Key works" }));
-          const ul = el("ul"); t.works.forEach((w) => ul.append(el("li", {}, [citeNode(w)]))); d.append(ul);
-          if (t.concepts && t.concepts.length) { d.append(el("h5", { text: "Core concepts" })); d.append(el("p", { text: t.concepts.join("; ") })); }
-          if (t.debates && t.debates.length) {
-            d.append(el("h5", { text: "Debates and critiques" }));
-            const dl = el("ul"); t.debates.forEach((w) => dl.append(el("li", {}, [citeNode(w), w.note ? el("span", { class: "dnote", text: " " + sentence(w.note) }) : ""]))); d.append(dl);
-          }
-          if (t.caution) { if (!(t.debates && t.debates.length)) d.append(el("h5", { text: "Debates and critiques" })); d.append(el("p", { text: t.caution })); }
-          if (t.community) d.append(el("p", { class: "dnote", text: "Proposed" + (t.contributor ? " by " + t.contributor : " by a user of the Lab") + " and accepted by the editor" + (t.added ? " on " + t.added : "") + "." }));
-          if (!t.custom) d.append(el("a", { href: reportUrl(t), target: "_blank", rel: "noopener", class: "report-link", text: "Report an error in this entry" }));
-          box.append(d);
-        }
       });
       list.append(box);
     });
+    renderPickerEnd(shown, total, q);
+  }
+
+  // A theory's key works, concepts and critiques open in a side panel, so the list stays short.
+  let sourcesOpener = null;
+  function showSources(t, opener) {
+    sourcesOpener = opener || null;
+    const d = $("tdBody");
+    d.textContent = "";
+    $("tdTitle").textContent = t.n;
+    if (t.t || t.type) d.append(el("p", { class: "dmeta", text: [t.t, TYPE_LABEL[t.type] || t.type].filter(Boolean).join(" \u00b7 ") }));
+    if (t.a) d.append(el("p", { text: sentence(t.a) }));
+    {
+          d.append(el("h3", { text: "Key works" }));
+          const ul = el("ul"); t.works.forEach((w) => ul.append(el("li", {}, [citeNode(w)]))); d.append(ul);
+          if (t.concepts && t.concepts.length) { d.append(el("h3", { text: "Core concepts" })); d.append(el("p", { text: t.concepts.join("; ") })); }
+          if (t.debates && t.debates.length) {
+            d.append(el("h3", { text: "Debates and critiques" }));
+            const dl = el("ul"); t.debates.forEach((w) => dl.append(el("li", {}, [citeNode(w), w.note ? el("span", { class: "dnote", text: " " + sentence(w.note) }) : ""]))); d.append(dl);
+          }
+          if (t.caution) { if (!(t.debates && t.debates.length)) d.append(el("h3", { text: "Debates and critiques" })); d.append(el("p", { text: t.caution })); }
+          if (t.community) d.append(el("p", { class: "dnote", text: "Proposed" + (t.contributor ? " by " + t.contributor : " by a user of the Lab") + " and accepted by the editor" + (t.added ? " on " + t.added : "") + "." }));
+          if (!t.custom) d.append(el("a", { href: reportUrl(t), target: "_blank", rel: "noopener", class: "report-link", text: "Report an error in this entry" }));
+    }
+    const dlg = $("theoryDrawer");
+    if (dlg.open) dlg.close();
+    dlg.showModal();
+    $("tdClose").focus();
+  }
+
+  function renderPickerEnd(shown, total, q) {
+    const list = $("theoryList");
     if (!shown.length) {
       const empty = el("div", { class: "picker-empty" });
       if (theoryField === "selected") empty.textContent = "No theories selected yet.";
@@ -1741,9 +1757,17 @@
     closeDialog();
     renderBuild();
     showTab("tab-build");
+    reveal("sourceText");
     $("sourceText").scrollIntoView({ behavior: "smooth", block: "center" });
     $("sourceText").classList.remove("flash-target"); void $("sourceText").offsetWidth; $("sourceText").classList.add("flash-target");
   });
+
+  // the Build tab shows one step at a time (ui.js): show the step that holds a field before moving to it
+  function reveal(id) { if (window.LAB_STEPS && $(id)) window.LAB_STEPS.reveal($(id)); }
+  $("tdClose").addEventListener("click", () => $("theoryDrawer").close());
+  $("theoryDrawer").addEventListener("click", (e) => { if (e.target === $("theoryDrawer")) $("theoryDrawer").close(); });
+  // closing the panel returns the keyboard to the button that opened it
+  $("theoryDrawer").addEventListener("close", () => { if (sourcesOpener && sourcesOpener.isConnected) sourcesOpener.focus(); sourcesOpener = null; });
 
   /* ---------- events: build ---------- */
   $("builder").addEventListener("submit", (e) => e.preventDefault());
@@ -1771,6 +1795,7 @@
     $("example").value = "";
     writeState(Object.assign({}, BLANK, { planCross: s.planCross, planLog: s.planLog }));
     renderBuild();
+    reveal("question");
     $("question").scrollIntoView({ behavior: "smooth", block: "center" });
     $("question").focus({ preventScroll: true });
   });

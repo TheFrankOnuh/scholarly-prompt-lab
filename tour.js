@@ -108,6 +108,7 @@
     // wait a moment for debounced checks and tab switches before pointing at things
     setTimeout(function () {
       current = s.target ? $(s.target) : null;
+      if (current && window.LAB_STEPS) window.LAB_STEPS.reveal(current);
       if (current) {
         current.classList.add("tour-target");
         var scrollEl = s.scrollTo ? $(s.scrollTo) || current : current;

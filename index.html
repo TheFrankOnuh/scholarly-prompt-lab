@@ -10,7 +10,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="theme-color" content="#185c4a">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="styles.css?v=1.0.1">
+  <link rel="stylesheet" href="styles.css?v=1.1.0">
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to the main content</a>
@@ -31,8 +31,6 @@
   </header>
 
   <main class="wrap" id="main" tabindex="-1">
-    <p class="notice"><strong>Private by design.</strong> Everything runs in your browser. Nothing you type or load is sent anywhere, and the Lab does not call any AI model: you copy the prompt into the AI system you are using, then log what came back.</p>
-
     <p class="notice warn" id="storageWarn" role="alert" hidden>This browser's storage is full, so recent work may not be saved. Back up a project to a file under Manage projects, then delete a project you have finished or remove very large source texts.</p>
 
     <section class="projects card" aria-labelledby="projTitle">
@@ -40,7 +38,7 @@
         <h2 class="h-small" id="projTitle"><label for="projSelect">Project</label></h2>
         <select id="projSelect"></select>
         <button type="button" class="ghost" id="projNew">New project</button>
-        <p class="hint proj-hint">Each project keeps its own questions, theories, sources, prompt, log and report.</p>
+        <p class="proj-privacy"><strong>Private by design.</strong> Your work stays in this browser, and the Lab never contacts an AI system. <a href="#privacy">What leaves your device</a></p>
       </div>
       <p class="hint" id="projMsg" role="status"></p>
       <details id="projManage">
@@ -53,29 +51,19 @@
         </div>
         <p class="proj-restore"><button type="button" class="ghost" id="projRestore">Restore a project from a backup file</button>
           <input type="file" id="projFile" accept=".json,application/json" hidden></p>
-        <p class="hint">Projects are kept in this browser. A backup file holds one whole project, so you can keep it safe, move it to another computer or send it to a collaborator. Theories and disciplines you have added are shared by all your projects.</p>
+        <p class="hint">Each project keeps its own questions, theories, sources, prompt, log and report. Projects are kept in this browser. A backup file holds one whole project, so you can keep it safe, move it to another computer or send it to a collaborator. Theories and disciplines you have added are shared by all your projects.</p>
       </details>
     </section>
 
     <!-- BUILD -->
     <section id="panel-build" role="tabpanel" aria-labelledby="tab-build">
-      <div class="start card">
-        <div class="start-own">
-          <h2 class="h-small">Use your own research</h2>
-          <p class="hint">Type your own question and sources, or load your own files: PDF, Word (.docx), or text and transcripts. Files stay on your computer.</p>
-          <div class="actions">
-            <button type="button" id="startOwn">Start my own research</button>
-            <button type="button" class="ghost" id="tourStart">Take the guided demo</button>
-            <button type="button" class="ghost" data-pick="sourceFiles">Load your own files</button>
-          </div>
-        </div>
-        <div class="start-example">
-          <h2 class="h-small"><label for="example">Or explore a worked example</label></h2>
-          <select id="example"></select>
-          <div class="actions">
-            <button type="button" id="reset" class="ghost">Clear form</button>
-          </div>
-        </div>
+      <div class="start-bar card" role="group" aria-labelledby="startTitle">
+        <h2 class="vh" id="startTitle">Start</h2>
+        <button type="button" id="startOwn">Start my own research</button>
+        <button type="button" class="ghost" data-pick="sourceFiles" title="PDF, Word (.docx) or text files. They are read on your computer and never uploaded.">Load your own files</button>
+        <button type="button" class="ghost" id="tourStart">Take the guided demo</button>
+        <span class="start-example"><label for="example">Worked example</label> <select id="example"></select></span>
+        <button type="button" id="reset" class="ghost">Clear form</button>
       </div>
 
       <div class="grid">
@@ -488,6 +476,14 @@
     </div>
   </dialog>
 
+  <dialog id="theoryDrawer" class="drawer" aria-labelledby="tdTitle">
+    <div class="drawer-head">
+      <h2 id="tdTitle"></h2>
+      <button type="button" class="ghost" id="tdClose">Close</button>
+    </div>
+    <div id="tdBody" class="theory-detail"></div>
+  </dialog>
+
   <dialog id="review" aria-labelledby="reviewTitle">
     <div class="review-inner">
       <h2 id="reviewTitle">Check the extracted text</h2>
@@ -517,19 +513,20 @@
     <p><span id="offlineStatus" role="status"></span> <button type="button" id="installBtn" class="ghost small-btn" hidden>Install the Lab on this device</button></p>
   </footer>
 
-  <script src="release.js?v=1.0.1"></script>
-  <script src="theories.js?v=1.0.1"></script>
-  <script src="theory-links.js?v=1.0.1"></script>
-  <script src="disciplines.js?v=1.0.1"></script>
-  <script src="community.js?v=1.0.1"></script>
-  <script src="procedures.js?v=1.0.1"></script>
-  <script src="data.js?v=1.0.1"></script>
-  <script src="checks.js?v=1.0.1"></script>
-  <script src="app.js?v=1.0.1"></script>
-  <script src="report.js?v=1.0.1"></script>
-  <script src="tour.js?v=1.0.1"></script>
-  <script src="projects.js?v=1.0.1"></script>
-  <script src="offline.js?v=1.0.1"></script>
-  <script src="counter.js?v=1.0.1"></script>
+  <script src="release.js?v=1.1.0"></script>
+  <script src="theories.js?v=1.1.0"></script>
+  <script src="theory-links.js?v=1.1.0"></script>
+  <script src="disciplines.js?v=1.1.0"></script>
+  <script src="community.js?v=1.1.0"></script>
+  <script src="procedures.js?v=1.1.0"></script>
+  <script src="data.js?v=1.1.0"></script>
+  <script src="checks.js?v=1.1.0"></script>
+  <script src="app.js?v=1.1.0"></script>
+  <script src="ui.js?v=1.1.0"></script>
+  <script src="report.js?v=1.1.0"></script>
+  <script src="tour.js?v=1.1.0"></script>
+  <script src="projects.js?v=1.1.0"></script>
+  <script src="offline.js?v=1.1.0"></script>
+  <script src="counter.js?v=1.1.0"></script>
 </body>
 </html>

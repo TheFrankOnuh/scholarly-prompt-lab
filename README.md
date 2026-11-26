@@ -34,6 +34,8 @@ It is for scholars in the humanities and social sciences anywhere in the world. 
 
 **Disciplines.** Choose from 80 disciplines in six groups (humanities; arts and heritage; communication and media; social sciences; area and identity studies; interdisciplinary and digital), search by typing, or add your own.
 
+**Step by step.** The Build tab takes you through seven steps with a progress rail, one at a time, or shows them all on one page if you prefer.
+
 **Research projects.** Keep several studies apart. Each project has its own questions, theories, sources, prompt, log, scores and report details. Create, rename, duplicate and delete projects, and save a whole project as one backup file that you can restore on another computer or send to a collaborator. Theories and disciplines you have added are shared by all your projects.
 
 **Theory library.** Choose from 176 entries across twelve fields: communication and media; language and discourse; literature, orality and translation; history and memory; African, postcolonial and decolonial thought; gender, race and intersectionality; philosophy and ethics; sociology, anthropology and cultural studies; visual, material and performance culture; religion; digital and data studies; and analytical approaches. Each entry is typed (theory, framework, approach, method, concept, school, movement or critique) and gives one to three key works in Harvard author-date style, the framework's own core concepts and, for contested positions, well-known critiques. All 427 references were checked against library catalogues: 383 were confirmed, and the rest are marked in the Lab. See [how the library was compiled and checked](docs/theory-library.md). Search by name, thinker or idea, filter by field, and combine several theories in one design. You can add your own theories: they are saved in your browser, travel with exported designs, and can be suggested for the shared library with one click. If a theory you add is already in the library, the Lab points you to the existing entry. You can also **propose** your theory or discipline for every user: proposals are checked automatically, reviewed by the editor like submissions to a journal, and, if accepted, appear in the Lab for everyone with credit to you. With one theory selected, the Lab suggests companion theories, drawing on common scholarly pairings and on the words in your research question and loaded material, and says why each was suggested.
@@ -76,7 +78,7 @@ When you log an output, the Lab records a SHA-256 fingerprint of the exact sourc
 
 ## Accessibility
 
-Version 1.0.0 was checked with the axe-core automated checker (WCAG 2.0, 2.1 and 2.2, levels A and AA, plus best-practice rules) on all five tabs in light and dark mode, with no failures remaining, and with a check that every control can be reached by keyboard. Automated checks cannot find every barrier, and the Lab has not yet been tested by people who use screen readers. If you meet a barrier, please [open an issue](https://github.com/TheFrankOnuh/scholarly-prompt-lab/issues).
+Version 1.1.0 was checked with the axe-core automated checker (WCAG 2.0, 2.1 and 2.2, levels A and AA, plus best-practice rules) on all five tabs in light and dark mode, with no failures remaining, and with a check that every control can be reached by keyboard. Automated checks cannot find every barrier, and the Lab has not yet been tested by people who use screen readers. If you meet a barrier, please [open an issue](https://github.com/TheFrankOnuh/scholarly-prompt-lab/issues).
 
 ## Versions
 
@@ -106,6 +108,6 @@ Code: [MIT](LICENSE). Documentation and the CONTEXT framework guide: [CC BY 4.0]
 
 If you use the Lab or the framework in research, please cite it:
 
-> Onuh, F. (2026). *Scholarly Prompt Lab: The Prompt as Method* (Version 1.0.1) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.24521711
+> Onuh, F. (2026). *Scholarly Prompt Lab: The Prompt as Method* (Version 1.1.0) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.24521711
 
 The DOI above always points to the latest version. Each release also has its own DOI on [Zenodo](https://doi.org/10.5281/zenodo.24521711). See also [CITATION.cff](CITATION.cff).

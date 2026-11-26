@@ -8,6 +8,17 @@ This page lists every version of the Scholarly Prompt Lab, newest first.
 
 To cite the Lab, use the DOI that always opens the latest version: [10.5281/zenodo.24521711](https://doi.org/10.5281/zenodo.24521711).
 
+## 1.1.0, November 2026
+
+A redesign of the Build tab in response to feedback about the interface.
+
+- Build is now seven steps with a progress rail. One step shows at a time, with Back and Next, and a single button shows all steps on one page for those who prefer it. A step's number is filled in once it has answers.
+- The privacy notice, the project bar and the start options now sit in two compact rows instead of three large panels.
+- A theory's key works, concepts and critiques open in a side panel, so the theory list stays short.
+- On phones the prompt sits in a panel at the bottom of the screen that opens and closes.
+- The guided demo moves to the right step automatically.
+- Checked with the axe-core accessibility checker on every step, the side panel and every tab, in light and dark mode, with no failures.
+
 ## 1.0.1, November 2026
 
 DOI: [10.5281/zenodo.24544927](https://doi.org/10.5281/zenodo.24544927)
