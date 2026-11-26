@@ -8,6 +8,19 @@ This page lists every version of the Scholarly Prompt Lab, newest first.
 
 To cite the Lab, use the DOI that always opens the latest version: [10.5281/zenodo.24521711](https://doi.org/10.5281/zenodo.24521711).
 
+## 1.3.0, November 2026
+
+The methods report becomes a methodological reporting engine that connects research design, documented AI use and scholarly evaluation.
+
+- The report keeps four kinds of statement apart: what the research design intends, what the researcher reports, what the Lab's records document, and what the researcher confirmed. Selecting a commitment or an AI-use category no longer produces a claim that an activity, check or evaluation took place.
+- New heading, "AI-Assisted Research: Methodological Report", generated with the date, version and DOI. Revised section headings, and two new appendices: F (prompt-sensitivity analysis, where conditions, AI systems or repeated runs can be compared) and G (evaluation criteria and scoring records).
+- The CONTEXT assessment uses four statuses (Not addressed, Specified, Documented, Not applicable) assigned by rules for each dimension. Researchers can record why a dimension does not apply.
+- Prompts are reproduced verbatim with an identifier, condition, status (copied and recorded with the run, or rebuilt from the design), Lab version and linked output records.
+- Missing information, activities not yet undertaken and inapplicable activities are marked differently, and each [To complete] note names exactly what is missing.
+- Limitations are generated from the research design and the records, including the evidential status of outputs when AI is the object of study.
+- The software citation uses the version DOI when the release metadata records one, and otherwise the DOI for all versions.
+- Fixed: a criterion with no score was counted as confirmed when summarising evaluation.
+
 ## 1.2.4, November 2026
 
 - Log & evaluate: revised wording for all four steps (Record the run, Quotation verification, Evaluate the output, Review and save), the six evaluation criteria, second-model evaluation and the options for how an output was used. Stored values are unchanged, so earlier entries read correctly.

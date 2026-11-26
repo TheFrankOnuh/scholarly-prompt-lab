@@ -698,3 +698,11 @@ dialog.drawer .dmeta { color: var(--muted); font-size: 0.9rem; margin: 0 0 8px; 
 .out-picker .out-actions { padding: 8px 14px 0; margin: 0; }
 .out-picker #rpOutputs { padding: 4px 14px 12px; max-height: 280px; overflow-y: auto; }
 .out-empty { margin-top: 6px; }
+
+/* ---------- methods report: subtitle and dimension justifications ---------- */
+.report .subtitle { font-size: 1.05rem; font-weight: 600; margin: 0 0 6px; color: #17201c; }
+.report .meta a { color: #0e5c47; }
+.na-set { margin: 16px 0 0; }
+.na-set > summary { cursor: pointer; font-weight: 600; min-height: 44px; display: flex; align-items: center; gap: 6px; }
+.na-set label { margin-top: 10px; }
+.report .note { border-left: 4px solid #8a5a00; background: #fbf1dc; padding: 6px 12px; }
