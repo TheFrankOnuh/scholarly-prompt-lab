@@ -897,14 +897,8 @@
     else if (cur === gen || !cur) { procAuto = true; if (!cur) box.value = gen; }
     else procAuto = false;
     lastGenerated = gen;
-    const conv = conventionFor(partial.discipline);
-    const th = partial.theories.map(theoryById).filter(Boolean);
-    const own = th.filter((t) => TSTEPS[t.id]).length;
     $("procNote").textContent = procAuto
-      ? "Built from your choices: " + [conv && techniqueOf(partial).sources !== "none" ? conv.label.toLowerCase() + " for " + partial.discipline : null,
-          "the " + techniqueOf(partial).label.split(" (")[0].toLowerCase() + " technique",
-          th.length ? (own ? own + " framework" + (own > 1 ? "s" : "") + " with their own method" : "") + (own && th.length > own ? " and " : "") + (th.length > own ? (th.length - own) + " applied through core concepts" : "") : null
-        ].filter(Boolean).join("; ") + ". Edit any step: your edits are kept."
+      ? "The procedure reflects your selected research method and prompting technique. You may revise individual steps to suit your research needs. All revisions are retained."
       : "You have edited this procedure, so the Lab no longer changes it when you change discipline, technique or theories.";
     $("procActions").hidden = procAuto;
   }

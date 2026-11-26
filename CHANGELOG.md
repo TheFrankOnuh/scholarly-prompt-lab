@@ -8,6 +8,11 @@ This page lists every version of the Scholarly Prompt Lab, newest first.
 
 To cite the Lab, use the DOI that always opens the latest version: [10.5281/zenodo.24521711](https://doi.org/10.5281/zenodo.24521711).
 
+## 1.2.2, November 2026
+
+- Revised text for three parts of the Build tab: Testing and record-keeping, the note under the analytical procedure, and Research design.
+- The labels under each Build step now say "CONTEXT dimension" instead of "CONTEXT step".
+
 ## 1.2.1, November 2026
 
 - Revised text for the CONTEXT framework: its introduction, the seven dimensions, the four roles of AI in humanities research and the closing statement, in the Lab, the README and the framework guide.

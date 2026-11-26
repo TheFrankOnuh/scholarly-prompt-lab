@@ -10,7 +10,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="theme-color" content="#185c4a">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="styles.css?v=1.2.1">
+  <link rel="stylesheet" href="styles.css?v=1.2.2">
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to the main content</a>
@@ -68,7 +68,7 @@
       <div class="grid">
         <form id="builder" class="card" autocomplete="off">
           <fieldset>
-            <legend><span class="step-no" aria-hidden="true">1</span><span class="leg-text"><span class="leg-title">Your question and theory</span><span class="ctx-tag">CONTEXT step C: Conceptual grounding</span></span></legend>
+            <legend><span class="step-no" aria-hidden="true">1</span><span class="leg-text"><span class="leg-title">Your question and theory</span><span class="ctx-tag">CONTEXT dimension C: Conceptual grounding</span></span></legend>
             <label for="discipline">Discipline</label>
             <div class="combo">
               <input id="discipline" name="discipline" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="discList" autocomplete="off" spellcheck="false" placeholder="Search or type your discipline">
@@ -161,7 +161,7 @@
           </fieldset>
 
           <fieldset>
-            <legend><span class="step-no" aria-hidden="true">2</span><span class="leg-text"><span class="leg-title">Method: what the AI should do</span><span class="ctx-tag">CONTEXT step O: Operationalisation</span></span></legend>
+            <legend><span class="step-no" aria-hidden="true">2</span><span class="leg-text"><span class="leg-title">Method: what the AI should do</span><span class="ctx-tag">CONTEXT dimension O: Operationalisation</span></span></legend>
             <label for="technique">Prompting technique</label>
             <select id="technique" name="technique"></select>
             <p class="hint" id="techniqueHint"></p>
@@ -176,18 +176,18 @@
           </fieldset>
 
           <fieldset>
-            <legend><span class="step-no" aria-hidden="true">3</span><span class="leg-text"><span class="leg-title">Research design</span><span class="ctx-tag">CONTEXT step O: Operationalisation</span></span></legend>
-            <p class="hint">A methods reviewer will ask for these. They go into the prompt so the model works to your design, not its own.</p>
+            <legend><span class="step-no" aria-hidden="true">3</span><span class="leg-text"><span class="leg-title">Research design</span><span class="ctx-tag">CONTEXT dimension O: Operationalisation</span></span></legend>
+            <p class="hint">Specify the methodological choices that will guide the AI-assisted analysis. These details are incorporated into the prompt to ensure that the model follows your research design.</p>
             <label for="unit">Unit of analysis</label>
             <input id="unit" name="unit" placeholder="e.g. the paragraph; the clause; each editorial; each proverb in its speech situation">
-            <label for="corpus">Corpus and how it was selected</label>
+            <label for="corpus">Corpus and selection criteria</label>
             <input id="corpus" name="corpus" placeholder="e.g. all 24 editorials on the fuel subsidy in The Guardian (Nigeria), May to July 2023">
-            <label for="definitions">Working definitions <span class="muted">(key categories and how to decide borderline cases)</span></label>
+            <label for="definitions">Working definitions <span class="muted">(key analytical categories and criteria for resolving ambiguous cases)</span></label>
             <textarea id="definitions" name="definitions" rows="2" placeholder="e.g. Legitimation: any statement giving a reason why the reforms are right or necessary. If a statement only describes the reforms, do not code it."></textarea>
           </fieldset>
 
           <fieldset>
-            <legend><span class="step-no" aria-hidden="true">4</span><span class="leg-text"><span class="leg-title">Sources and their context</span><span class="ctx-tag">CONTEXT step N: Situated knowledge</span></span></legend>
+            <legend><span class="step-no" aria-hidden="true">4</span><span class="leg-text"><span class="leg-title">Sources and their context</span><span class="ctx-tag">CONTEXT dimension N: Situated knowledge</span></span></legend>
             <label for="sourceDesc">Source material</label>
             <input id="sourceDesc" name="sourceDesc" placeholder="e.g. Authenticated excerpts from colonial archival documents">
             <label for="sourceText">Source text <span class="muted">(optional: paste the corpus the model must stay within)</span></label>
@@ -204,7 +204,7 @@
           </fieldset>
 
           <fieldset>
-            <legend><span class="step-no" aria-hidden="true">5</span><span class="leg-text"><span class="leg-title">Output Format</span><span class="ctx-tag">CONTEXT step T: Traceability</span></span></legend>
+            <legend><span class="step-no" aria-hidden="true">5</span><span class="leg-text"><span class="leg-title">Output Format</span><span class="ctx-tag">CONTEXT dimension T: Traceability</span></span></legend>
             <label for="output">Output format</label>
             <select id="output" name="output">
               <option value="table">Table</option>
@@ -217,16 +217,16 @@
           </fieldset>
 
           <fieldset>
-            <legend><span class="step-no" aria-hidden="true">6</span><span class="leg-text"><span class="leg-title">Standards the AI must work to</span><span class="ctx-tag">CONTEXT step E: Evaluation</span></span></legend>
+            <legend><span class="step-no" aria-hidden="true">6</span><span class="leg-text"><span class="leg-title">Standards the AI must work to</span><span class="ctx-tag">CONTEXT dimension E: Evaluation</span></span></legend>
             <div id="safeguards" class="sg-groups"></div>
           </fieldset>
 
           <fieldset>
-            <legend><span class="step-no" aria-hidden="true">7</span><span class="leg-text"><span class="leg-title">Testing and record-keeping</span><span class="ctx-tag">CONTEXT steps X: Cross-model examination, and T: Transparency</span></span></legend>
-            <p class="hint">An answer from one AI system, run once, is not a finding. Tick what you commit to; both are done in the other tabs.</p>
+            <legend><span class="step-no" aria-hidden="true">7</span><span class="leg-text"><span class="leg-title">Testing and record-keeping</span><span class="ctx-tag">CONTEXT dimensions X: Cross-model examination and T: Transparency</span></span></legend>
+            <p class="hint">A single response from an AI system provides a limited basis for scholarly conclusions. Select the methodological commitments you intend to undertake. The corresponding activities can be completed in the tabs indicated below.</p>
             <div class="checks">
-              <label class="check"><input type="checkbox" id="planCross"> <span><strong>Test it.</strong> I will run this prompt more than once, and on at least two AI systems or prompt versions <span class="muted">(Sensitivity study tab)</span></span></label>
-              <label class="check"><input type="checkbox" id="planLog"> <span><strong>Record it.</strong> I will log the AI system, its version, the date, the settings and who reviewed the output <span class="muted">(Log &amp; evaluate tab)</span></span></label>
+              <label class="check"><input type="checkbox" id="planCross"> <span><strong>Cross-model examination.</strong> I will test this prompt through repeated runs and examine how different AI systems or prompt formulations affect the results. <span class="muted">(Sensitivity study tab)</span></span></label>
+              <label class="check"><input type="checkbox" id="planLog"> <span><strong>Research documentation.</strong> I will record the AI system and its version, the date of use, the relevant settings and the details of human review. <span class="muted">(Log &amp; evaluate tab)</span></span></label>
             </div>
           </fieldset>
         </form>
@@ -531,20 +531,20 @@
     <p><span id="offlineStatus" role="status"></span> <button type="button" id="installBtn" class="ghost small-btn" hidden>Install the Lab on this device</button></p>
   </footer>
 
-  <script src="release.js?v=1.2.1"></script>
-  <script src="theories.js?v=1.2.1"></script>
-  <script src="theory-links.js?v=1.2.1"></script>
-  <script src="disciplines.js?v=1.2.1"></script>
-  <script src="community.js?v=1.2.1"></script>
-  <script src="procedures.js?v=1.2.1"></script>
-  <script src="data.js?v=1.2.1"></script>
-  <script src="checks.js?v=1.2.1"></script>
-  <script src="app.js?v=1.2.1"></script>
-  <script src="ui.js?v=1.2.1"></script>
-  <script src="report.js?v=1.2.1"></script>
-  <script src="tour.js?v=1.2.1"></script>
-  <script src="projects.js?v=1.2.1"></script>
-  <script src="offline.js?v=1.2.1"></script>
-  <script src="counter.js?v=1.2.1"></script>
+  <script src="release.js?v=1.2.2"></script>
+  <script src="theories.js?v=1.2.2"></script>
+  <script src="theory-links.js?v=1.2.2"></script>
+  <script src="disciplines.js?v=1.2.2"></script>
+  <script src="community.js?v=1.2.2"></script>
+  <script src="procedures.js?v=1.2.2"></script>
+  <script src="data.js?v=1.2.2"></script>
+  <script src="checks.js?v=1.2.2"></script>
+  <script src="app.js?v=1.2.2"></script>
+  <script src="ui.js?v=1.2.2"></script>
+  <script src="report.js?v=1.2.2"></script>
+  <script src="tour.js?v=1.2.2"></script>
+  <script src="projects.js?v=1.2.2"></script>
+  <script src="offline.js?v=1.2.2"></script>
+  <script src="counter.js?v=1.2.2"></script>
 </body>
 </html>
