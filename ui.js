@@ -1,7 +1,9 @@
 /* Scholarly Prompt Lab: page layout helpers.
-   1. The Build tab as seven steps with a progress rail, or all steps at once.
-   2. On small screens, the prompt panel as a sheet fixed to the bottom of the screen.
-   3. The privacy link in the top bar opens the privacy statement in the footer.
+   1. Step-by-step forms with a progress rail, or all steps at once: the Build tab (seven steps)
+      and the Log & evaluate tab (four steps).
+   2. On small screens, the Build tab's prompt panel as a sheet fixed to the bottom of the screen.
+   3. In the Sensitivity study, each condition's prompt shows its first lines until opened in full.
+   4. The privacy statement in the footer appears when the pointer rests on it or it receives keyboard focus.
    Nothing here reads or stores research content. Only the chosen layout and step are remembered. */
 (function () {
   "use strict";
@@ -16,82 +18,77 @@
   function write(store, k, v) { try { store.setItem(k, v); } catch (e) { /* storage blocked: layout still works */ } }
   var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  /* ---------- 1. steps ---------- */
-  var form = $("builder");
-  var sets = form ? Array.prototype.filter.call(form.children, function (n) { return n.tagName === "FIELDSET"; }) : [];
-  var KEY_MODE = "spl.ui.mode", KEY_STEP = "spl.ui.step";
-  var mode = read(localStorage, KEY_MODE) === "all" ? "all" : "steps";
-  var cur = Math.min(sets.length - 1, Math.max(0, parseInt(read(sessionStorage, KEY_STEP) || "0", 10) || 0));
-  var titles = sets.map(function (fs) { var t = fs.querySelector(".leg-title"); return t ? t.textContent.trim() : "Step"; });
-  var railBtns = [], toggle, live;
-
   // a step counts as started once any of its own answers has content (search boxes and add-forms do not count)
   function started(fs) {
-    var f = fs.querySelectorAll("input, textarea");
+    var f = fs.querySelectorAll("input, textarea, select");
     for (var i = 0; i < f.length; i++) {
       var x = f[i];
-      if (x.closest("#addTheoryForm, #discAddForm, .picker-search") || x.id === "theorySearch" || x.type === "file") continue;
+      if (x.closest("#addTheoryForm, #discAddForm, .picker-search, .no-progress") || x.id === "theorySearch" || x.type === "file") continue;
+      if (x.tagName === "SELECT") { if ((x.dataset.counts === "yes" || x.closest(".criteria")) && x.value) return true; continue; }
       if (x.type === "checkbox" || x.type === "radio") { if (x.checked) return true; }
-      else if (x.type !== "button" && x.type !== "submit" && x.value && x.value.trim()) return true;
+      else if (x.type !== "button" && x.type !== "submit" && x.value && x.value.trim() && !x.dataset.preset) return true;
     }
-    return false;
+    var shown = fs.querySelector("[data-step-content]");
+    return !!(shown && shown.textContent.trim());
   }
 
-  function render() {
-    sets.forEach(function (fs, i) {
-      fs.hidden = mode === "steps" && i !== cur;
-      var nav = fs.querySelector(".step-nav");
-      if (nav) nav.hidden = mode !== "steps";
-    });
-    railBtns.forEach(function (b, i) {
-      var done = started(sets[i]);
-      b.classList.toggle("done", done);
-      b.classList.toggle("is-current", mode === "steps" && i === cur);
-      if (mode === "steps" && i === cur) b.setAttribute("aria-current", "step"); else b.removeAttribute("aria-current");
-      b.querySelector(".vh").textContent = done ? " (has answers)" : " (not started)";
-    });
-    if (toggle) {
+  /* ---------- 1. step-by-step forms ---------- */
+  var steppers = [];
+  function makeStepper(o) {
+    var form = o.form, sets = o.sets;
+    if (!form || !sets.length) return null;
+    var mode = read(localStorage, o.keyMode) === "all" ? "all" : "steps";
+    var cur = Math.min(sets.length - 1, Math.max(0, parseInt(read(sessionStorage, o.keyStep) || "0", 10) || 0));
+    var titles = sets.map(function (fs) { var t = fs.querySelector(".leg-title"); return t ? t.textContent.trim() : "Step"; });
+    var railBtns = [];
+    var rail = el("nav", { class: "stepper" + (o.compact ? " stepper-" + sets.length : ""), "aria-label": o.railLabel });
+    var ol = el("ol");
+    var toggle = el("button", { type: "button", class: "ghost small-btn step-mode" });
+    var live = el("p", { class: "vh", role: "status" });
+
+    function render() {
+      sets.forEach(function (fs, i) {
+        fs.hidden = mode === "steps" && i !== cur;
+        var nav = fs.querySelector(".step-nav");
+        if (nav) nav.hidden = mode !== "steps";
+      });
+      railBtns.forEach(function (b, i) {
+        var done = started(sets[i]);
+        b.classList.toggle("done", done);
+        b.classList.toggle("is-current", mode === "steps" && i === cur);
+        if (mode === "steps" && i === cur) b.setAttribute("aria-current", "step"); else b.removeAttribute("aria-current");
+        b.querySelector(".vh").textContent = done ? " (has answers)" : " (not started)";
+      });
       toggle.textContent = mode === "steps" ? "Show all steps on one page" : "Show one step at a time";
       toggle.setAttribute("aria-pressed", mode === "all" ? "true" : "false");
+      form.classList.toggle("stepped", mode === "steps");
+      // on narrow screens the rail scrolls sideways: keep the current step in view
+      if (ol.scrollWidth > ol.clientWidth && railBtns[cur]) ol.scrollLeft = Math.max(0, railBtns[cur].parentNode.offsetLeft - ol.offsetLeft - 8);
     }
-    if (form) form.classList.toggle("stepped", mode === "steps");
-    // on narrow screens the rail scrolls sideways: keep the current step in view
-    var list = railBtns.length ? railBtns[0].closest("ol") : null;
-    if (list && list.scrollWidth > list.clientWidth && railBtns[cur]) list.scrollLeft = Math.max(0, railBtns[cur].parentNode.offsetLeft - list.offsetLeft - 8);
-  }
 
-  function go(i, focus) {
-    if (i < 0 || i >= sets.length) return;
-    cur = i;
-    write(sessionStorage, KEY_STEP, String(i));
-    if (mode === "all") {
-      // in the all-steps view the rail moves to the step instead
-      sets[i].scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
-      return;
+    function go(i, focus) {
+      if (i < 0 || i >= sets.length) return;
+      cur = i;
+      write(sessionStorage, o.keyStep, String(i));
+      if (mode === "all") { sets[i].scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" }); return; }
+      render();
+      live.textContent = "Step " + (i + 1) + " of " + sets.length + ": " + titles[i];
+      if (focus) {
+        sets[i].setAttribute("tabindex", "-1");
+        sets[i].focus({ preventScroll: true });
+        var top = rail.getBoundingClientRect().top;
+        if (top < 0 || top > window.innerHeight * 0.6) rail.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+      }
     }
-    render();
-    if (live) live.textContent = "Step " + (i + 1) + " of " + sets.length + ": " + titles[i];
-    if (focus) {
-      sets[i].setAttribute("tabindex", "-1");
-      sets[i].focus({ preventScroll: true });
-      var top = rail.getBoundingClientRect().top;
-      if (top < 0 || top > window.innerHeight * 0.6) rail.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+
+    function reveal(target) {
+      if (!target || !target.closest || mode !== "steps") return false;
+      for (var i = 0; i < sets.length; i++) {
+        if (sets[i].contains(target)) { if (i !== cur) go(i, false); return true; }
+      }
+      return false;
     }
-  }
 
-  // show the step that holds an element, so links, the demo and file loading always land on something visible
-  function reveal(target) {
-    if (!target || !target.closest) return;
-    var fs = target.closest("#builder > fieldset");
-    if (fs && mode === "steps") { var i = sets.indexOf(fs); if (i !== -1 && i !== cur) go(i, false); }
-    var sheet = target.closest(".sheet");
-    if (sheet) openSheet(true);
-  }
-
-  var rail = null;
-  if (form && sets.length) {
-    rail = el("nav", { class: "stepper", "aria-label": "Steps in building your prompt" });
-    var ol = el("ol");
     titles.forEach(function (t, i) {
       var b = el("button", { type: "button", class: "step-btn" }, [
         el("span", { class: "sn", "aria-hidden": "true", text: String(i + 1) }),
@@ -102,17 +99,13 @@
       railBtns.push(b);
       ol.append(el("li", {}, [b]));
     });
-    toggle = el("button", { type: "button", class: "ghost small-btn step-mode" });
     toggle.addEventListener("click", function () {
       mode = mode === "steps" ? "all" : "steps";
-      write(localStorage, KEY_MODE, mode);
+      write(localStorage, o.keyMode, mode);
       render();
     });
-    live = el("p", { class: "vh", role: "status" });
     rail.append(ol, toggle, live);
-    // the rail spans the full width above the form and the prompt panel
-    var grid = form.parentNode;
-    grid.parentNode.insertBefore(rail, grid);
+    o.place(rail);
 
     sets.forEach(function (fs, i) {
       var nav = el("div", { class: "step-nav" });
@@ -121,25 +114,74 @@
         back.addEventListener("click", function () { go(i - 1, true); });
         nav.append(back);
       }
-      var next;
       if (i < sets.length - 1) {
-        next = el("button", { type: "button", text: "Next: " + titles[i + 1] });
+        var next = el("button", { type: "button", text: "Next: " + titles[i + 1] });
         next.addEventListener("click", function () { go(i + 1, true); });
-      } else {
-        next = el("button", { type: "button", text: "Done: review and copy your prompt" });
-        next.addEventListener("click", function () {
-          var c = $("copyPrompt");
-          openSheet(true);
-          if (c) { c.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "center" }); c.focus({ preventScroll: true }); }
-        });
+        nav.append(next);
+      } else if (o.finish) {
+        var fin = el("button", { type: "button", text: o.finish.text });
+        fin.addEventListener("click", o.finish.action);
+        nav.append(fin);
+      } else if (o.lastNav) {
+        // the form's own last control row (for example Save entry) sits beside Back
+        nav.classList.add("step-nav-end");
       }
-      nav.append(next);
       fs.append(nav);
     });
+
+    // a required field on an earlier step: show that step before the browser reports it
+    form.addEventListener("click", function (e) {
+      var b = e.target.closest && e.target.closest('button[type="submit"]');
+      if (!b || mode !== "steps" || form.checkValidity()) return;
+      var bad = form.querySelector(":invalid:not(fieldset)");
+      if (bad) { e.preventDefault(); reveal(bad); bad.reportValidity(); }
+    }, true);
+
     var t;
-    form.addEventListener("input", function () { clearTimeout(t); t = setTimeout(render, 250); });
-    form.addEventListener("change", function () { clearTimeout(t); t = setTimeout(render, 250); });
+    function later() { clearTimeout(t); t = setTimeout(render, 250); }
+    form.addEventListener("input", later);
+    form.addEventListener("change", later);
+    if (o.watch) new MutationObserver(later).observe(o.watch, { childList: true });
     render();
+    var api = { reveal: reveal, go: go, mode: function () { return mode; }, count: sets.length, render: render };
+    steppers.push(api);
+    return api;
+  }
+
+  /* the Build tab: seven steps, rail above the form and the prompt panel */
+  var builder = $("builder");
+  var build = builder ? makeStepper({
+    form: builder,
+    sets: Array.prototype.filter.call(builder.children, function (n) { return n.tagName === "FIELDSET"; }),
+    keyMode: "spl.ui.mode", keyStep: "spl.ui.step",
+    railLabel: "Steps in building your prompt",
+    place: function (rail) { var grid = builder.parentNode; grid.parentNode.insertBefore(rail, grid); },
+    finish: { text: "Done: review and copy your prompt", action: function () {
+      var c = $("copyPrompt");
+      openSheet(true);
+      if (c) { c.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "center" }); c.focus({ preventScroll: true }); }
+    } }
+  }) : null;
+
+  /* the Log & evaluate tab: four steps, rail above the form and the summary */
+  var logForm = $("logForm");
+  var logSteps = logForm ? makeStepper({
+    form: logForm,
+    sets: Array.prototype.filter.call(logForm.querySelectorAll(":scope > fieldset.log-step"), function () { return true; }),
+    keyMode: "spl.ui.logmode", keyStep: "spl.ui.logstep",
+    railLabel: "Steps in logging and evaluating an output",
+    compact: true,
+    watch: $("autoChecks"),
+    lastNav: true,
+    place: function (rail) { var grid = logForm.parentNode; grid.parentNode.insertBefore(rail, grid); }
+  }) : null;
+
+  // show whichever step holds an element, so links, the demo and file loading always land on something visible
+  function reveal(target) {
+    var hit = false;
+    steppers.forEach(function (s) { if (s.reveal(target)) hit = true; });
+    if (target && target.closest && target.closest(".sheet")) openSheet(true);
+    return hit;
   }
 
   /* ---------- 2. the prompt panel as a sheet on small screens ---------- */
@@ -161,10 +203,49 @@
     document.addEventListener("keydown", function (e) { if (e.key === "Escape" && aside.classList.contains("open") && window.matchMedia("(max-width: 959px)").matches) { openSheet(false); sheetBtn.focus(); } });
   }
 
-  /* ---------- 3. privacy link ---------- */
-  document.querySelectorAll('a[href="#privacy"]').forEach(function (a) {
-    a.addEventListener("click", function () { var d = $("privacy"); if (d) d.open = true; });
-  });
+  /* ---------- 3. study prompts: first lines, then the full text on request ---------- */
+  var conds = $("conditions");
+  var openConds = {};
+  function foldPrompts() {
+    if (!conds) return;
+    Array.prototype.forEach.call(conds.querySelectorAll("pre.prompt"), function (pre, i) {
+      pre.id = pre.id || "condPrompt" + (i + 1);
+      var key = pre.id;
+      if (pre.dataset.fold) return;
+      pre.dataset.fold = "1";
+      var b = el("button", { type: "button", class: "ghost small-btn fold-toggle", "aria-controls": pre.id });
+      function set(open) {
+        openConds[key] = open;
+        pre.classList.toggle("folded", !open);
+        b.setAttribute("aria-expanded", open ? "true" : "false");
+        b.textContent = open ? "Show fewer lines" : "Show the full prompt";
+      }
+      b.addEventListener("click", function () { set(!openConds[key]); });
+      var row = pre.parentNode.querySelector(".actions");
+      if (row) row.append(b); else pre.after(b);
+      set(!!openConds[key]);
+    });
+  }
+  if (conds) { new MutationObserver(foldPrompts).observe(conds, { childList: true }); foldPrompts(); }
 
-  window.LAB_STEPS = { reveal: reveal, go: go, mode: function () { return mode; }, count: sets.length };
+  /* ---------- 4. privacy statement: shown on hover or keyboard focus ---------- */
+  // It stays open while the pointer is over it, so it can be read and selected, and Escape closes it.
+  var pv = $("privacy"), pvBtn = $("privacyBtn"), pvTimer, pvClosed = false;
+  function pvShow(on) { if (!pv) return; clearTimeout(pvTimer); pv.classList.toggle("show", on); pvBtn.setAttribute("aria-expanded", on ? "true" : "false"); }
+  if (pv && pvBtn) {
+    pv.addEventListener("mouseenter", function () { pvClosed = false; pvShow(true); });
+    pv.addEventListener("mouseleave", function () { clearTimeout(pvTimer); pvTimer = setTimeout(function () { if (!pv.contains(document.activeElement)) pvShow(false); }, 250); });
+    pv.addEventListener("focusin", function () { if (!pvClosed) pvShow(true); });
+    pv.addEventListener("focusout", function (e) { if (!pv.contains(e.relatedTarget)) { pvClosed = false; pvShow(false); } });
+    pvBtn.addEventListener("click", function () { pvClosed = false; pvShow(!pv.classList.contains("show")); });   // touch screens have no hover
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape" && pv.classList.contains("show")) { pvClosed = true; pvShow(false); pvBtn.focus(); } });
+  }
+
+  window.LAB_STEPS = {
+    reveal: reveal,
+    go: function (i, focus) { if (build) build.go(i, focus); },
+    mode: function () { return build ? build.mode() : "all"; },
+    count: build ? build.count : 0,
+    log: logSteps
+  };
 })();

@@ -1381,6 +1381,7 @@
   function mean(arr) { return arr.length ? (arr.reduce((a, b) => a + b, 0) / arr.length) : null; }
 
   function renderLog() {
+    $("panel-log").classList.toggle("no-entries", !log.length);
     $("entryCount").textContent = "(" + log.length + ")";
     const t = $("entries"); t.replaceChildren();
     if (!log.length) {
@@ -1808,6 +1809,7 @@
     if (!$("lgOutput").value.trim()) $("lgCondition").value = "custom";
     showTab("tab-log");
     runChecks();
+    reveal("lgOutput");
     $("lgOutput").scrollIntoView({ behavior: "smooth", block: "center" });
     $("lgOutput").focus({ preventScroll: true });
   });

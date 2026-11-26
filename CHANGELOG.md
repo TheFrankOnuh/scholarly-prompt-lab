@@ -8,6 +8,17 @@ This page lists every version of the Scholarly Prompt Lab, newest first.
 
 To cite the Lab, use the DOI that always opens the latest version: [10.5281/zenodo.24521711](https://doi.org/10.5281/zenodo.24521711).
 
+## 1.2.0, November 2026
+
+The rest of the interface, after the Build tab.
+
+- Log & evaluate is now four steps with the same progress rail: record the run, check the quotations, score the answer, and review and save. If a required field on an earlier step is empty, the Lab opens that step and points to the field. The list of saved entries appears once there is one.
+- Log & evaluate has a title and a line saying what the tab is for, like the other tabs.
+- The Sensitivity study shows the first lines of each version of the prompt, with Copy and "Show the full prompt" side by side.
+- The privacy statement sits in the footer only and appears when the pointer rests on it or it receives keyboard focus. Escape closes it. The privacy line at the top of the page is gone.
+- Build step 5 is now titled Output Format.
+- Checked with the axe-core accessibility checker on every step and tab, in light and dark mode and on a phone-sized screen, with no failures.
+
 ## 1.1.0, November 2026
 
 A redesign of the Build tab in response to feedback about the interface.

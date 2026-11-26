@@ -34,7 +34,7 @@ It is for scholars in the humanities and social sciences anywhere in the world. 
 
 **Disciplines.** Choose from 80 disciplines in six groups (humanities; arts and heritage; communication and media; social sciences; area and identity studies; interdisciplinary and digital), search by typing, or add your own.
 
-**Step by step.** The Build tab takes you through seven steps with a progress rail, one at a time, or shows them all on one page if you prefer.
+**Step by step.** The Build tab takes you through seven steps with a progress rail, and Log & evaluate through four, one at a time, or all on one page if you prefer.
 
 **Research projects.** Keep several studies apart. Each project has its own questions, theories, sources, prompt, log, scores and report details. Create, rename, duplicate and delete projects, and save a whole project as one backup file that you can restore on another computer or send to a collaborator. Theories and disciplines you have added are shared by all your projects.
 
@@ -78,7 +78,7 @@ When you log an output, the Lab records a SHA-256 fingerprint of the exact sourc
 
 ## Accessibility
 
-Version 1.1.0 was checked with the axe-core automated checker (WCAG 2.0, 2.1 and 2.2, levels A and AA, plus best-practice rules) on all five tabs in light and dark mode, with no failures remaining, and with a check that every control can be reached by keyboard. Automated checks cannot find every barrier, and the Lab has not yet been tested by people who use screen readers. If you meet a barrier, please [open an issue](https://github.com/TheFrankOnuh/scholarly-prompt-lab/issues).
+Version 1.2.0 was checked with the axe-core automated checker (WCAG 2.0, 2.1 and 2.2, levels A and AA, plus best-practice rules) on all five tabs in light and dark mode, with no failures remaining, and with a check that every control can be reached by keyboard. Automated checks cannot find every barrier, and the Lab has not yet been tested by people who use screen readers. If you meet a barrier, please [open an issue](https://github.com/TheFrankOnuh/scholarly-prompt-lab/issues).
 
 ## Versions
 
@@ -108,6 +108,6 @@ Code: [MIT](LICENSE). Documentation and the CONTEXT framework guide: [CC BY 4.0]
 
 If you use the Lab or the framework in research, please cite it:
 
-> Onuh, F. (2026). *Scholarly Prompt Lab: The Prompt as Method* (Version 1.1.0) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.24521711
+> Onuh, F. (2026). *Scholarly Prompt Lab: The Prompt as Method* (Version 1.2.0) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.24521711
 
 The DOI above always points to the latest version. Each release also has its own DOI on [Zenodo](https://doi.org/10.5281/zenodo.24521711). See also [CITATION.cff](CITATION.cff).

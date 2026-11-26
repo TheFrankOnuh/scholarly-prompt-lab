@@ -10,7 +10,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="theme-color" content="#185c4a">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="styles.css?v=1.1.0">
+  <link rel="stylesheet" href="styles.css?v=1.2.0">
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to the main content</a>
@@ -38,7 +38,6 @@
         <h2 class="h-small" id="projTitle"><label for="projSelect">Project</label></h2>
         <select id="projSelect"></select>
         <button type="button" class="ghost" id="projNew">New project</button>
-        <p class="proj-privacy"><strong>Private by design.</strong> Your work stays in this browser, and the Lab never contacts an AI system. <a href="#privacy">What leaves your device</a></p>
       </div>
       <p class="hint" id="projMsg" role="status"></p>
       <details id="projManage">
@@ -205,7 +204,7 @@
           </fieldset>
 
           <fieldset>
-            <legend><span class="step-no" aria-hidden="true">5</span><span class="leg-text"><span class="leg-title">Output: how the findings come back</span><span class="ctx-tag">CONTEXT step T: Traceability</span></span></legend>
+            <legend><span class="step-no" aria-hidden="true">5</span><span class="leg-text"><span class="leg-title">Output Format</span><span class="ctx-tag">CONTEXT step T: Traceability</span></span></legend>
             <label for="output">Output format</label>
             <select id="output" name="output">
               <option value="table">Table</option>
@@ -288,9 +287,15 @@
 
     <!-- LOG -->
     <section id="panel-log" role="tabpanel" aria-labelledby="tab-log" hidden>
+      <div class="card tab-intro">
+        <h2>Log and evaluate an output</h2>
+        <p class="hint">Record each run of your prompt, check the AI's quotations against your sources, score the answer and save it. Saved entries feed the summary, the Sensitivity study and your Methods report.</p>
+      </div>
       <div class="grid">
         <form id="logForm" class="card" autocomplete="off">
-          <h2>Log a model output</h2>
+          <h2 class="vh">Log a model output</h2>
+          <fieldset class="log-step">
+            <legend><span class="step-no" aria-hidden="true">1</span><span class="leg-text"><span class="leg-title">Record the run</span><span class="ctx-tag">The AI system, the date and its answer</span></span></legend>
           <div class="row">
             <div>
               <label for="lgCondition">Condition</label>
@@ -298,7 +303,7 @@
             </div>
             <div>
               <label for="lgRun">Run #</label>
-              <input type="number" id="lgRun" min="1" value="1">
+              <input type="number" id="lgRun" min="1" value="1" data-preset="1">
             </div>
           </div>
           <div class="row">
@@ -308,17 +313,24 @@
             </div>
             <div>
               <label for="lgDate">Date run</label>
-              <input type="date" id="lgDate" required>
+              <input type="date" id="lgDate" required data-preset="1">
             </div>
           </div>
           <label for="lgSettings">Settings <span class="muted">(temperature, interface, system prompt, tools)</span></label>
           <input id="lgSettings" placeholder="e.g. web chat, default settings, no browsing">
           <label for="lgOutput">Model output <span class="muted">(paste the AI's full response)</span></label>
           <textarea id="lgOutput" rows="8" required></textarea>
+          </fieldset>
 
-          <div id="autoChecks" class="auto-checks"></div>
+          <fieldset class="log-step">
+            <legend><span class="step-no" aria-hidden="true">2</span><span class="leg-text"><span class="leg-title">Check the quotations</span><span class="ctx-tag">Every quotation compared with your sources</span></span></legend>
+          <p class="hint check-empty">Paste the AI's answer in step 1 and the Lab checks every quotation in it against your sources.</p>
+          <div id="autoChecks" class="auto-checks" data-step-content></div>
           <p class="vh" id="checksAnnounce" role="status"></p>
+          </fieldset>
 
+          <fieldset class="log-step">
+            <legend><span class="step-no" aria-hidden="true">3</span><span class="leg-text"><span class="leg-title">Score the answer</span><span class="ctx-tag">Six criteria, confirmed by you</span></span></legend>
           <div class="eval-head">
             <h3 class="h-small">Evaluation <span class="muted">(1 = poor, 5 = strong)</span></h3>
             <button type="button" class="ghost small-btn" id="confirmAll" hidden>Confirm all suggestions</button>
@@ -344,9 +356,12 @@
             </ol>
             <p class="status" id="evalStatus" role="status"></p>
           </details>
+          </fieldset>
 
+          <fieldset class="log-step">
+            <legend><span class="step-no" aria-hidden="true">4</span><span class="leg-text"><span class="leg-title">Review and save</span><span class="ctx-tag">Errors found, how you used the output, and notes</span></span></legend>
           <label for="lgUse">What did you do with this output?</label>
-          <select id="lgUse">
+          <select id="lgUse" data-counts="yes">
             <option value="">Not decided yet</option>
             <option value="used">Used it as it stands</option>
             <option value="revised">Used it after my own corrections</option>
@@ -375,6 +390,7 @@
             <button type="submit">Save entry</button>
           </div>
           <p class="status" id="logStatus" role="status"></p>
+          </fieldset>
         </form>
 
         <aside class="card">
@@ -389,7 +405,7 @@
           </div>
         </aside>
       </div>
-      <div class="card">
+      <div class="card entries-card">
         <h2 class="h-small">Entries <span id="entryCount" class="muted"></span></h2>
         <div class="table-wrap" tabindex="0" role="region" aria-label="Logged entries: scroll sideways to see every column"><table id="entries"></table></div>
       </div>
@@ -499,8 +515,9 @@
   <footer class="wrap footer">
     <p class="built-by">Created by <a href="https://www.linkedin.com/in/frank-onuh/" target="_blank" rel="noopener author">Frank Onuh</a>. <a href="https://www.linkedin.com/in/frank-onuh/" target="_blank" rel="noopener">Connect on LinkedIn</a> · <a href="https://doi.org/10.5281/zenodo.24521711" target="_blank" rel="noopener">Cite the Lab</a> · <a href="https://github.com/TheFrankOnuh/scholarly-prompt-lab" target="_blank" rel="noopener">Source code</a></p>
     <p>Open source under the MIT licence. Your work is saved only in this browser. Export it to keep it. <span id="labVersion"></span></p>
-    <details class="privacy" id="privacy">
-      <summary>Privacy: what stays on your device, and what does not</summary>
+    <div class="privacy" id="privacy">
+      <button type="button" class="privacy-trigger" id="privacyBtn" aria-expanded="false" aria-controls="privacyPanel">Privacy: what stays on your device, and what does not</button>
+      <div class="privacy-panel" id="privacyPanel" role="region" aria-label="Privacy statement">
       <ul>
         <li><strong>Stays on your device:</strong> everything you type or load, including your sources, prompts, logged outputs, scores and reports. They are kept in this browser's own storage. The Lab has no server and no accounts, and it never contacts an AI system.</li>
         <li><strong>A visit is counted, and nothing more:</strong> when the Lab is opened online, GoatCounter, a privacy-friendly and open-source service, counts one visit. It receives the page address, the website that linked here and your screen size. It sets no cookies, receives nothing you type or load, and does not record who you are. If your browser asks sites not to track you, no visit is counted.</li>
@@ -509,24 +526,25 @@
         <li><strong>Not encrypted:</strong> browser storage is not encrypted by the Lab. On a shared computer, export your work and clear the site's data when you finish. Anyone using this browser profile can open what is saved here.</li>
         <li><strong>Not a backup:</strong> clearing your browser's data deletes your work. Export it regularly.</li>
       </ul>
-    </details>
+      </div>
+    </div>
     <p><span id="offlineStatus" role="status"></span> <button type="button" id="installBtn" class="ghost small-btn" hidden>Install the Lab on this device</button></p>
   </footer>
 
-  <script src="release.js?v=1.1.0"></script>
-  <script src="theories.js?v=1.1.0"></script>
-  <script src="theory-links.js?v=1.1.0"></script>
-  <script src="disciplines.js?v=1.1.0"></script>
-  <script src="community.js?v=1.1.0"></script>
-  <script src="procedures.js?v=1.1.0"></script>
-  <script src="data.js?v=1.1.0"></script>
-  <script src="checks.js?v=1.1.0"></script>
-  <script src="app.js?v=1.1.0"></script>
-  <script src="ui.js?v=1.1.0"></script>
-  <script src="report.js?v=1.1.0"></script>
-  <script src="tour.js?v=1.1.0"></script>
-  <script src="projects.js?v=1.1.0"></script>
-  <script src="offline.js?v=1.1.0"></script>
-  <script src="counter.js?v=1.1.0"></script>
+  <script src="release.js?v=1.2.0"></script>
+  <script src="theories.js?v=1.2.0"></script>
+  <script src="theory-links.js?v=1.2.0"></script>
+  <script src="disciplines.js?v=1.2.0"></script>
+  <script src="community.js?v=1.2.0"></script>
+  <script src="procedures.js?v=1.2.0"></script>
+  <script src="data.js?v=1.2.0"></script>
+  <script src="checks.js?v=1.2.0"></script>
+  <script src="app.js?v=1.2.0"></script>
+  <script src="ui.js?v=1.2.0"></script>
+  <script src="report.js?v=1.2.0"></script>
+  <script src="tour.js?v=1.2.0"></script>
+  <script src="projects.js?v=1.2.0"></script>
+  <script src="offline.js?v=1.2.0"></script>
+  <script src="counter.js?v=1.2.0"></script>
 </body>
 </html>
