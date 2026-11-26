@@ -62,15 +62,15 @@ The Lab has no server and no accounts, and it never contacts an AI system. Every
 
 | | Dimension | Question |
 |---|---|---|
-| **C** | Conceptual grounding | What am I investigating, and through which concepts? |
-| **O** | Operationalisation | What operations should the model perform, step by step? |
-| **N** | Situated knowledge | Whose knowledge is this, in which language, and what will an outsider misread? |
-| **T** | Traceability | Can every claim be followed back to a source I can check? |
-| **E** | Evaluation | How will I judge whether the output is defensible, and who else should judge it? |
-| **X** | Cross-model examination | Does the finding survive a different model, wording or language? |
-| **T** | Transparency | Could another scholar reproduce or audit what I did? |
+| **C** | Conceptual grounding | What am I investigating, and which concepts inform my analysis? |
+| **O** | Operationalisation | What analytical tasks should the model perform, and according to which procedures? |
+| **N** | Situated knowledge | Whose knowledge informs the analysis, and what might the model misunderstand or overlook? |
+| **T** | Traceability | What evidence supports each claim, and how can I independently verify it? |
+| **E** | Evaluation | What makes an interpretation defensible, and whose expertise is needed to assess it? |
+| **X** | Cross-model examination | To what extent are my findings influenced by the AI system or the way I formulate my instructions? |
+| **T** | Transparency | Does my documentation allow another researcher to examine how I arrived at my findings? |
 
-The full guide is in [docs/CONTEXT-framework.md](docs/CONTEXT-framework.md). The framework is offered as a proposal, open to evaluation and refinement.
+The full methodological guide is available in [`docs/CONTEXT-framework.md`](docs/CONTEXT-framework.md) in the repository.
 
 ## Integrity of sources
 
@@ -108,6 +108,6 @@ Code: [MIT](LICENSE). Documentation and the CONTEXT framework guide: [CC BY 4.0]
 
 If you use the Lab or the framework in research, please cite it:
 
-> Onuh, F. (2026). *Scholarly Prompt Lab: The Prompt as Method* (Version 1.2.0) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.24521711
+> Onuh, F. (2026). *Scholarly Prompt Lab: The Prompt as Method* (Version 1.2.1) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.24521711
 
 The DOI above always points to the latest version. Each release also has its own DOI on [Zenodo](https://doi.org/10.5281/zenodo.24521711). See also [CITATION.cff](CITATION.cff).

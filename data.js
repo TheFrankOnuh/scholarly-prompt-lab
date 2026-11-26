@@ -160,13 +160,13 @@ window.LAB = {
   ],
 
   framework: [
-    { l: "C", name: "Conceptual grounding", d: "Define the research problem and the theoretical assumptions behind it.", q: "What exactly am I investigating, and through which concepts?" },
-    { l: "O", name: "Operationalisation", d: "Translate scholarly concepts into explicit analytical instructions.", q: "What operations should the model perform, step by step?" },
-    { l: "N", name: "Situated knowledge", d: "Account for cultural, linguistic and historical specificity.", q: "Whose knowledge is this, in which language, and what will an outsider misread?" },
-    { l: "T", name: "Traceability", d: "Connect generated claims to identifiable evidence.", q: "Can every claim be followed back to a source I can check?" },
-    { l: "E", name: "Evaluation", d: "Assess accuracy, validity and interpretive limits.", q: "How will I decide whether this output is defensible, and who else should judge it?" },
-    { l: "X", name: "Cross-model examination", d: "Test the stability of findings across prompts and systems.", q: "Does the finding survive a different model, wording or language?" },
-    { l: "T", name: "Transparency", d: "Document AI involvement, methodological decisions and human oversight.", q: "Could another scholar reproduce or audit what I did?" }
+    { l: "C", name: "Conceptual grounding", d: "Establish the research problem and the theoretical assumptions that inform the inquiry.", q: "What am I investigating, and which concepts inform my analysis?" },
+    { l: "O", name: "Operationalisation", d: "Translate theoretical concepts and methodological choices into instructions the AI system can execute.", q: "What analytical tasks should the model perform, and according to which procedures?" },
+    { l: "N", name: "Situated knowledge", d: "Consider the cultural, linguistic and historical conditions in which knowledge is produced and understood.", q: "Whose knowledge informs the analysis, and what might the model misunderstand or overlook?" },
+    { l: "T", name: "Traceability", d: "Establish a verifiable connection between AI-generated claims and their supporting evidence.", q: "What evidence supports each claim, and how can I independently verify it?" },
+    { l: "E", name: "Evaluation", d: "Establish the criteria for assessing the accuracy and scholarly validity of AI-generated interpretations.", q: "What makes an interpretation defensible, and whose expertise is needed to assess it?" },
+    { l: "X", name: "Cross-model examination", d: "Examine how changes in models, prompt formulations and languages affect research findings.", q: "To what extent are my findings influenced by the AI system or the way I formulate my instructions?" },
+    { l: "T", name: "Transparency", d: "Maintain a record of AI involvement and the methodological decisions for which the researcher is responsible.", q: "Does my documentation allow another researcher to examine how I arrived at my findings?" }
   ],
 
   examples: [
