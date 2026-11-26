@@ -223,10 +223,10 @@
 
           <fieldset>
             <legend><span class="step-no" aria-hidden="true">7</span><span class="leg-text"><span class="leg-title">Testing and record-keeping</span><span class="ctx-tag">CONTEXT dimensions X: Cross-model examination and T: Transparency</span></span></legend>
-            <p class="hint">A single response from an AI system provides a limited basis for scholarly conclusions. Select the methodological commitments you intend to undertake. The corresponding activities can be completed in the tabs indicated below.</p>
+            <p class="hint">Select the methodological commitments that will guide your analysis.</p>
             <div class="checks">
-              <label class="check"><input type="checkbox" id="planCross"> <span><strong>Cross-model examination.</strong> I will test this prompt through repeated runs and examine how different AI systems or prompt formulations affect the results. <span class="muted">(Sensitivity study tab)</span></span></label>
-              <label class="check"><input type="checkbox" id="planLog"> <span><strong>Research documentation.</strong> I will record the AI system and its version, the date of use, the relevant settings and the details of human review. <span class="muted">(Log &amp; evaluate tab)</span></span></label>
+              <label class="check"><input type="checkbox" id="planCross"> <span><strong>Cross-model examination.</strong> I will test the prompt through repeated runs and compare results across at least two AI systems or prompt formulations. <span class="muted">(Sensitivity study tab)</span></span></label>
+              <label class="check"><input type="checkbox" id="planLog"> <span><strong>Research documentation.</strong> I will record the AI system, its version, the date of use, relevant settings and who reviewed the output. <span class="muted">(Log &amp; evaluate tab)</span></span></label>
             </div>
           </fieldset>
         </form>
@@ -269,8 +269,8 @@
     <section id="panel-study" role="tabpanel" aria-labelledby="tab-study" hidden>
       <div class="card">
         <h2>Prompt-sensitivity study</h2>
-        <p>The same research task under four conditions. Each condition adds one layer, and every condition keeps the same output specification so the results stay comparable. Run each condition several times on each model, then log the outputs.</p>
-        <p class="muted">A fuller prompt may improve an output, introduce new errors, or simply teach the model to agree with you. The point is to find out which.</p>
+        <p>Examine how prompt design influences AI-generated results under four research conditions. Each condition introduces an additional layer of instruction while retaining the same output specification. Run each condition several times across the selected models and record the results.</p>
+        <p class="muted">Assess whether additional instructions improve analytical quality, introduce errors or increase agreement with the researcher's assumptions.</p>
         <div class="study-controls">
           <label for="runs">Runs per condition</label>
           <input type="number" id="runs" min="1" max="20" value="3">
