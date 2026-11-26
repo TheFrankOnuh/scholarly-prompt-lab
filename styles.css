@@ -684,9 +684,9 @@ dialog.drawer .dmeta { color: var(--muted); font-size: 0.9rem; margin: 0 0 8px; 
   .disclosure { transition: transform 0.2s ease; animation: spl-nudge 1.4s ease 1.2s 2; }
   .privacy-trigger[aria-expanded="true"] .disclosure { animation: none; }
   @keyframes spl-nudge { 0%, 60%, 100% { translate: 0 0; } 30% { translate: 0 3px; } }
-  /* the install option: two soft pulses of its outline after the page loads, then still */
-  #installBtn.attention { animation: spl-invite 1.6s ease-out 2; }
-  @keyframes spl-invite { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 45%, transparent); } 100% { box-shadow: 0 0 0 10px transparent; } }
+  /* the install option: a soft pulse of its outline, repeated with a pause, until the Lab is installed */
+  #installBtn.attention { animation: spl-invite 3.2s ease-out infinite; }
+  @keyframes spl-invite { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 45%, transparent); } 50%, 100% { box-shadow: 0 0 0 10px transparent; } }
 }
 #installHelp:empty { display: none; }
 

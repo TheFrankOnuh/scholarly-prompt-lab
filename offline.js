@@ -40,9 +40,8 @@
   }
   if (btn && !installed) {
     btn.hidden = false;
-    // one brief, gentle signal after the page settles; none for people who ask for reduced motion
+    // a gentle, repeating signal until the Lab is installed; none for people who ask for reduced motion
     setTimeout(function () { btn.classList.add("attention"); }, 1500);
-    btn.addEventListener("animationend", function () { btn.classList.remove("attention"); });
   }
   window.addEventListener("beforeinstallprompt", function (e) {
     e.preventDefault();
@@ -53,9 +52,9 @@
     if (!deferred) { if (help) help.textContent = guidance(); return; }
     if (help) help.textContent = "";
     deferred.prompt();
-    deferred.userChoice.then(function () { deferred = null; btn.hidden = true; });
+    deferred.userChoice.then(function (choice) { deferred = null; if (choice && choice.outcome === "accepted") { btn.classList.remove("attention"); btn.hidden = true; } });
   });
-  window.addEventListener("appinstalled", function () { if (btn) btn.hidden = true; if (help) help.textContent = ""; say("Installed. Open it from your home screen or apps list, online or offline."); });
+  window.addEventListener("appinstalled", function () { if (btn) { btn.classList.remove("attention"); btn.hidden = true; } if (help) help.textContent = ""; say("Installed. Open it from your home screen or apps list, online or offline."); });
   window.addEventListener("offline", function () { say("You are offline. The Lab keeps working, and your work stays saved in this browser."); });
   window.addEventListener("online", function () { say("Back online."); });
 })();

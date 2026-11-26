@@ -8,6 +8,10 @@ This page lists every version of the Scholarly Prompt Lab, newest first.
 
 To cite the Lab, use the DOI that always opens the latest version: [10.5281/zenodo.24521711](https://doi.org/10.5281/zenodo.24521711).
 
+## 1.3.1, November 2026
+
+- Install the Lab on this device keeps its gentle pulse until the Lab is installed. If the installation prompt is dismissed, the option stays available. There is no animation when reduced motion is requested.
+
 ## 1.3.0, November 2026
 
 The methods report becomes a methodological reporting engine that connects research design, documented AI use and scholarly evaluation.
