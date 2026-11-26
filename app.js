@@ -1028,7 +1028,7 @@
     // progress is shown with a tick or a ring and words, never by colour alone
     cov.forEach((c) => meter.append(el("li", { class: c.on ? "on" : "off" }, [
       el("span", { class: "ci", "aria-hidden": "true", text: c.on ? "\u2713" : "\u25CB" }),
-      el("span", {}, [el("strong", { text: c.l + " \u00b7 " + c.fullName }), el("span", { class: "cov-need", text: c.on ? "Covered" : "To add: " + c.need })])
+      el("span", {}, [el("strong", { text: "CONTEXT dimension " + c.l + ": " + c.fullName }), el("span", { class: "cov-need", text: c.on ? "Covered" : "To add: " + c.need })])
     ])));
     const missing = cov.filter((c) => !c.on);
     $("covCount").textContent = (7 - missing.length) + " of 7 covered";
@@ -1096,7 +1096,7 @@
     const row = (k, v) => "| " + k + " | " + String(v || "—").replace(/\|/g, "\\|").replace(/\n/g, "<br>") + " |\n";
     md += row("Discipline", s.discipline) + row("Theoretical orientation", theoryLines(s).map((t) => t.n + (t.t ? " (" + t.t + ")" : "") + (t.custom ? " [researcher-defined]" : "")).concat(s.theoryNotes.trim() ? [s.theoryNotes.trim()] : []).join("\n")) + row("Technique", L.techniques[s.technique].label);
     md += row("Unit of analysis", s.unit) + row("Corpus and selection", s.corpus) + row("Working definitions", s.definitions) + row("Source material", s.sourceDesc) + row("Context", s.context) + row("Contested terminology", s.terms) + row("Output", s.output + ": " + (s.fields || "default fields")) + "\n";
-    md += "## CONTEXT checklist\n\n" + cov.map((c) => "- [" + (c.on ? "x" : " ") + "] **" + c.l + " · " + c.name + "**" + (c.on ? "" : " (needs " + c.need + ")")).join("\n") + "\n\n";
+    md += "## CONTEXT checklist\n\n" + cov.map((c) => "- [" + (c.on ? "x" : " ") + "] **CONTEXT dimension " + c.l + ": " + c.fullName + "**" + (c.on ? "" : " (needs " + c.need + ")")).join("\n") + "\n\n";
     md += "## Prompt\n\n```text\n" + buildPrompt(s, 4) + "\n```\n\n";
     const lib = theoryLines(s).filter((t) => t.works && t.works.length);
     if (lib.length) {

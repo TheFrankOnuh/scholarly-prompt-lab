@@ -175,7 +175,7 @@
     var shas = {}; entries.forEach(function (e) { if (e.design && e.design.sourceSha256) shas[e.design.sourceSha256] = (shas[e.design.sourceSha256] || 0) + 1; });
     var shaKeys = Object.keys(shas);
     if (shaKeys.length) out.push(p("To identify the exact source text analysed, the Lab recorded its SHA-256 fingerprint when each output was logged: " + shaKeys.map(function (k) { return "<code>" + k + "</code> (" + plural(shas[k], "output") + ")"; }).join("; ") + ". The same text always produces the same fingerprint." + (shaKeys.length > 1 ? " More than one fingerprint means the source text changed between runs." : "")));
-    out.push(p("The prompt covers " + covered + " of the 7 elements of the CONTEXT framework for scholarly prompting (Appendix E). The full prompt is given in Appendix A."));
+    out.push(p("The prompt covers " + covered + " of the 7 dimensions of the CONTEXT framework for scholarly prompting (Appendix E). The full prompt is given in Appendix A."));
 
     out.push("<h3>2.3 Runs</h3>");
     if (!n) out.push(p(gap("how many times the prompt was run, and on which systems")));
@@ -270,7 +270,7 @@
     if (th.some(function (t) { return t.works && t.works.length; })) out.push(p("References to theoretical frameworks come from the Lab's theory library. Check editions and page numbers against your own copies before publication."));
 
     out.push("<h2>Appendix E. CONTEXT checklist for this prompt</h2>");
-    out.push(table(["Element", "Status"], cov.map(function (c) { return [esc(c.l + " · " + (c.fullName || c.name)), c.on ? "Covered" : "Not covered: needs " + esc(c.need)]; })));
+    out.push(table(["Dimension", "Status"], cov.map(function (c) { return [esc("CONTEXT dimension " + c.l + ": " + (c.fullName || c.name)), c.on ? "Covered" : "Not covered: needs " + esc(c.need)]; })));
     return out.join("\n");
   }
 

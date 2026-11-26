@@ -11,7 +11,9 @@ To cite the Lab, use the DOI that always opens the latest version: [10.5281/zeno
 ## 1.2.2, November 2026
 
 - Revised text for three parts of the Build tab: Testing and record-keeping, the note under the analytical procedure, and Research design.
-- The labels under each Build step now say "CONTEXT dimension" instead of "CONTEXT step".
+- Revised text for Sources and their context, Output format and Analytical standards (the eleven standards keep their meaning and their place in the prompt).
+- A revised privacy statement, Privacy and data storage, in the footer.
+- Every reference to a dimension now reads in one format, for example "CONTEXT dimension C: Conceptual grounding": the Build step captions, the CONTEXT coverage list, the research design download and Appendix E of the methods report.
 
 ## 1.2.1, November 2026
 
