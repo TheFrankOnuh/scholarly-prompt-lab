@@ -42,3 +42,18 @@ test("the saved copy is all-or-nothing and never mixes releases", () => {
   assert.ok(!/cache\.put\(/.test(sw), "files fetched online must not be added to the saved copy");
   assert.ok(!/\.catch\(\(\) => null\)/.test(sw), "caching failures must not be swallowed");
 });
+
+test("the fonts are stored with the Lab, in a cache kept apart from the release copy", () => {
+  const sw = read("sw.js");
+  const css = read("assets/fonts/fonts.css");
+  const fs = require("node:fs"), path = require("node:path");
+  const listed = [...sw.matchAll(/"(assets\/fonts\/[^"]+\.woff2)"/g)].map((m) => m[1]);
+  assert.ok(listed.length >= 10, "sw.js must save the Latin fonts for offline use");
+  for (const f of listed) assert.ok(fs.existsSync(path.join(__dirname, "..", f)), "sw.js lists a missing font: " + f);
+  for (const m of css.matchAll(/url\("([^"]+)"\)/g)) assert.ok(fs.existsSync(path.join(__dirname, "..", "assets/fonts", m[1])), "fonts.css names a missing file: " + m[1]);
+  assert.ok(!/https?:/.test(css.replace(/\/\*[\s\S]*?\*\//g, "")), "fonts must load from the Lab itself, never from a font service");
+  assert.match(sw, /const FONT_CACHE = "spl-fonts-\d+"/);
+  assert.ok(/k !== CACHE && k !== FONT_CACHE/.test(sw), "a new release must keep the saved fonts");
+  assert.ok(sw.includes('"assets/fonts/fonts.css"'), "the font stylesheet belongs to the release copy");
+  assert.ok(fs.existsSync(path.join(__dirname, "..", "assets/fonts/OFL-SourceSerif4.txt")) && fs.existsSync(path.join(__dirname, "..", "assets/fonts/OFL-IBMPlex.txt")), "the font licences must ship with the fonts");
+});

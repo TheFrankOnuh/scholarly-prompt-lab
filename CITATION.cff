@@ -5,8 +5,8 @@ type: software
 authors:
   - family-names: Onuh
     given-names: Frank
-version: 1.3.1
-date-released: 2026-11-26
+version: 1.4.0
+date-released: 2026-11-27
 license: MIT
 doi: 10.5281/zenodo.24521711
 url: "https://thefrankonuh.github.io/scholarly-prompt-lab/"

@@ -8,6 +8,25 @@ This page lists every version of the Scholarly Prompt Lab, newest first.
 
 To cite the Lab, use the DOI that always opens the latest version: [10.5281/zenodo.24521711](https://doi.org/10.5281/zenodo.24521711).
 
+## 1.4.0, November 2026
+
+A new visual identity and a redesign of the interface. The research workflows, the prompts, the stored records, the scoring and the methods report text are unchanged: for all seven worked examples, the prompt, the research design download, the study protocol and the report text are identical to version 1.3.1.
+
+- Typefaces: Source Serif 4 for headings, the methods report and the framework guide; IBM Plex Sans for the interface; IBM Plex Mono only for text sent to an AI system or stored verbatim. All three are under the SIL Open Font License, are stored with the Lab and are saved for offline use, so no visit reaches a font service. They cover Latin, Greek, Cyrillic and Vietnamese (Plex Mono has no Greek).
+- Colour: petrol blue as the primary colour, with rubric, the red of manuscript rubrication, for CONTEXT letters and section numbers only. Every text pair measures at least 4.5:1 in light and dark mode.
+- Nine text sizes in place of twenty-two, and none below 13 pixels.
+- The project controls are in the header, with Manage projects opening as a panel.
+- Build has a title and a one-line introduction, with the start options beside it. "Start my own research" is the main action, and "Clear form" is set apart from the start options.
+- The step rail shows each step's full name. On phones it shows "Step 3 of 7" with the step name.
+- The panels around each region are removed. Only the prompt keeps a sheet of its own.
+- CONTEXT coverage is shown as the seven letters of CONTEXT, each underlined once that dimension is covered.
+- Buttons have three levels, with line icons from Lucide (ISC licence) always beside a word. Quotation checks show a word and an icon for each result.
+- Evaluation scores are chosen from a row of buttons from 1 to 5. A suggested score is outlined and labelled; a confirmed score is filled.
+- The methods report is shown as a document, with section numbers in rubric and each CONTEXT status written out and coloured. The Word export uses Source Serif 4 where it is installed and Georgia otherwise.
+- The wordmark and the app icon are redrawn in Source Serif 4.
+- On touch screens every control is at least 44 pixels tall, the open tab stays in view, and the prompt sheet scrolls as one area.
+- Fixed: the maskable app icons were not saved for offline use.
+
 ## 1.3.1, November 2026
 
 - Install the Lab on this device keeps its gentle pulse until the Lab is installed. If the installation prompt is dismissed, the option stays available. There is no animation when reduced motion is requested.

@@ -78,7 +78,7 @@ When you log an output, the Lab records a SHA-256 fingerprint of the exact sourc
 
 ## Accessibility
 
-Version 1.2.0 was checked with the axe-core automated checker (WCAG 2.0, 2.1 and 2.2, levels A and AA, plus best-practice rules) on all five tabs in light and dark mode, with no failures remaining, and with a check that every control can be reached by keyboard. Automated checks cannot find every barrier, and the Lab has not yet been tested by people who use screen readers. If you meet a barrier, please [open an issue](https://github.com/TheFrankOnuh/scholarly-prompt-lab/issues).
+Version 1.4.0 was checked with the axe-core automated checker (WCAG 2.0, 2.1 and 2.2, levels A and AA, plus best-practice rules) on all five tabs in light and dark mode, at phone, tablet and desktop widths, with no failures remaining. Every control was checked for a visible focus indicator when reached by keyboard, text pairs meet a contrast of at least 4.5:1, controls are at least 44 pixels tall on touch screens, and all animation stops when the device asks for reduced motion. Automated checks cannot find every barrier, and the Lab has not yet been tested by people who use screen readers. If you meet a barrier, please [open an issue](https://github.com/TheFrankOnuh/scholarly-prompt-lab/issues).
 
 ## Versions
 
@@ -96,7 +96,7 @@ The version number lives in one file, `release.js`. `node tools/set-version.mjs 
 
 Contributions are welcome, especially worked examples from other disciplines and languages, translations of the interface, and new evaluation criteria. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
-The tool is plain HTML, CSS and JavaScript with no build step. Reference data (disciplines, theories, techniques, safeguards, examples) lives in `data.js`.
+The tool is plain HTML, CSS and JavaScript with no build step. Its fonts are stored in the repository, so it makes no request to a font service. Reference data (disciplines, theories, techniques, safeguards, examples) lives in `data.js`.
 
 ## Author
 
@@ -104,10 +104,10 @@ Created by [Frank Onuh](https://www.linkedin.com/in/frank-onuh/).
 
 ## Licence
 
-Code: [MIT](LICENSE). Documentation and the CONTEXT framework guide: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). The wordmark is set in DM Sans (SIL Open Font License) and stored as outlines. Bundled libraries keep their own licences: PDF.js (Apache 2.0) and Mammoth (BSD 2-Clause); see [vendor/README.md](vendor/README.md).
+Code: [MIT](LICENSE). Documentation and the CONTEXT framework guide: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). The wordmark is set in Source Serif 4 (SIL Open Font License) and stored as outlines. The interface uses Source Serif 4, IBM Plex Sans and IBM Plex Mono (SIL Open Font License), stored in `assets/fonts` with their licences; the icons are from Lucide (ISC licence). Bundled libraries keep their own licences: PDF.js (Apache 2.0) and Mammoth (BSD 2-Clause); see [vendor/README.md](vendor/README.md).
 
 If you use the Lab or the framework in research, please cite it:
 
-> Onuh, F. (2026). *Scholarly Prompt Lab: The Prompt as Method* (Version 1.3.1) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.24521711
+> Onuh, F. (2026). *Scholarly Prompt Lab: The Prompt as Method* (Version 1.4.0) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.24521711
 
 The DOI above always points to the latest version. Each release also has its own DOI on [Zenodo](https://doi.org/10.5281/zenodo.24521711). See also [CITATION.cff](CITATION.cff).

@@ -4,6 +4,7 @@
    2. On small screens, the Build tab's prompt panel as a sheet fixed to the bottom of the screen.
    3. In the Sensitivity study, each condition's prompt shows its first lines until opened in full.
    4. The privacy statement in the footer opens and closes when the researcher selects it.
+   5. Evaluation scores from 1 to 5 as a row of buttons, kept in step with the original menus.
    Nothing here reads or stores research content. Only the chosen layout and step are remembered. */
 (function () {
   "use strict";
@@ -45,8 +46,12 @@
     var ol = el("ol");
     var toggle = el("button", { type: "button", class: "ghost small-btn step-mode" });
     var live = el("p", { class: "vh", role: "status" });
+    // on phones the step names do not fit under the numbers, so the current one is written out (screen readers hear the live region)
+    var caption = el("p", { class: "rail-caption", "aria-hidden": "true" });
 
     function render() {
+      caption.hidden = mode !== "steps";
+      caption.textContent = "Step " + (cur + 1) + " of " + sets.length + ": " + titles[cur];
       sets.forEach(function (fs, i) {
         fs.hidden = mode === "steps" && i !== cur;
         var nav = fs.querySelector(".step-nav");
@@ -104,7 +109,7 @@
       write(localStorage, o.keyMode, mode);
       render();
     });
-    rail.append(ol, toggle, live);
+    rail.append(ol, caption, toggle, live);
     o.place(rail);
 
     sets.forEach(function (fs, i) {
@@ -237,6 +242,71 @@
       if (e.key === "Escape" && !pvPanel.hidden && $("privacy").contains(document.activeElement)) { pvShow(false); pvBtn.focus(); }
     });
   }
+
+  /* ---------- on narrow screens the tab bar scrolls sideways: keep the open tab in view ---------- */
+  var tabBar = document.querySelector(".tabs");
+  function tabInView() {
+    var on = tabBar && tabBar.querySelector('[aria-selected="true"]');
+    if (!on || tabBar.scrollWidth <= tabBar.clientWidth) return;
+    var left = on.getBoundingClientRect().left - tabBar.getBoundingClientRect().left + tabBar.scrollLeft, right = left + on.offsetWidth;
+    if (left < tabBar.scrollLeft || right > tabBar.scrollLeft + tabBar.clientWidth - 40) tabBar.scrollLeft = Math.max(0, left - 16);
+  }
+  if (tabBar) { new MutationObserver(tabInView).observe(tabBar, { attributes: true, subtree: true, attributeFilter: ["aria-selected"] }); tabInView(); }
+
+  /* ---------- the letter of each CONTEXT dimension in a step's label, set in rubric (the words are unchanged) ---------- */
+  document.querySelectorAll(".ctx-tag").forEach(function (t) {
+    if (t.querySelector(".dim-l")) return;
+    var parts = t.textContent.split(/\b([A-Z])(?=:)/);
+    if (parts.length < 3) return;
+    t.replaceChildren.apply(t, parts.map(function (p, i) { return i % 2 ? el("span", { class: "dim-l", text: p }) : document.createTextNode(p); }));
+  });
+
+  /* ---------- project menu in the header: on wide screens Manage projects opens as a panel,
+     which Escape or a click elsewhere closes ---------- */
+  var pm = $("projManage");
+  if (pm) {
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && pm.open && pm.contains(document.activeElement)) { pm.open = false; pm.querySelector("summary").focus(); }
+    });
+    document.addEventListener("click", function (e) {
+      // a button the project list has just redrawn is no longer in the page; that click came from inside the panel
+      if (pm.open && e.target.isConnected && !pm.contains(e.target) && !e.target.closest("dialog") && window.matchMedia("(min-width: 960px)").matches) pm.open = false;
+    });
+  }
+
+  /* ---------- 5. scores from 1 to 5 as a row of buttons ----------
+     The original menu stays in the page, hidden, and still holds the score. Choosing a number sets the menu
+     and sends the same "change" event as before, so the scoring logic is untouched. When the Lab sets a score
+     itself (a suggestion, a confirmation, a cleared form), the row is redrawn from the menu. */
+  function scoreRow(sel) {
+    var id = sel.id, name = "seg_" + id;
+    var group = el("div", { class: "score-seg", role: "radiogroup", "aria-label": (sel.getAttribute("aria-label") || "Score") + ", score from 1 to 5" });
+    for (var i = 1; i <= 5; i++) {
+      var r = el("input", { type: "radio", name: name, value: String(i) });
+      group.append(el("label", {}, [r, el("span", { "aria-hidden": "true", text: String(i) })]));
+      r.setAttribute("aria-label", String(i));
+    }
+    var clear = el("button", { type: "button", class: "score-clear", text: "Clear" });
+    clear.setAttribute("aria-label", "Clear the score for " + (sel.getAttribute("aria-label") || "this criterion"));
+    var ctl = el("div", { class: "score-ctl" });
+    sel.before(ctl);
+    ctl.append(group, clear, sel);
+    sel.hidden = true;
+    function sync() {
+      group.querySelectorAll("input").forEach(function (r) { r.checked = r.value === sel.value; });
+      group.classList.toggle("is-suggested", sel.classList.contains("suggested"));
+      clear.hidden = !sel.value;
+    }
+    function set(v) { sel.value = v; sel.dispatchEvent(new Event("change", { bubbles: true })); sync(); }
+    group.addEventListener("change", function (e) { if (e.target.name === name) set(e.target.value); });
+    clear.addEventListener("click", function () { set(""); var first = group.querySelector("input"); if (first) first.focus(); });
+    sel.addEventListener("change", sync);
+    new MutationObserver(sync).observe(sel, { attributes: true, attributeFilter: ["class"] });
+    var badge = $("st_" + id.replace(/^sc_/, ""));
+    if (badge) new MutationObserver(sync).observe(badge, { childList: true, subtree: true });
+    sync();
+  }
+  document.querySelectorAll("#criteria select[id^='sc_']").forEach(scoreRow);
 
   window.LAB_STEPS = {
     reveal: reveal,

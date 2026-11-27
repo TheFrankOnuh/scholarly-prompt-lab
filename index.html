@@ -8,18 +8,43 @@
   <meta name="description" content="A free, open-source environment for designing, documenting and evaluating AI prompts in digital humanities research.">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23185c4a'/%3E%3Ctext x='16' y='22' font-size='16' text-anchor='middle' fill='white' font-family='Georgia'%3EP%3C/text%3E%3C/svg%3E">
   <link rel="manifest" href="manifest.webmanifest">
-  <meta name="theme-color" content="#185c4a">
+  <meta name="theme-color" content="#17434d">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="styles.css?v=1.3.1">
+  <link rel="preload" href="assets/fonts/ibm-plex-sans-normal-400-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/source-serif-4-normal-400-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="assets/fonts/fonts.css?v=1.4.0">
+  <link rel="stylesheet" href="styles.css?v=1.4.0">
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to the main content</a>
   <header class="site-header">
     <div class="wrap header-inner">
-      <div>
-        <h1 class="brand"><picture><source srcset="assets/logo/wordmark-on-dark.svg" media="(prefers-color-scheme: dark)"><img src="assets/logo/wordmark.svg" alt="Scholarly Prompt Lab" width="316" height="36"></picture></h1>
+      <div class="brand-block">
+        <h1 class="brand"><picture><source srcset="assets/logo/wordmark-on-dark.svg" media="(prefers-color-scheme: dark)"><img src="assets/logo/wordmark.svg" alt="Scholarly Prompt Lab" width="284" height="36"></picture></h1>
         <p class="tagline">The prompt as method: design, document and evaluate AI-assisted research in the humanities and social sciences.</p>
       </div>
+      <section class="projects" aria-labelledby="projTitle">
+        <div class="proj-bar">
+          <h2 class="h-small" id="projTitle"><label for="projSelect">Project</label></h2>
+          <select id="projSelect"></select>
+          <button type="button" class="ghost" id="projNew">New project</button>
+        </div>
+        <p class="hint" id="projMsg" role="status"></p>
+        <details id="projManage">
+          <summary>Manage projects <span id="projCount" class="muted"></span></summary>
+          <div class="proj-panel">
+            <div class="table-wrap" tabindex="0" role="region" aria-label="Your projects: scroll sideways to see every column">
+              <table class="proj-table">
+                <thead><tr><th scope="col">Project</th><th scope="col">First research question</th><th scope="col">Sources</th><th scope="col">Runs</th><th scope="col">Actions</th></tr></thead>
+                <tbody id="projList"></tbody>
+              </table>
+            </div>
+            <p class="proj-restore"><button type="button" class="ghost" id="projRestore">Restore a project from a backup file</button>
+              <input type="file" id="projFile" accept=".json,application/json" hidden></p>
+            <p class="hint">Each project keeps its own questions, theories, sources, prompt, log and report. Projects are kept in this browser. A backup file holds one whole project, so you can keep it safe, move it to another computer or send it to a collaborator. Theories and disciplines you have added are shared by all your projects.</p>
+          </div>
+        </details>
+      </section>
       <nav class="tabs" role="tablist" aria-label="Sections">
         <button role="tab" aria-selected="true" aria-controls="panel-build" id="tab-build">Build</button>
         <button role="tab" aria-selected="false" aria-controls="panel-study" id="tab-study">Sensitivity study</button>
@@ -33,36 +58,21 @@
   <main class="wrap" id="main" tabindex="-1">
     <p class="notice warn" id="storageWarn" role="alert" hidden>This browser's storage is full, so recent work may not be saved. Back up a project to a file under Manage projects, then delete a project you have finished or remove very large source texts.</p>
 
-    <section class="projects card" aria-labelledby="projTitle">
-      <div class="proj-bar">
-        <h2 class="h-small" id="projTitle"><label for="projSelect">Project</label></h2>
-        <select id="projSelect"></select>
-        <button type="button" class="ghost" id="projNew">New project</button>
-      </div>
-      <p class="hint" id="projMsg" role="status"></p>
-      <details id="projManage">
-        <summary>Manage projects <span id="projCount" class="muted"></span></summary>
-        <div class="table-wrap" tabindex="0" role="region" aria-label="Your projects: scroll sideways to see every column">
-          <table class="proj-table">
-            <thead><tr><th scope="col">Project</th><th scope="col">First research question</th><th scope="col">Sources</th><th scope="col">Runs</th><th scope="col">Actions</th></tr></thead>
-            <tbody id="projList"></tbody>
-          </table>
-        </div>
-        <p class="proj-restore"><button type="button" class="ghost" id="projRestore">Restore a project from a backup file</button>
-          <input type="file" id="projFile" accept=".json,application/json" hidden></p>
-        <p class="hint">Each project keeps its own questions, theories, sources, prompt, log and report. Projects are kept in this browser. A backup file holds one whole project, so you can keep it safe, move it to another computer or send it to a collaborator. Theories and disciplines you have added are shared by all your projects.</p>
-      </details>
-    </section>
-
     <!-- BUILD -->
     <section id="panel-build" role="tabpanel" aria-labelledby="tab-build">
-      <div class="start-bar card" role="group" aria-labelledby="startTitle">
-        <h2 class="vh" id="startTitle">Start</h2>
-        <button type="button" id="startOwn">Start my own research</button>
-        <button type="button" class="ghost" data-pick="sourceFiles" title="PDF, Word (.docx) or text files. They are read on your computer and never uploaded.">Load your own files</button>
-        <button type="button" class="ghost" id="tourStart">Take the guided demo</button>
-        <span class="start-example"><label for="example">Worked example</label> <select id="example"></select></span>
-        <button type="button" id="reset" class="ghost">Clear form</button>
+      <div class="build-head">
+        <div class="tab-intro">
+          <h2>Design the research prompt</h2>
+          <p class="hint">Work through seven steps, each tied to a dimension of the CONTEXT framework. Your answers build the prompt as you go.</p>
+        </div>
+        <div class="start-bar" role="group" aria-labelledby="startTitle">
+          <h2 class="vh" id="startTitle">Start</h2>
+          <button type="button" id="startOwn">Start my own research</button>
+          <button type="button" class="ghost" data-pick="sourceFiles" title="PDF, Word (.docx) or text files. They are read on your computer and never uploaded.">Load your own files</button>
+          <button type="button" class="ghost" id="tourStart">Take the guided demo</button>
+          <span class="start-example"><label for="example">Worked example</label> <select id="example"></select></span>
+          <button type="button" id="reset" class="ghost">Clear form</button>
+        </div>
       </div>
 
       <div class="grid">
@@ -231,7 +241,7 @@
           </fieldset>
         </form>
 
-        <aside class="card sticky" aria-label="Your prompt">
+        <aside class="card sticky prompt-sheet" aria-label="Your prompt">
           <div class="panel-head">
             <h2 class="h-small" id="promptTitle">Your scholarly prompt</h2>
             <button type="button" id="copyPrompt">Copy prompt</button>
@@ -240,6 +250,7 @@
           <ul class="design-warn" id="designWarn" aria-label="Things to check in this design" hidden></ul>
           <details class="coverage" id="coverage">
             <summary><span class="cov-title">CONTEXT coverage</span> <span class="cov-count" id="covCount"></span>
+              <span class="cov-letters" id="covLetters" aria-hidden="true"></span>
               <span class="cov-bar" aria-hidden="true"><span id="covFill"></span></span></summary>
             <ul class="cov-list" id="meter"></ul>
           </details>
@@ -548,20 +559,20 @@
     <p><span id="offlineStatus" role="status"></span> <button type="button" id="installBtn" class="ghost small-btn" hidden>Install the Lab on this device</button> <span class="hint" id="installHelp" role="status"></span></p>
   </footer>
 
-  <script src="release.js?v=1.3.1"></script>
-  <script src="theories.js?v=1.3.1"></script>
-  <script src="theory-links.js?v=1.3.1"></script>
-  <script src="disciplines.js?v=1.3.1"></script>
-  <script src="community.js?v=1.3.1"></script>
-  <script src="procedures.js?v=1.3.1"></script>
-  <script src="data.js?v=1.3.1"></script>
-  <script src="checks.js?v=1.3.1"></script>
-  <script src="app.js?v=1.3.1"></script>
-  <script src="ui.js?v=1.3.1"></script>
-  <script src="report.js?v=1.3.1"></script>
-  <script src="tour.js?v=1.3.1"></script>
-  <script src="projects.js?v=1.3.1"></script>
-  <script src="offline.js?v=1.3.1"></script>
-  <script src="counter.js?v=1.3.1"></script>
+  <script src="release.js?v=1.4.0"></script>
+  <script src="theories.js?v=1.4.0"></script>
+  <script src="theory-links.js?v=1.4.0"></script>
+  <script src="disciplines.js?v=1.4.0"></script>
+  <script src="community.js?v=1.4.0"></script>
+  <script src="procedures.js?v=1.4.0"></script>
+  <script src="data.js?v=1.4.0"></script>
+  <script src="checks.js?v=1.4.0"></script>
+  <script src="app.js?v=1.4.0"></script>
+  <script src="ui.js?v=1.4.0"></script>
+  <script src="report.js?v=1.4.0"></script>
+  <script src="tour.js?v=1.4.0"></script>
+  <script src="projects.js?v=1.4.0"></script>
+  <script src="offline.js?v=1.4.0"></script>
+  <script src="counter.js?v=1.4.0"></script>
 </body>
 </html>

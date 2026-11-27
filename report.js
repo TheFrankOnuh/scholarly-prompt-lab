@@ -608,7 +608,25 @@
   function outputsChanged() { summariseOutputs(); saveSettings(); if (!edited) render(); }
 
   var edited = false, shownOnce = false;
-  function render() { $("reportPreview").innerHTML = build(); edited = false; }
+  function render() { $("reportPreview").innerHTML = build(); dress($("reportPreview")); edited = false; }
+  // Presentation only: section numbers set apart so they can be printed in rubric, and the assessment statuses
+  // given a class so each is coloured as well as written out. The words of the report are not changed.
+  var STATUS_CLASS = { "Documented": "st-doc", "Specified": "st-spec", "Not addressed": "st-none", "Not applicable": "st-na" };
+  function dress(root) {
+    Array.prototype.forEach.call(root.querySelectorAll("h2, h3"), function (h) {
+      var t = h.firstChild;
+      if (!t || t.nodeType !== 3) return;
+      var m = /^(Appendix [A-Z]\.|\d+(?:\.\d+)*\.?)\s/.exec(t.nodeValue);
+      if (!m) return;
+      t.nodeValue = t.nodeValue.slice(m[0].length);
+      var n = document.createElement("span"); n.className = "num"; n.textContent = m[1];
+      h.insertBefore(document.createTextNode(" "), t); h.insertBefore(n, h.firstChild);
+    });
+    Array.prototype.forEach.call(root.querySelectorAll("td"), function (td) {
+      var c = STATUS_CLASS[td.textContent.trim()];
+      if (c) td.className = c; // one class only: Word ignores cells with two
+    });
+  }
   function show() {
     if (!shownOnce) {
       var st = settings();
@@ -660,9 +678,11 @@
 
   function fileName(ext) { return ($("rpTitle").value.trim() || "ai-methods-report").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 50) + "." + ext; }
   $("rpWord").addEventListener("click", function () {
-    var css = "body{font-family:'Times New Roman',serif;font-size:12pt;line-height:1.5} h1{font-size:18pt} h2{font-size:14pt;margin-top:18pt} h3{font-size:12pt;margin-top:12pt}" +
-      " table{border-collapse:collapse;width:100%} th,td{border:1px solid #666;padding:3pt 5pt;font-size:10pt;vertical-align:top;text-align:left} th{background:#eeeeee}" +
-      " pre{font-family:Consolas,'Courier New',monospace;font-size:9pt;white-space:pre-wrap;border:1px solid #999;padding:6pt} .gap{background:#fff2a8;font-weight:bold} .meta{color:#555555} .subtitle{font-size:13pt;font-weight:bold;margin:0} .note{border-left:3pt solid #8a5a00;background:#fbf1dc;padding:4pt 8pt} .stmt{border-left:3pt solid #0e5c47;padding-left:8pt}";
+    // Word cannot embed web fonts: Source Serif 4 is used where it is installed, Georgia otherwise
+    var css = "body{font-family:'Source Serif 4',Georgia,'Times New Roman',serif;font-size:12pt;line-height:1.5;color:#1f2a30} h1{font-size:20pt;margin-bottom:2pt} h2{font-size:14pt;margin-top:18pt} h3{font-size:12pt;margin-top:12pt} .num{color:#a8402c;margin-right:4pt}" +
+      " table{border-collapse:collapse;width:100%} th,td{border:1px solid #9aa3a7;padding:3pt 5pt;font-family:Calibri,Arial,sans-serif;font-size:9.5pt;vertical-align:top;text-align:left} th{background:#eef2f1}" +
+      " .st-doc{color:#24694f;font-weight:bold} .st-spec{color:#17434d;font-weight:bold} .st-none{color:#56626a} .st-na{color:#56626a;font-style:italic}" +
+      " pre{font-family:Consolas,'Courier New',monospace;font-size:9pt;white-space:pre-wrap;border:1px solid #9aa3a7;padding:6pt} .gap{background:#fbefc9;font-weight:bold} .meta{color:#555555} .subtitle{font-size:13pt;font-weight:bold;margin:0} .note{border-left:3pt solid #8a5300;background:#fbf0da;padding:4pt 8pt} .stmt{border-left:3pt solid #17434d;padding-left:8pt}";
     var html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>' +
       esc($("rpTitle").value.trim() || "AI methods report") + "</title><style>" + css + "</style></head><body>" + $("reportPreview").innerHTML + "</body></html>";
     A.download(fileName("doc"), "﻿" + html, "application/msword");

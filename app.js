@@ -1033,6 +1033,8 @@
     const missing = cov.filter((c) => !c.on);
     $("covCount").textContent = (7 - missing.length) + " of 7 covered";
     $("covFill").style.width = Math.round(100 * (7 - missing.length) / 7) + "%";
+    // the seven letters of CONTEXT, each underlined once that dimension is covered (the list below says which in words)
+    $("covLetters").replaceChildren(...cov.map((c) => el("span", { class: c.on ? "on" : "off", text: c.l })));
     $("meterNote").textContent = missing.length
       ? "CONTEXT coverage " + (7 - missing.length) + "/7. Still to add: " + missing.map((c) => c.need).join("; ") + "."
       : "CONTEXT coverage 7/7. The design is fully specified; the outputs still need checking.";
