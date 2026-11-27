@@ -8,6 +8,10 @@ This page lists every version of the Scholarly Prompt Lab, newest first.
 
 To cite the Lab, use the DOI that always opens the latest version: [10.5281/zenodo.24521711](https://doi.org/10.5281/zenodo.24521711).
 
+## 1.9.1, November 2026
+
+- The Build tab no longer opens with the heading "Design the research prompt" and its introductory sentence. The start controls (Start my own research, Load your own files, Take the guided demo and the worked examples) now sit directly under the tabs.
+
 ## 1.9.0, November 2026
 
 DOI: [10.5281/zenodo.24592473](https://doi.org/10.5281/zenodo.24592473)
