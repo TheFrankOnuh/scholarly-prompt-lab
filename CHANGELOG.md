@@ -8,6 +8,10 @@ This page lists every version of the Scholarly Prompt Lab, newest first.
 
 To cite the Lab, use the DOI that always opens the latest version: [10.5281/zenodo.24521711](https://doi.org/10.5281/zenodo.24521711).
 
+## 1.5.1, November 2026
+
+- The theory library under Theoretical orientation can be folded away with "Hide the theory library", in one step at a time and when all steps are shown on one page. The chosen theories stay visible. The choice is remembered on the device; without one, the library starts folded when the design already has theories. The guided demo opens it when it needs to.
+
 ## 1.5.0, November 2026
 
 DOI: [10.5281/zenodo.24575498](https://doi.org/10.5281/zenodo.24575498)

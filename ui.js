@@ -184,6 +184,8 @@
   // show whichever step holds an element, so links, the demo and file loading always land on something visible
   function reveal(target) {
     var hit = false;
+    // the theory library opens when something inside it (or its heading) has to be shown, for example by the guided demo
+    if (target && openLibrary && (target.id === "theoryLabel" || (theoryLibrary && theoryLibrary.contains(target)))) openLibrary();
     steppers.forEach(function (s) { if (s.reveal(target)) hit = true; });
     if (target && target.closest && target.closest(".sheet")) openSheet(true);
     return hit;
@@ -241,6 +243,27 @@
     document.addEventListener("keydown", function (e) {
       if (e.key === "Escape" && !pvPanel.hidden && $("privacy").contains(document.activeElement)) { pvShow(false); pvBtn.focus(); }
     });
+  }
+
+  /* ---------- 6. the theory library folds away, so the step stays short; the chosen theories stay visible as chips ----------
+     The researcher's choice is remembered on this device. Without one, the library starts folded when the design
+     already has theories and open when it has none. */
+  var theoryLibrary = document.querySelector("#builder .picker"), theoryHead = document.querySelector("#builder .theory-head");
+  var openLibrary = null;
+  if (theoryLibrary && theoryHead) {
+    theoryLibrary.id = theoryLibrary.id || "theoryLibrary";
+    var libBtn = el("button", { type: "button", class: "lib-toggle", "aria-controls": theoryLibrary.id });
+    var setLibrary = function (open, remember) {
+      theoryLibrary.hidden = !open;
+      libBtn.setAttribute("aria-expanded", open ? "true" : "false");
+      libBtn.textContent = open ? "Hide the theory library" : "Show the theory library";
+      if (remember) write(localStorage, "spl.ui.theorylib", open ? "open" : "closed");
+    };
+    openLibrary = function () { if (theoryLibrary.hidden) setLibrary(true, false); };
+    libBtn.addEventListener("click", function () { setLibrary(theoryLibrary.hidden, true); });
+    theoryHead.append(libBtn);
+    var savedLib = read(localStorage, "spl.ui.theorylib");
+    setLibrary(savedLib ? savedLib === "open" : !document.querySelector("#theoryChips .chip"), false);
   }
 
   /* ---------- on narrow screens the tab bar scrolls sideways: keep the open tab in view ---------- */

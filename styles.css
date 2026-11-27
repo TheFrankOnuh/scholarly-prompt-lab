@@ -1093,3 +1093,15 @@ button.step-mode:hover { color: var(--ink); }
 @media (prefers-reduced-motion: no-preference) { .combo-toggle::before { transition: transform 0.2s cubic-bezier(.2, .7, .2, 1); } }
 /* these two buttons already begin with "+", so they carry no icon */
 #discAddBtn::before, #addTheoryBtn::before { content: none; display: none; }
+
+/* the theory library folds away: a text button with a turning arrow, beside the heading */
+.theory-head { justify-content: flex-start; align-items: center; flex-wrap: wrap; gap: 4px 12px; }
+.theory-head .lib-toggle { margin-left: auto; }
+.lib-toggle, .lib-toggle:hover, .lib-toggle:active { background: transparent; border-color: transparent; color: var(--accent); min-height: 36px; padding: 4px 2px;
+  font-weight: 500; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; transform: none; gap: 6px; }
+.lib-toggle:hover { color: var(--ink); text-decoration-thickness: 2px; }
+.lib-toggle::after { content: ""; width: 16px; height: 16px; flex: none; background: currentColor;
+  -webkit-mask: var(--i-chev) center / contain no-repeat; mask: var(--i-chev) center / contain no-repeat; }
+.lib-toggle[aria-expanded="true"]::after { transform: rotate(180deg); }
+@media (prefers-reduced-motion: no-preference) { .lib-toggle::after { transition: transform 0.2s cubic-bezier(.2, .7, .2, 1); } }
+@media (pointer: coarse) { .lib-toggle { min-height: 44px; } }
