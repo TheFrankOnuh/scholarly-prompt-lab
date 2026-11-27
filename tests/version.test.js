@@ -57,3 +57,14 @@ test("the fonts are stored with the Lab, in a cache kept apart from the release 
   assert.ok(sw.includes('"assets/fonts/fonts.css"'), "the font stylesheet belongs to the release copy");
   assert.ok(fs.existsSync(path.join(__dirname, "..", "assets/fonts/OFL-SourceSerif4.txt")) && fs.existsSync(path.join(__dirname, "..", "assets/fonts/OFL-IBMPlex.txt")), "the font licences must ship with the fonts");
 });
+
+test("text-style buttons stay readable on hover: they are never given the filled hover of a primary button", () => {
+  const css = read("styles.css");
+  // the general rule fills a button on hover; a button drawn as plain text must clear that fill
+  const rules = css.split("}").map((r) => r.split("{")).filter((r) => r.length === 2);
+  for (const sel of [".privacy-trigger:hover", "#reset:hover", "button.step-mode:hover", ".score-clear:hover"]) {
+    const mine = rules.filter(([selectors]) => selectors.split(",").some((x) => x.trim().endsWith(sel)));
+    assert.ok(mine.length, "no hover rule for " + sel);
+    assert.ok(mine.some(([, body]) => /background: transparent/.test(body)), sel + " must keep a clear background on hover");
+  }
+});

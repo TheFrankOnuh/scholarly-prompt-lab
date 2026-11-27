@@ -8,6 +8,11 @@ This page lists every version of the Scholarly Prompt Lab, newest first.
 
 To cite the Lab, use the DOI that always opens the latest version: [10.5281/zenodo.24521711](https://doi.org/10.5281/zenodo.24521711).
 
+## 1.4.1, November 2026
+
+- Privacy and data storage stays readable when the pointer rests on it: the text turns petrol and is underlined. In 1.4.0 the button was filled with dark petrol on hover, which left its text at a contrast of about 1.3:1. Every other button and link was checked and keeps a contrast of at least 4.5:1 on hover, and an automated test now guards this.
+- The footer and the README say "Developed by" in place of "Created by".
+
 ## 1.4.0, November 2026
 
 A new visual identity and a redesign of the interface. The research workflows, the prompts, the stored records, the scoring and the methods report text are unchanged: for all seven worked examples, the prompt, the research design download, the study protocol and the report text are identical to version 1.3.1.
