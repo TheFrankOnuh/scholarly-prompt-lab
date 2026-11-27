@@ -10,6 +10,10 @@ To cite the Lab, use the DOI that always opens the latest version: [10.5281/zeno
 
 ## 1.9.0, November 2026
 
+DOI: [10.5281/zenodo.24592473](https://doi.org/10.5281/zenodo.24592473)
+
+Versions 1.5.1 to 1.8.0 were published on the site only and not archived separately. Their changes are archived in this version.
+
 **Log and evaluate.** The tab opens with "Log and evaluate" and a short description, and a record-type switch: *Single output* or *Research conversation*.
 
 **Research conversations: getting started.** With no conversations yet, the section shows one empty state: "No conversations recorded yet", with two actions.
