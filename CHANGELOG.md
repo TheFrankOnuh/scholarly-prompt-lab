@@ -10,6 +10,10 @@ To cite the Lab, use the DOI that always opens the latest version: [10.5281/zeno
 
 ## 1.5.0, November 2026
 
+DOI: [10.5281/zenodo.24575498](https://doi.org/10.5281/zenodo.24575498)
+
+Versions 1.2.1 to 1.4.1 were published on the site only and not archived separately. Their changes are archived in this version.
+
 - Two teaching cases, documented in the guide [Research applications and methodological use cases](docs/research-use-cases.md): SPL-UC-001, equality, citizenship and political belonging in the Declaration of Independence (1776) and the Declaration of Sentiments (1848); and SPL-UC-002, cultural rights and collective knowledge in the African Charter on Human and Peoples' Rights and the United Nations Declaration on the Rights of Indigenous Peoples. Every quotation and reference in the guide was checked against its source.
 - A teaching case is chosen from the Worked example menu and opens as a new project with its research design, procedure, source passages, working definitions and study-level AI uses. The project that was open is kept as it is.
 - While a design started from a teaching case, the Build tab shows a notice that the worked responses and scores in the guide are constructed teaching specimens, and the downloaded research design carries the same notice.
