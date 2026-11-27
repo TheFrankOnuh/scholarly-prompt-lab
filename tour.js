@@ -99,6 +99,8 @@
     if (current) current.classList.remove("tour-target");
     if (s.prep && !s.done) { s.prep(); s.done = true; }
     if (s.tab) { var t = $(s.tab); if (t && t.getAttribute("aria-selected") !== "true") t.click(); }
+    // the demo's Log & evaluate steps are about a single output, not a conversation
+    if (s.tab === "tab-log" && window.LAB_CONV && window.LAB_CONV.setMode) window.LAB_CONV.setMode("single");
     $("tourCount").textContent = i === 0 ? "Demo: introduction" : "Demo: step " + i;
     $("tourTitle").textContent = s.title;
     $("tourBody").textContent = s.body;

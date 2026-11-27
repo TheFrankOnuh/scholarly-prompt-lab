@@ -42,7 +42,7 @@
   var norm = function (s) { return s.replace(/\s+/g, " ").trim(); };
   function has(k) { return Object.prototype.hasOwnProperty.call(S, k); }
   function t(s) { var k = norm(s); return has(k) ? S[k] : s; }
-  var KEEP = "script, style, textarea, input, select#example, #projSelect, #langSel, #prompt, .prompt, #reportPreview, .report, #theoryList, #theoryChips, #entries, code, pre";
+  var KEEP = "script, style, textarea, input, select#example, #projSelect, #langSel, #prompt, .prompt, #reportPreview, .report, #theoryList, #theoryChips, #entries, .conv-keep, code, pre";
   var ATTRS = ["placeholder", "aria-label", "title"];
 
   function textNode(n) {

@@ -1,0 +1,33 @@
+You said:
+RESEARCH QUESTION: How does the Declaration of Sentiments (1848) rework the language of the Declaration of Independence (1776)?
+
+ChatGPT said:
+Finding 1 (CL-001). The Declaration of Sentiments repeats the 1776 claim of equality and adds women to it: "all men and women are created equal" [DOC-02].
+
+SPL Research Session — Initial Record
+Model: reported as Example Model; requires confirmation.
+
+You said:
+SPL: CONFIRM RESEARCH METADATA · protocol 0.1 · session SPL-S-20261127-7F3K
+Model as shown: Example Model. Backend version: not exposed by provider.
+
+ChatGPT said:
+Recorded. Still outstanding: session start date.
+
+You said:
+In 1848, did "men" in the 1776 text include women in law? Check the context you gave.
+
+ChatGPT said:
+No. In 1848 women could not vote, and married women's property passed to their husbands. The excerpts support reading "men" as excluding women in practice.
+
+You said:
+Consider the following passage from the Declaration of Sentiments, which lists grievances about the elective franchise. Does it change your reading of "all men and women are created equal"?
+
+ChatGPT said:
+It qualifies Finding 1 (CL-001): the declaration states a principle and lists the denial of rights; it does not record their achievement.
+
+You said:
+Keep to the four excerpts only.
+
+ChatGPT said:
+Understood. I will restrict the analysis to the four excerpts.

@@ -139,10 +139,13 @@
       return { ok: true };
     }
 
-    function exportProject(id, labVersion) {
+    // Format version 2 adds the project's research conversations, which are kept apart in IndexedDB (conversations.js).
+    function exportProject(id, labVersion, conversations) {
       var ix = ensure(), p = find(ix, id);
       if (!p) return null;
-      return { format: FORMAT, formatVersion: 1, labVersion: labVersion || "", name: p.name, exported: now(), data: dataOf(id) };
+      var o = { format: FORMAT, formatVersion: 1, labVersion: labVersion || "", name: p.name, exported: now(), data: dataOf(id) };
+      if (conversations && conversations.conversations && conversations.conversations.length) { o.formatVersion = 2; o.conversations = conversations; }
+      return o;
     }
 
     // A backup file comes from outside, so it is checked before anything is stored.
@@ -188,6 +191,10 @@
   function reload() { location.hash = "#build"; location.reload(); }
   function failed(r) { say(r.reason === "full" ? FULL : r.reason === "last" ? "A project cannot be deleted while it is the only one." : "That did not work. Nothing was changed."); }
 
+  // research conversations live in IndexedDB, keyed by project: they follow their project when it is copied, backed up or deleted
+  var C = function () { return window.LAB_CONV && window.LAB_CONV.ready ? window.LAB_CONV : null; };
+  root.LAB_PROJECTS.currentId = function () { return P.current(); };
+
   function go(id) {
     if (demoRunning()) { say("End the demo before changing project."); render(); return; }
     saveNow();
@@ -211,21 +218,28 @@
       });
       btn("Duplicate", function () {
         saveNow();
-        var r = P.duplicate(p.id); if (r.ok) { say("A copy of “" + p.name + "” was made."); render(); } else failed(r);
+        var r = P.duplicate(p.id);
+        if (!r.ok) { failed(r); return; }
+        var done = function () { say("A copy of “" + p.name + "” was made."); render(); };
+        if (C()) C().copyProject(p.id, r.id).then(done, function () { say("A copy of “" + p.name + "” was made, but its research conversations could not be copied."); render(); }); else done();
       });
       btn("Back up", function () {
         saveNow();
-        var file = P.exportProject(p.id, A.VERSION);
         var name = p.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "project";
-        if (A.download) A.download(name + ".spl-project.json", JSON.stringify(file, null, 2), "application/json");
-        say("Backup file saved for “" + p.name + "”.");
+        var write = function (convs) {
+          var file = P.exportProject(p.id, A.VERSION, convs);
+          if (A.download) A.download(name + ".spl-project.json", JSON.stringify(file, null, 2), "application/json");
+          say("Backup file saved for “" + p.name + "”" + (convs && convs.conversations && convs.conversations.length ? ", with its research conversations." : "."));
+        };
+        if (C()) C().exportProject(p.id).then(write, function () { write(null); say("Backup file saved for “" + p.name + "”, but WITHOUT its research conversations, which could not be read."); }); else write(null);
       });
       if (items.length > 1) btn("Delete", function () {
         if (demoRunning()) { say("End the demo before deleting a project."); return; }
         if (!confirm("Delete the project “" + p.name + "” with its " + count(p.sources, "source") + " and " + count(p.runs, "logged run") + "? This cannot be undone. Back it up first if you may need it.")) return;
         var wasCurrent = p.current, r = P.remove(p.id);
         if (!r.ok) { failed(r); return; }
-        if (wasCurrent) reload(); else { say("Deleted."); render(); }
+        var after = function () { if (wasCurrent) reload(); else { say("Deleted."); render(); } };
+        if (C()) C().deleteProject(p.id).then(after, after); else after();
       });
       body.append(el("tr", {}, [
         el("th", { scope: "row" }, [p.name, p.current ? el("span", { class: "proj-open", text: " Open now" }) : ""]),
@@ -267,13 +281,16 @@
   $("projFile").addEventListener("change", function () {
     var f = $("projFile").files[0];
     if (!f) return;
-    if (f.size > 12 * 1024 * 1024) { say("That file is too large to be a project backup."); $("projFile").value = ""; return; }
+    if (f.size > 64 * 1024 * 1024) { say("That file is too large to be a project backup."); $("projFile").value = ""; return; }
     var reader = new FileReader();
     reader.onload = function () {
       var o = null;
       try { o = JSON.parse(String(reader.result)); } catch (e) { /* handled below */ }
       var r = P.importProject(o);
-      if (r.ok) { say("Project restored. Choose Open to work on it."); render(); }
+      if (r.ok && o.conversations && C()) {
+        C().importProject(r.id, o.conversations).then(function (n) { say("Project restored with " + n + " research conversation" + (n === 1 ? "" : "s") + ". Choose Open to work on it."); render(); },
+          function () { say("Project restored, but its research conversations could not be stored in this browser."); render(); });
+      } else if (r.ok) { say("Project restored. Choose Open to work on it." + (o.conversations ? " Its research conversations could not be stored in this browser." : "")); render(); }
       else say(r.reason === "full" ? FULL : "That file is not a Scholarly Prompt Lab project backup.");
       $("projFile").value = "";
     };

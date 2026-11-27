@@ -257,6 +257,8 @@
     var out = [];
     var n = entries.length;
     var cit = labCitation(REL);
+    // research conversations (conversations.js), included by the researcher; absent from studies without them
+    var convs = window.LAB_CONV && window.LAB_CONV.forReport && PR ? window.LAB_CONV.forReport() : [];
     // a researcher-confirmed score: a score is present and is not an unconfirmed suggestion
     var conf = function (e, id) { return !!(e.scores && e.scores[id]) && A.countsScore(e, id); };
 
@@ -339,7 +341,8 @@
       (cit.versionSpecific ? "DOI for this version: " : "DOI (all versions): ") + '<a href="https://doi.org/' + esc(cit.doi) + '">https://doi.org/' + esc(cit.doi) + "</a></p>");
     if (!n) out.push('<p class="note">' + (logAll.length
       ? "No logged outputs are selected for this study, so this report describes the research design only. Select outputs in the report settings to include them."
-      : "No AI outputs are documented yet, so this report describes the research design only.") + "</p>");
+      : "No AI outputs are documented yet, so this report describes the research design only.") +
+      (convs.length ? " Research conversations are reported separately, in section 2.8 and Appendix H." : "") + "</p>");
 
     // ---- 1. Generative AI disclosure ----
     out.push("<h2>1. Generative AI disclosure</h2>");
@@ -351,6 +354,7 @@
       if (withChecks.length) disc.push("Automated quotation matching against the loaded source text is recorded for " + (withChecks.length === n ? (n === 1 ? "this output" : "all " + n + " outputs") : withChecks.length + " of them") + ".");
       if (confirmedOutputs) disc.push("Researcher-confirmed evaluation scores are recorded for " + (confirmedOutputs === n ? (n === 1 ? "this output" : "all " + n + " outputs") : confirmedOutputs + " of them") + ".");
     }
+    if (convs.length) disc.push("The records also document " + plural(convs.length, "research conversation") + " with generative AI systems, comprising " + plural(convs.reduce(function (m, c) { return m + PR.counts(c).researcher_prompts; }, 0), "researcher prompt") + " and " + plural(convs.reduce(function (m, c) { return m + PR.counts(c).ai_responses; }, 0), "AI response") + " (section 2.8 and Appendix H).");
     disc.push("Prompts were designed and recorded with Scholarly Prompt Lab (Onuh, " + cit.year + "). The researcher is responsible for the analysis and conclusions presented.");
     out.push('<p class="stmt" id="rpStatement">' + disc.join(" ") + "</p>");
 
@@ -358,7 +362,9 @@
     out.push("<h2>2. Research methodology</h2>");
 
     out.push("<h3>2.1 AI systems and conditions of use</h3>");
-    if (!n) out.push(p(gap("AI system, version and dates of use")));
+    // with no single outputs but with conversations, the single-output sections point to section 2.8 instead of asking for input
+    var onlyConv = !n && convs.length ? "No single AI outputs are documented. The research conversations, with their AI systems, are described in section 2.8." : "";
+    if (!n) out.push(p(onlyConv || gap("AI system, version and dates of use")));
     else out.push(table(["AI system and version", "Outputs", "Dates of use", "Interface and settings"], sysKeys.map(function (k) {
       var s = systems[k], sets = Object.keys(s.settings);
       return [s.name ? esc(s.name) : gap("AI system and version"), String(s.n),
@@ -396,7 +402,7 @@
 
     out.push("<h3>2.3 Execution and experimental conditions</h3>");
     var ex = [];
-    if (!n) ex.push("Not yet undertaken: no runs are documented.");
+    if (!n) ex.push(onlyConv || "Not yet undertaken: no runs are documented.");
     else {
       ex.push("The selected records document " + plural(n, "run") + (namedSystems.length ? " on " + plural(namedSystems.length, "AI system") : "") + " under " + plural(conds.length, "prompt condition") + (conds.length === 1 ? " (" + esc(A.condName(conds[0])) + ")" : "") + "." +
         (repeats >= 2 ? " At least one prompt was run " + repeats + " times on the same AI system." : ""));
@@ -411,7 +417,7 @@
 
     out.push("<h3>2.4 Output verification</h3>");
     var ver = [];
-    if (!n) ver.push("Not yet undertaken: no AI outputs are documented.");
+    if (!n) ver.push(onlyConv || "Not yet undertaken: no AI outputs are documented.");
     else if (noSources) ver.push("Quotation matching is not applicable: the prompting technique supplies no source material against which quotations could be matched.");
     else if (!withChecks.length) ver.push("No quotation matching is recorded for the selected outputs, because no source text was loaded in the Lab when they were logged. " + gap("verification undertaken outside the Lab, or a statement that none was undertaken"));
     else {
@@ -424,7 +430,7 @@
     out.push(p(ver.join(" ")));
 
     out.push("<h3>2.5 Researcher evaluation</h3>");
-    if (!n) out.push(p("Not yet undertaken: no AI outputs are documented."));
+    if (!n) out.push(p(onlyConv || "Not yet undertaken: no AI outputs are documented."));
     else if (!confirmedOutputs) out.push(p("No researcher-confirmed scores are recorded for the selected outputs." + (unconfirmed ? " " + plural(unconfirmed, "automatically suggested score remains", "automatically suggested scores remain") + " unconfirmed and " + (unconfirmed === 1 ? "is" : "are") + " not reported as evaluation." : "") + " " + gap("researcher evaluation of the outputs, or a statement that none was undertaken")));
     else {
       out.push(p("The researcher scored " + plural(confirmedOutputs, "output") + " on six criteria from 1 (poor) to 5 (strong)" + (Object.keys(evaluators).length ? ", recording the evaluator as " + esc(joinAnd(Object.keys(evaluators))) : "") + ". Only researcher-confirmed scores are summarised here. The criteria, scoring guidance and each score are given in Appendix G." + (Object.keys(evaluators).length ? "" : " " + gap("evaluator name or role"))));
@@ -471,6 +477,8 @@
       if (confirmedOutputs && Object.keys(evaluators).length < 2) lim.push("The outputs were evaluated by a single evaluator. No independent evaluation by another researcher is documented.");
     }
     out.push(list(lim.filter(Boolean).map(esc)));
+
+    if (convs.length) out.push(conversationSection(convs, L));
 
     // ---- Appendix A. Research prompts ----
     out.push("<h2>Appendix A. Research prompts</h2>");
@@ -574,7 +582,141 @@
         if ((e.evaluator || "").trim()) out.push(p("<strong>Evaluator:</strong> " + esc(e.evaluator)));
       });
     }
+    if (convs.length) out.push(conversationAppendix(convs, L));
     return out.join("\n");
+  }
+
+  /* ---------- research conversations: section 2.8 and Appendix H ---------- */
+  var PR = window.LAB_PROTOCOL;
+  // what the provenance of a value allows the report to say, and no more
+  function provPhrase(a) {
+    if (!a) return "not recorded";
+    var pv = a.provenance || {}, v = pv.verification;
+    var who = { ai_reported: "reported by the AI system", researcher_reported: "recorded by the researcher", provider_recorded: "recorded in the provider's data", official_documentation: "taken from the provider's documentation", system_recorded: "recorded by Scholarly Prompt Lab", unknown: "of unknown origin" }[pv.origin] || "of unknown origin";
+    var chk = v === "researcher_confirmed" ? (pv.origin === "researcher_reported" ? "" : " and confirmed by the researcher") : v === "compared_with_original" ? " and compared with the original record" : v === "disputed" ? "; disputed" : pv.origin === "ai_reported" ? " and not confirmed by the researcher" : "";
+    return who + chk;
+  }
+  function fieldValue(c, id) {
+    var f = c.metadata[id], a = f ? PR.currentAssertion(f) : null;
+    if (!a) return { text: "not recorded", a: null };
+    var t = a.status === "known" || a.status === "confirmation_required" ? "\u201c" + esc(a.value) + "\u201d" : a.status === "not_exposed" ? "not exposed by the provider" : a.status === "not_applicable" ? "not applicable" : "not established";
+    return { text: t, a: a };
+  }
+  function covSentence(c) {
+    var cov = PR.coverage(c), k = PR.counts(c);
+    if (cov.status === "complete") return "The researcher confirmed that the record is complete" + (cov.basis === "compared_with_original" ? ", after it was compared with the original conversation." : ".");
+    if (cov.status === "partial") return "The record is incomplete: " + plural(k.gaps, "gap") + " " + (k.gaps === 1 ? "is" : "are") + " recorded" + (cov.prompts_missing != null ? ", with " + plural(cov.prompts_missing, "researcher prompt") + " and " + plural(cov.responses_missing, "AI response") + " missing" : ", and the number of missing turns is not known") + ".";
+    return cov.basis === "ai_reported" ? "Only a record written by the AI system is available; its completeness has not been established against the original conversation." : "Its completeness has not been confirmed.";
+  }
+  var REVIEW_RE = { initial: /SPL Research Session \u2014 Initial Record/, fin: /SPL Research Session \u2014 Final Record/ };
+  function conversationSection(convs, L) {
+    var o = ["<h3>2.8 Conversational research</h3>"];
+    var k = convs.map(function (c) { return PR.counts(c); });
+    var sum = function (f) { return k.reduce(function (m, x) { return m + x[f]; }, 0); };
+    o.push(p("The study documents " + plural(convs.length, "research conversation") + " with generative AI systems, in which the researcher's follow-up prompts form part of the method. Across them the records hold " + plural(sum("researcher_prompts"), "researcher prompt") + ", " + plural(sum("ai_responses"), "AI response") + " and " + plural(sum("administrative"), "administrative message") + ", counted separately, and " + plural(sum("gaps"), "recorded gap") + ". Each conversation is reproduced in Appendix H."));
+    o.push(table(["Record", "Conversation", "AI system and model", "Session dates", "Prompts", "Responses", "Gaps", "Coverage"], convs.map(function (c, i) {
+      var sys = fieldValue(c, "ai_system"), mod = fieldValue(c, "model_name"), s0 = fieldValue(c, "session_start"), s1 = fieldValue(c, "session_end"), kk = k[i];
+      return ["H" + (i + 1), esc(c.title), (sys.a ? sys.text + "; " : "") + "model " + mod.text, s0.a ? s0.text + (s1.a ? " to " + s1.text : "") : gap("session dates"), String(kk.researcher_prompts), String(kk.ai_responses), String(kk.gaps), esc(PR.COVERAGE_LABELS[PR.coverage(c).status])];
+    })));
+    // how each system was identified: only what the provenance of each value supports
+    convs.forEach(function (c, i) {
+      var mod = fieldValue(c, "model_name"), ver = fieldValue(c, "model_version");
+      o.push(p("<strong>H" + (i + 1) + ".</strong> Model " + mod.text + (mod.a ? ", " + provPhrase(mod.a) : "") + "; version " + ver.text + (ver.a ? ", " + provPhrase(ver.a) : "") + ". " + covSentence(c) +
+        (mod.a ? "" : " " + gap("model as shown in the application"))));
+    });
+    // protocol use, and the reviews it asks for
+    var withP = convs.filter(function (c) { return c.protocolVersion; });
+    if (withP.length) {
+      var versions = {}; withP.forEach(function (c) { versions[c.protocolVersion] = 1; });
+      var initial = withP.filter(function (c) { return c.turns.some(function (t) { return t.role === "ai" && REVIEW_RE.initial.test(t.text); }); }).length;
+      var fin = withP.filter(function (c) { return c.turns.some(function (t) { return t.role === "ai" && REVIEW_RE.fin.test(t.text); }); }).length;
+      o.push(p(plural(withP.length, "conversation") + (withP.length === convs.length ? "" : " of " + convs.length) + " began with the SPL Research Session Protocol (version " + esc(Object.keys(versions).join(", ")) + "), which asks the AI system to keep to the research design, to report only what it can establish about itself, and to produce structured records on request. The protocol is a draft whose reliability has not been validated, and its instructions and reminders may have influenced the conversations. The AI system's initial metadata record appears in " + (initial ? plural(initial, "conversation") : "none of them") + ", and its final record in " + (fin ? plural(fin, "conversation") : "none") + ". " +
+        (withP.length < convs.length ? plural(convs.length - withP.length, "conversation") + " " + (convs.length - withP.length === 1 ? "was" : "were") + " recorded without the protocol." : "")));
+    } else o.push(p("The conversations were recorded without the SPL Research Session Protocol."));
+    // where the records came from, and what was checked
+    var orig = 0, aiOnly = 0, disc = { ai_differs: 0, ai_omitted: 0, ai_only: 0 };
+    convs.forEach(function (c) {
+      c.turns.forEach(function (t) { if (t.text_status === "original" || t.text_status === "researcher_corrected") orig++; else if (t.provenance.verification === "unreviewed") aiOnly++; });
+      c.discrepancies.forEach(function (d) { if (disc[d.status] !== undefined) disc[d.status]++; });
+    });
+    var rec = [plural(orig, "turn") + " " + (orig === 1 ? "is" : "are") + " taken from the original conversations"];
+    if (aiOnly) rec.push(plural(aiOnly, "turn") + " " + (aiOnly === 1 ? "is" : "are") + " known only from records written by the AI system and " + (aiOnly === 1 ? "has" : "have") + " not been verified against the original");
+    o.push(p("Of the recorded turns, " + rec.join("; ") + "." + (disc.ai_differs + disc.ai_omitted + disc.ai_only ? " Comparing the AI-generated records with the original conversations found " + [disc.ai_differs ? plural(disc.ai_differs, "turn") + " reproduced with different wording" : "", disc.ai_omitted ? plural(disc.ai_omitted, "turn") + " left out" : "", disc.ai_only ? plural(disc.ai_only, "turn") + " not present in the original" : ""].filter(Boolean).join(", ") + ". The original wording is used throughout." : "")));
+    // the purposes of the researcher's follow-up prompts
+    var cats = {}, follow = 0, classified = 0;
+    convs.forEach(function (c) {
+      var rs = c.turns.filter(function (t) { return t.role === "researcher" && t.kind !== "administrative"; }).slice(1);
+      follow += rs.length;
+      rs.forEach(function (t) { if (t.classification.length) classified++; t.classification.forEach(function (x) { var lb = PR.labelOf(x.category) + (x.note ? " (" + x.note + ")" : ""); cats[lb] = (cats[lb] || 0) + 1; }); });
+    });
+    if (follow) o.push(p("The researcher classified " + classified + " of " + plural(follow, "follow-up prompt") + " by purpose, using the Lab's follow-up taxonomy (version " + esc(PR.TAXONOMY_VERSION) + "; a prompt may have several purposes)" +
+      (classified ? ": " + Object.keys(cats).sort(function (a, b) { return cats[b] - cats[a]; }).map(function (x) { return esc(x.charAt(0).toLowerCase() + x.slice(1)) + " (" + cats[x] + ")"; }).join(", ") + "." : ".") + (classified < follow ? " " + gap("purpose of the remaining follow-up prompts, if relevant") : "")));
+    // researcher evaluation of responses
+    var scored = 0, na = {}, vals = {};
+    convs.forEach(function (c) { c.turns.forEach(function (t) {
+      if (t.role !== "ai" || t.kind === "administrative" || !t.evaluation) return;
+      var e = t.evaluation; if (Object.keys(e.scores).length) scored++;
+      Object.keys(e.scores).forEach(function (id) { (vals[id] = vals[id] || []).push(parseInt(e.scores[id], 10)); });
+      Object.keys(e.na).forEach(function (id) { na[id] = (na[id] || 0) + 1; });
+    }); });
+    if (scored) {
+      o.push(p("The researcher scored " + plural(scored, "AI response") + " in the conversations on the six criteria, from 1 (poor) to 5 (strong). These scores are reported separately from those for single outputs. A criterion marked not applicable is not a score and is not averaged; the reasons are given in Appendix H."));
+      o.push(table(["Criterion", "Responses scored", "Mean", "Range", "Not applicable"], L.criteria.map(function (c) {
+        var v = vals[c.id] || [];
+        return [esc(c.label), String(v.length), v.length ? (v.reduce(function (a, b) { return a + b; }, 0) / v.length).toFixed(1) : "\u2013", v.length ? (Math.min.apply(null, v) === Math.max.apply(null, v) ? String(v[0]) : Math.min.apply(null, v) + "\u2013" + Math.max.apply(null, v)) : "\u2013", String(na[c.id] || 0)];
+      })));
+    } else o.push(p(gap("researcher evaluation of the AI responses in the conversations, if part of the design")));
+    var lim = ["The records describe the conversations as conducted with the recorded systems; the same follow-up prompts may produce different responses on another occasion or system."];
+    if (withP.length) lim.push("The SPL Research Session Protocol adds instructions and reminders to the conversation, so the conversations it documents may differ from conversations held without it.");
+    if (convs.some(function (c) { return Object.keys(c.metadata).some(function (kk) { var a = PR.currentAssertion(c.metadata[kk]); return a && a.provenance.origin === "ai_reported" && a.provenance.verification === "unreviewed"; }); }))
+      lim.push("Some details about the AI systems were reported by the AI systems themselves and were not confirmed by the researcher; AI systems often do not know their exact version or the date.");
+    if (aiOnly) lim.push("Turns known only from AI-generated records may differ from what was actually said.");
+    if (convs.some(function (c) { return PR.coverage(c).status !== "complete"; })) lim.push("The completeness of " + (convs.length === 1 ? "the conversation record" : "some conversation records") + " has not been established.");
+    lim.push("Regenerated responses and edited prompts are not represented: each conversation is recorded as a single path.");
+    o.push(p("<strong>Limitations specific to the conversations:</strong>") + list(lim.map(esc)));
+    return o.join("\n");
+  }
+  function conversationAppendix(convs, L) {
+    var o = ["<h2>Appendix H. Conversational research records</h2>"];
+    o.push(p("Each conversation is reproduced with its metadata and every recorded turn, in order, with stable turn identifiers. For each value, the table gives where it came from and whether it was checked. Text status: <strong>original</strong>, taken from the conversation itself; <strong>reproduced by the AI, unverified</strong>, known only from a record the AI system wrote; <strong>corrected by the researcher</strong>, original wording with a recorded correction. Administrative messages are the SPL commands and the AI system's replies to them."));
+    convs.forEach(function (c, i) {
+      var k = PR.counts(c), cov = PR.coverage(c);
+      o.push("<h3>H" + (i + 1) + ". " + esc(c.title) + "</h3>");
+      var rows = [["Session identifier", esc(c.sessionId || "None"), "Recorded by Scholarly Prompt Lab", "\u2013"], ["Protocol", c.protocolVersion ? "SPL Research Session Protocol " + esc(c.protocolVersion) + (c.reminders ? (c.reminders === "off" ? ", no reminders" : ", reminders about every " + esc(c.reminders) + " messages") : "") : "Not used", "Recorded by Scholarly Prompt Lab", "\u2013"]];
+      PR.FIELDS.forEach(function (f) {
+        var a = c.metadata[f.id] ? PR.currentAssertion(c.metadata[f.id]) : null;
+        if (!a && !f.required) return;
+        rows.push([esc(f.label), a ? (a.status === "known" || a.status === "confirmation_required" ? esc(a.value) : esc(PR.STATUSES[a.status])) + (a.reason && a.provenance.origin === "researcher_reported" && a.status !== "known" ? " (" + esc(a.reason) + ")" : "") : gap(f.label.toLowerCase()), a ? esc(PR.ORIGINS[a.provenance.origin]) : "\u2013", a ? esc(PR.VERIFICATIONS[a.provenance.verification]) + (c.metadata[f.id].assertions.length > 1 ? "; " + plural(c.metadata[f.id].assertions.length - 1, "earlier value") + " kept" : "") : "\u2013"]);
+      });
+      o.push(table(["Item", "Value", "Origin", "Verification"], rows));
+      o.push(p(plural(k.researcher_prompts, "researcher prompt") + ", " + plural(k.ai_responses, "AI response") + ", " + plural(k.administrative, "administrative message") + ", " + plural(k.gaps, "gap") + ". Coverage: " + esc(PR.COVERAGE_LABELS[cov.status]) + ". " + covSentence(c)));
+      var chars = c.turns.reduce(function (m, t) { return m + t.text.length; }, 0);
+      var long = c.turns.length > 60 || chars > 120000;
+      if (long) o.push(p("This conversation is long, so the researcher prompts are reproduced here and the AI responses are listed by identifier. The complete transcript, with every response, is exported separately from the Lab (Log &amp; evaluate, Conversation, Export)."));
+      var gapP = function (g) { return '<p class="note">' + (g.resolved ? "Gap, since filled: " : "Gap: ") + esc({ researcher_prompt: "a researcher prompt is missing", ai_response: "an AI response is missing", both: "a prompt and its response are missing", unknown: "something is missing" }[g.missing]) + (g.reason ? " (" + esc(g.reason) + ")" : "") + ".</p>"; };
+      c.gaps.filter(function (g) { return !g.after_turn; }).forEach(function (g) { o.push(gapP(g)); });
+      c.turns.forEach(function (t) {
+        var bits = [t.role === "ai" ? "AI response" : "Researcher prompt"];
+        if (t.kind === "administrative") bits.push("administrative");
+        bits.push(PR.TEXT_STATUSES[t.text_status].charAt(0).toLowerCase() + PR.TEXT_STATUSES[t.text_status].slice(1));
+        if (t.provenance.verification !== "unreviewed") bits.push(PR.VERIFICATIONS[t.provenance.verification].toLowerCase());
+        if (t.timestamp) bits.push(t.timestamp);
+        if (t.classification.length) bits.push("purpose: " + t.classification.map(function (x) { return PR.labelOf(x.category).toLowerCase() + (x.note ? " (" + x.note + ")" : ""); }).join(", "));
+        var pos = c.turns.indexOf(t) + 1;
+        var head = "<p><strong>" + esc(t.turn_id) + "</strong>" + (parseInt(t.turn_id.slice(1), 10) === pos ? "" : " (turn " + pos + " in the conversation)") + " \u00b7 " + esc(bits.join(" \u00b7 ")) + "</p>";
+        if (long && t.role === "ai") o.push(head);
+        else o.push(head + "<pre>" + esc(t.text) + "</pre>");
+        if (t.evaluation && (Object.keys(t.evaluation.scores).length || Object.keys(t.evaluation.na).length)) {
+          var sc = L.criteria.filter(function (cr) { return t.evaluation.scores[cr.id]; }).map(function (cr) { return esc(cr.label) + " " + esc(t.evaluation.scores[cr.id]); });
+          var nas = L.criteria.filter(function (cr) { return t.evaluation.na[cr.id]; }).map(function (cr) { return esc(cr.label) + " not applicable (" + esc(t.evaluation.na[cr.id]) + ")"; });
+          o.push(p("<em>Researcher scores:</em> " + sc.concat(nas).join("; ") + (t.evaluation.evaluator ? ". Evaluator: " + esc(t.evaluation.evaluator) : "") + "." + (t.evaluation.notes ? " " + esc(t.evaluation.notes) : "")));
+        }
+        if (t.corrections.length) o.push(p("<em>Corrected by the researcher:</em> " + t.corrections.map(function (x) { return esc(x.reason || "no reason given"); }).join("; ") + "."));
+        c.gaps.filter(function (g) { return g.after_turn === t.turn_id; }).forEach(function (g) { o.push(gapP(g)); });
+      });
+      if (c.discrepancies.length) o.push(p("<strong>Differences between the AI-generated record and the original:</strong>") + list(c.discrepancies.map(function (d) { return (d.turn_id ? esc(d.turn_id) + ": " : "") + esc(PR.DISCREPANCY_LABELS[d.status]) + (d.resolved ? " (reviewed by the researcher)" : ""); })));
+    });
+    return o.join("\n");
   }
 
   // Every logged output, each with a tick box. The choice is saved with the report settings (and with the project),

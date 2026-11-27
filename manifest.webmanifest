@@ -1,7 +1,7 @@
 {
   "name": "Scholarly Prompt Lab",
   "short_name": "Prompt Lab",
-  "description": "Design, document and evaluate AI prompts for humanities research. Works offline; nothing is uploaded.",
+  "description": "Design, document and examine how scholarly knowledge develops through human–AI interaction. Free and open-source research software for the humanities and social sciences. Works offline; nothing is uploaded.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

@@ -5,15 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Scholarly Prompt Lab</title>
   <meta name="author" content="Frank Onuh">
-  <meta name="description" content="A free, open-source environment for designing, documenting and evaluating AI prompts in digital humanities research.">
+  <meta name="description" content="Design, document and examine how scholarly knowledge develops through human–AI interaction. Free and open-source research software for the humanities and social sciences.">
+  <meta property="og:title" content="Scholarly Prompt Lab">
+  <meta property="og:description" content="The prompt as method. Design, document and examine how scholarly knowledge develops through human–AI interaction. Free and open-source research software for the humanities and social sciences.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://thefrankonuh.github.io/scholarly-prompt-lab/">
+  <meta property="og:image" content="https://thefrankonuh.github.io/scholarly-prompt-lab/icons/icon-512.png">
+  <meta name="twitter:card" content="summary">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23185c4a'/%3E%3Ctext x='16' y='22' font-size='16' text-anchor='middle' fill='white' font-family='Georgia'%3EP%3C/text%3E%3C/svg%3E">
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="theme-color" content="#17434d">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
   <link rel="preload" href="assets/fonts/ibm-plex-sans-normal-400-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="assets/fonts/source-serif-4-normal-400-700-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="assets/fonts/fonts.css?v=1.6.0">
-  <link rel="stylesheet" href="styles.css?v=1.6.0">
+  <link rel="stylesheet" href="assets/fonts/fonts.css?v=1.7.0">
+  <link rel="stylesheet" href="styles.css?v=1.7.0">
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to the main content</a>
@@ -21,7 +27,9 @@
     <div class="wrap header-inner">
       <div class="brand-block">
         <h1 class="brand"><picture><source srcset="assets/logo/wordmark-on-dark.svg" media="(prefers-color-scheme: dark)"><img src="assets/logo/wordmark.svg" alt="Scholarly Prompt Lab" width="284" height="36"></picture></h1>
-        <p class="tagline">The prompt as method: design, document and evaluate AI-assisted research in the humanities and social sciences.</p>
+        <p class="headline">The prompt as method.</p>
+        <p class="tagline">Design, document and examine how scholarly knowledge develops through human–AI interaction.</p>
+        <p class="tagline-2">Free and open-source research software for the humanities and social sciences.</p>
       </div>
       <div class="lang-switch">
         <label for="langSel">Language</label>
@@ -247,6 +255,18 @@
             <div class="checks">
               <label class="check"><input type="checkbox" id="planCross"> <span><strong>Cross-model examination.</strong> I will test the prompt through repeated runs and compare results across at least two AI systems or prompt formulations. <span class="muted">(Sensitivity study tab)</span></span></label>
               <label class="check"><input type="checkbox" id="planLog"> <span><strong>Research documentation.</strong> I will record the AI system, its version, the date of use, relevant settings and who reviewed the output. <span class="muted">(Log &amp; evaluate tab)</span></span></label>
+              <label class="check"><input type="checkbox" id="planConv"> <span><strong>Research conversation.</strong> I will document the whole conversation with the AI system: every follow-up prompt, every response, and what is known about the system. The prompt gains the SPL Research Session Protocol and a session identifier. <span class="muted">(Log &amp; evaluate tab, Conversation)</span></span></label>
+            </div>
+            <div class="conv-opts no-progress" id="convOpts" hidden>
+              <label for="convReminders">Reminders from the AI system to confirm metadata and save a checkpoint</label>
+              <select id="convReminders">
+                <option value="10">About every 10 researcher messages</option>
+                <option value="5">About every 5 researcher messages</option>
+                <option value="20">About every 20 researcher messages</option>
+                <option value="off">No reminders</option>
+              </select>
+              <label class="check"><input type="checkbox" id="convInitial" checked> <span>Ask the AI system for an initial metadata record after its first answer</span></label>
+              <p class="hint">Studying the AI system's own behaviour? The protocol adds instructions and reminders that may change it. Leave this off and record the conversation by transcript instead. <a href="https://github.com/TheFrankOnuh/scholarly-prompt-lab/blob/main/docs/research-session-protocol.md" target="_blank" rel="noopener">Read the protocol</a></p>
             </div>
           </fieldset>
         </form>
@@ -266,6 +286,15 @@
           </details>
           <p class="vh" id="meterNote" role="status"></p>
           <pre id="prompt" class="prompt" tabindex="0" aria-labelledby="promptTitle"></pre>
+          <div class="session-box" id="sessionBox" hidden>
+            <p class="session-line">Research session <code id="sessionId"></code> <span class="muted" id="sessionProto"></span></p>
+            <p class="status" id="sessionStatus" role="status"></p>
+            <details class="cmds" id="cmdList">
+              <summary>Session commands <span class="muted">(copy one into the conversation when you need it)</span></summary>
+              <ul class="cmd-items" id="cmdItems"></ul>
+              <p class="hint">Each command names this session, so its record can be matched to the right conversation. <button type="button" class="ghost small-btn" id="newSession">Start a new session</button></p>
+            </details>
+          </div>
           <div class="actions">
             <button type="button" id="dlPrompt" class="ghost">Download .txt</button>
             <button type="button" id="dlDesign" class="ghost">Download research design (.md)</button>
@@ -311,7 +340,15 @@
       <div class="card tab-intro">
         <h2>Log and evaluate an output</h2>
         <p class="hint">Record each run of your prompt, check the AI's quotations against your sources, score the answer and save it. Saved entries feed the summary, the Sensitivity study and your Methods report.</p>
+        <div class="log-mode">
+          <span class="label-like" id="logModeLabel">Record</span>
+          <div class="seg" id="logMode" role="group" aria-labelledby="logModeLabel">
+            <button type="button" aria-pressed="true" data-mode="single">Single output</button>
+            <button type="button" aria-pressed="false" data-mode="conv">Conversation</button>
+          </div>
+        </div>
       </div>
+      <div id="singleWrap">
       <div class="grid">
         <form id="logForm" class="card" autocomplete="off">
           <h2 class="vh">Log a model output</h2>
@@ -431,6 +468,25 @@
         <h2 class="h-small">Entries <span id="entryCount" class="muted"></span></h2>
         <div class="table-wrap" tabindex="0" role="region" aria-label="Logged entries: scroll sideways to see every column"><table id="entries"></table></div>
       </div>
+      </div>
+
+      <section id="convWrap" class="conv" aria-labelledby="convTitle" hidden>
+        <div class="card conv-intro">
+          <h2 class="h-small" id="convTitle">Research conversations</h2>
+          <p class="hint">Record a whole conversation with an AI system: every researcher prompt, every response, and what is known about the system. The original conversation is the record of truth. A record written by the AI system is checked against it, and every difference is kept. <a href="https://github.com/TheFrankOnuh/scholarly-prompt-lab/blob/main/docs/conversational-research.md" target="_blank" rel="noopener">How conversations are recorded</a></p>
+          <p class="notice warn" id="convUnavailable" hidden>This browser does not let the Lab store conversations (this happens in some private windows). The rest of the Lab works as usual.</p>
+        </div>
+        <div class="conv-grid">
+          <section class="card conv-side" aria-labelledby="convListTitle">
+            <h3 class="h-small" id="convListTitle">Conversations in this project</h3>
+            <ul class="conv-list" id="convList"></ul>
+            <div class="actions"><button type="button" id="convNew">New conversation</button></div>
+            <p class="hint" id="convStorage"></p>
+          </section>
+          <div class="card conv-main" id="convMain"></div>
+        </div>
+        <p class="vh" id="convAnnounce" role="status"></p>
+      </section>
     </section>
 
     <!-- REPORT -->
@@ -550,6 +606,9 @@
     </div>
   </dialog>
 
+  <dialog id="convImport" class="wide-dlg" aria-labelledby="ciTitle"><div class="review-inner" id="ciBody"></div></dialog>
+  <dialog id="convMeta" class="wide-dlg" aria-labelledby="cmTitle"><div class="review-inner" id="cmBody"></div></dialog>
+
   <footer class="wrap footer">
     <p class="built-by">Developed by <a href="https://www.linkedin.com/in/frank-onuh/" target="_blank" rel="noopener author">Frank Onuh</a>. <a href="https://www.linkedin.com/in/frank-onuh/" target="_blank" rel="noopener">Connect on LinkedIn</a> · <a href="https://doi.org/10.5281/zenodo.24521711" target="_blank" rel="noopener">Cite the Lab</a> · <a href="https://github.com/TheFrankOnuh/scholarly-prompt-lab" target="_blank" rel="noopener">Source code</a></p>
     <p>Open source under the MIT licence. Your work is saved only in this browser. Export it to keep it. <span id="labVersion"></span></p>
@@ -569,22 +628,24 @@
     <p><span id="offlineStatus" role="status"></span> <button type="button" id="installBtn" class="ghost small-btn" hidden>Install the Lab on this device</button> <span class="hint" id="installHelp" role="status"></span></p>
   </footer>
 
-  <script src="locales.js?v=1.6.0"></script>
-  <script src="i18n.js?v=1.6.0"></script>
-  <script src="release.js?v=1.6.0"></script>
-  <script src="theories.js?v=1.6.0"></script>
-  <script src="theory-links.js?v=1.6.0"></script>
-  <script src="disciplines.js?v=1.6.0"></script>
-  <script src="community.js?v=1.6.0"></script>
-  <script src="procedures.js?v=1.6.0"></script>
-  <script src="data.js?v=1.6.0"></script>
-  <script src="checks.js?v=1.6.0"></script>
-  <script src="app.js?v=1.6.0"></script>
-  <script src="ui.js?v=1.6.0"></script>
-  <script src="report.js?v=1.6.0"></script>
-  <script src="tour.js?v=1.6.0"></script>
-  <script src="projects.js?v=1.6.0"></script>
-  <script src="offline.js?v=1.6.0"></script>
-  <script src="counter.js?v=1.6.0"></script>
+  <script src="locales.js?v=1.7.0"></script>
+  <script src="i18n.js?v=1.7.0"></script>
+  <script src="release.js?v=1.7.0"></script>
+  <script src="theories.js?v=1.7.0"></script>
+  <script src="theory-links.js?v=1.7.0"></script>
+  <script src="disciplines.js?v=1.7.0"></script>
+  <script src="community.js?v=1.7.0"></script>
+  <script src="procedures.js?v=1.7.0"></script>
+  <script src="data.js?v=1.7.0"></script>
+  <script src="checks.js?v=1.7.0"></script>
+  <script src="protocol.js?v=1.7.0"></script>
+  <script src="app.js?v=1.7.0"></script>
+  <script src="ui.js?v=1.7.0"></script>
+  <script src="report.js?v=1.7.0"></script>
+  <script src="tour.js?v=1.7.0"></script>
+  <script src="projects.js?v=1.7.0"></script>
+  <script src="conversations.js?v=1.7.0"></script>
+  <script src="offline.js?v=1.7.0"></script>
+  <script src="counter.js?v=1.7.0"></script>
 </body>
 </html>

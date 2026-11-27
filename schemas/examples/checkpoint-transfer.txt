@@ -1,0 +1,39 @@
+SPL-HEADER
+{"format":"spl-rsr-transfer/0.1","protocol":"0.1","session":"SPL-S-20261127-7F3K","record_type":"checkpoint","part":1,"parts_total":1,"covers":[1,10],"coverage":"partial","metadata":{"ai_system":{"value":"Example Assistant (web application)","origin":"shown by application"},"model_name":{"value":"Example Model","origin":"reported by AI"},"model_version":{"value":"not exposed by provider","origin":"unknown"},"session_start":{"value":"unknown","origin":"unknown"},"reasoning_mode":{"value":"unknown","origin":"unknown"}},"gaps":[{"after_turn":8,"missing":"researcher_prompt","reason":"The exact wording of this message is no longer available to me."}]}
+<<<SPL-TURN 1 role=researcher>>>
+RESEARCH QUESTION: How does the Declaration of Sentiments (1848) rework the language of the Declaration of Independence (1776)?
+<<<SPL-END 1>>>
+<<<SPL-TURN 2 role=ai>>>
+Finding 1 (CL-001). The Declaration of Sentiments repeats the 1776 claim of equality and adds women to it: "all men and women are created equal" [DOC-02].
+
+SPL Research Session — Initial Record
+Model: reported as Example Model; requires confirmation.
+<<<SPL-END 2>>>
+<<<SPL-TURN 3 role=researcher kind=admin>>>
+SPL: CONFIRM RESEARCH METADATA · protocol 0.1 · session SPL-S-20261127-7F3K
+Model as shown: Example Model. Backend version: not exposed by provider.
+<<<SPL-END 3>>>
+<<<SPL-TURN 4 role=ai kind=admin>>>
+Recorded. Still outstanding: session start date.
+<<<SPL-END 4>>>
+<<<SPL-TURN 5 role=researcher>>>
+In 1848, did "men" in the 1776 text include women in law? Check the context you gave.
+<<<SPL-END 5>>>
+<<<SPL-TURN 6 role=ai>>>
+No. In 1848 women could not vote, and married women's property passed to their husbands. The excerpts support reading "men" as excluding women in practice.
+<<<SPL-END 6>>>
+<<<SPL-TURN 7 role=researcher>>>
+Consider the following passage from the Declaration of Sentiments, which lists grievances about the right to vote. Does it change your reading of "all men and women are created equal"?
+<<<SPL-END 7>>>
+<<<SPL-TURN 8 role=ai>>>
+It qualifies Finding 1 (CL-001): the declaration states a principle and lists the denial of rights; it does not record their achievement.
+<<<SPL-END 8>>>
+<<<SPL-GAP after=8 missing=researcher_prompt>>>
+The exact wording of this message is no longer available to me.
+<<<SPL-END GAP>>>
+<<<SPL-TURN 10 role=ai>>>
+Understood. I will restrict the analysis to the four excerpts.
+<<<SPL-END 10>>>
+SPL-NOTES
+- CL-001 qualified at turn 8 after the researcher introduced a further passage.
+- Contextual correction at turn 5 on the meaning of "men".

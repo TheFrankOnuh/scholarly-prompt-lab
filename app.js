@@ -818,6 +818,12 @@
     s.safeguards = [...document.querySelectorAll("#safeguards input:checked")].map((i) => i.value);
     s.planCross = $("planCross").checked;
     s.planLog = $("planLog").checked;
+    s.planConv = $("planConv").checked;
+    s.convReminders = $("convReminders").value;
+    s.convInitial = $("convInitial").checked;
+    // a documented conversation needs a session identifier, made by the Lab when the option is first ticked
+    if (s.planConv && !convSession && PROTO) convSession = PROTO.newSessionId();
+    s.convSession = convSession;
     s.runs = $("runs").value;
     s.models = $("models").value;
     return s;
@@ -831,6 +837,10 @@
     FIELDS.forEach((k) => { o[k] = typeof o[k] === "string" ? o[k] : String(o[k] == null ? "" : o[k]); });
     if (!L.techniques[o.technique]) o.technique = BLANK.technique;
     if (!["table", "json", "csv", "prose"].includes(o.output)) o.output = "table";
+    o.planConv = d.planConv === true;
+    o.convReminders = ["5", "10", "20", "off"].includes(String(d.convReminders)) ? String(d.convReminders) : "10";
+    o.convInitial = d.convInitial !== false;
+    o.convSession = PROTO && PROTO.isSessionId(d.convSession) ? d.convSession : "";
     o.theories = Array.isArray(d.theories) ? d.theories.filter((x) => typeof x === "string") : [];
     o.safeguards = Array.isArray(d.safeguards) ? d.safeguards.filter((x) => typeof x === "string") : BLANK.safeguards.slice();
     o.theoryDefs = Array.isArray(d.theoryDefs) ? d.theoryDefs.filter((t) => t && typeof t === "object" && typeof t.id === "string" && typeof t.n === "string" && typeof t.a === "string")
@@ -862,6 +872,10 @@
     document.querySelectorAll("#safeguards input").forEach((i) => (i.checked = (s.safeguards || []).includes(i.value)));
     $("planCross").checked = !!s.planCross;
     $("planLog").checked = !!s.planLog;
+    $("planConv").checked = !!s.planConv;
+    $("convReminders").value = ["5", "10", "20", "off"].includes(String(s.convReminders)) ? String(s.convReminders) : "10";
+    $("convInitial").checked = s.convInitial !== false;
+    convSession = PROTO && PROTO.isSessionId(s.convSession) ? s.convSession : "";
     if (s.runs) $("runs").value = s.runs;
     if (s.models !== undefined) $("models").value = s.models;
     renderTheoryPicker();
@@ -869,7 +883,9 @@
 
   const BLANK = { discipline: "History", question: "", theories: [], theoryNotes: "", technique: "evidence-constrained", procedure: "", fewshot: "", unit: "", corpus: "", definitions: "",
     sourceDesc: "", sourceText: "", context: "", terms: "", output: "table", fields: "", safeguards: ["quote", "nofab", "obs", "alt", "disconfirm", "uncert", "scope"],
-    planCross: false, planLog: false };
+    planCross: false, planLog: false, planConv: false, convReminders: "10", convInitial: true, convSession: "" };
+  const PROTO = window.LAB_PROTOCOL || null;
+  let convSession = "";   // the research session the Build prompt belongs to, when the conversation option is on
 
   /* ---------- procedure: built from the discipline, the technique and the chosen frameworks ---------- */
   const TSTEPS = window.LAB_THEORY_STEPS || {};
@@ -1026,7 +1042,7 @@
       { l: "T", name: "Traceable", fullName: "Traceability", on: has("quote") || (has("nofab") && !!s.sourceText.trim()), need: "a traceable-evidence safeguard" },
       { l: "E", name: "Evaluated", fullName: "Evaluation", on: ["uncert", "alt", "review", "syco", "obs"].filter(has).length >= 2, need: "at least two evaluation safeguards" },
       { l: "X", name: "Cross-model", fullName: "Cross-model examination", on: s.planCross, need: "a commitment to test the prompt across runs and AI systems (section 7)" },
-      { l: "T", name: "Transparent", fullName: "Transparency", on: s.planLog, need: "a commitment to record the AI system, version, date and settings (section 7)" }
+      { l: "T", name: "Transparent", fullName: "Transparency", on: s.planLog || !!s.planConv, need: "a commitment to record the AI system, version, date and settings (section 7)" }
     ];
   }
 
@@ -1055,7 +1071,8 @@
     renderTeachingNotice();
     const s = readState();
     refreshDiscOwn();
-    renderPrompt($("prompt"), buildPrompt(s, 4));
+    renderPrompt($("prompt"), shownPrompt(s));
+    renderSession(s);
     $("techniqueHint").textContent = L.techniques[s.technique].hint;
     const warns = designWarnings(s);
     const wl = $("designWarn"); wl.replaceChildren(); warns.forEach((x) => wl.append(el("li", { text: x }))); wl.hidden = !warns.length;
@@ -1079,6 +1096,30 @@
     renderRecs(s);
     updateSourceInfo();
     if (!$("panel-study").hidden) renderStudy(s);
+  }
+  // With the conversation option on, the prompt carries the SPL Research Session Protocol above it.
+  // Without it, the prompt is exactly what earlier versions produced.
+  function shownPrompt(s) {
+    const p = buildPrompt(s, 4);
+    return s.planConv && PROTO ? PROTO.withProtocol(p, { session: s.convSession, reminders: s.convReminders, initialRecord: s.convInitial }) : p;
+  }
+  let cmdSession = null;
+  function renderSession(s) {
+    const on = !!(s.planConv && PROTO);
+    $("convOpts").hidden = !on;
+    $("sessionBox").hidden = !on;
+    $("copyPrompt").textContent = on ? "Copy prompt with protocol" : "Copy prompt";
+    if (!on) return;
+    $("sessionId").textContent = s.convSession;
+    $("sessionProto").textContent = "· protocol " + PROTO.PROTOCOL_VERSION + " (draft)";
+    if (cmdSession === s.convSession) return;
+    cmdSession = s.convSession;
+    const ul = $("cmdItems"); ul.replaceChildren();
+    PROTO.COMMANDS.forEach((c) => {
+      const b = el("button", { type: "button", class: "ghost small-btn", text: "Copy", "aria-label": "Copy the command " + c.label.toLowerCase() });
+      b.addEventListener("click", () => copy(PROTO.commandText(c.id, s.convSession), "sessionStatus"));
+      ul.append(el("li", {}, [el("span", {}, [el("strong", { text: c.label }), " ", el("code", { text: "SPL: " + c.name }), el("small", { text: c.use })]), b]));
+    });
   }
   let buildTimer;
   function scheduleBuild(e) {
@@ -1850,7 +1891,23 @@
     if (!confirm("Clear the whole form?")) return;
     $("example").value = ""; writeState(Object.assign({}, BLANK)); renderBuild();
   });
-  $("copyPrompt").addEventListener("click", () => { rememberCopied("custom", $("prompt").textContent); copy($("prompt").textContent, "buildStatus"); });
+  $("copyPrompt").addEventListener("click", () => {
+    const text = $("prompt").textContent;
+    rememberCopied("custom", text); copy(text, "buildStatus");
+    const s = readState();
+    if (s.planConv && window.LAB_CONV && window.LAB_CONV.registerSession) {
+      // the session is registered in Log & evaluate with the exact prompt and the time it was copied
+      window.LAB_CONV.registerSession({ sessionId: s.convSession, prompt: text, copiedAt: new Date().toISOString(), reminders: s.convReminders, initialRecord: s.convInitial, question: s.question })
+        .then((msg) => { if (msg) flash("sessionStatus", msg); })
+        .catch(() => flash("sessionStatus", "The prompt was copied, but this browser could not store the session. Record the conversation in Log & evaluate by transcript."));
+    }
+  });
+  $("newSession").addEventListener("click", () => {
+    if (!PROTO) return;
+    convSession = PROTO.newSessionId();
+    renderBuild();
+    flash("sessionStatus", "New session " + convSession + ". Copy the prompt again to begin it.");
+  });
   $("goLog").addEventListener("click", () => {
     if (!$("lgOutput").value.trim()) $("lgCondition").value = "custom";
     showTab("tab-log");

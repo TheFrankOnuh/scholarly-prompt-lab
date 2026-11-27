@@ -1,7 +1,7 @@
 {
   "title": "Scholarly Prompt Lab: The Prompt as Method",
   "upload_type": "software",
-  "description": "<p>A free, open-source, browser-based tool for designing, documenting and evaluating generative-AI prompts in humanities and social science research. It turns a research question into a structured scholarly prompt using the CONTEXT framework (Conceptual grounding, Operationalisation, Situated knowledge, Traceability, Evaluation, Cross-model examination, Transparency), with analytical procedures drawn from the researcher's discipline and chosen theoretical frameworks; generates four-condition prompt-sensitivity studies; checks every quotation in a model's output against the researcher's own sources; suggests evaluation scores that the researcher must confirm; drafts a report of AI-assisted methods; and keeps separate research projects, each with its own sources, log and report. It takes particular care with languages and knowledge traditions that are under-represented in AI training data. Runs entirely in the browser: no AI model is called and no user files are uploaded.</p>",
+  "description": "<p><strong>The prompt as method.</strong> Design, document and examine how scholarly knowledge develops through human–AI interaction. Free and open-source research software for the humanities and social sciences.</p><p>Scholarly Prompt Lab turns a research question into a structured scholarly prompt using the CONTEXT framework (Conceptual grounding, Operationalisation, Situated knowledge, Traceability, Evaluation, Cross-model examination, Transparency), with analytical procedures drawn from the researcher's discipline and chosen theoretical frameworks. It supports three research modes: single-prompt analysis; four-condition prompt-sensitivity studies; and documented multi-turn research conversations, in which every researcher prompt is preserved verbatim, linked to its response and evaluated. Conversations can be documented with the SPL Research Session Protocol (version 0.1, a draft under study) and stored as Research Session Records with field-level provenance; a record written by the AI system is checked against the original conversation, and every difference is kept. The Lab checks every quotation in a model's output against the researcher's own sources, suggests evaluation scores that the researcher must confirm, drafts a report of AI-assisted methods, and keeps separate research projects. It takes particular care with languages and knowledge traditions that are under-represented in AI training data. Runs entirely in the browser: no AI model is called and no user files are uploaded.</p>",
   "creators": [
     {
       "name": "Onuh, Frank"
@@ -19,7 +19,9 @@
     "qualitative research",
     "research integrity",
     "AI evaluation",
-    "under-represented languages"
+    "under-represented languages",
+    "research conversations",
+    "research documentation"
   ],
   "related_identifiers": [
     {

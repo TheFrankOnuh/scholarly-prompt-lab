@@ -5,7 +5,7 @@ importScripts("release.js");
 // The saved copy belongs to exactly one release. A new release makes a new copy and removes the old one.
 const CACHE = "spl-" + self.LAB_RELEASE.version;
 const CORE = [
-  "./", "index.html", "locales.js", "i18n.js", "release.js", "styles.css", "app.js", "ui.js", "checks.js", "data.js", "theories.js", "theory-links.js", "disciplines.js", "procedures.js", "community.js", "report.js", "tour.js", "projects.js", "offline.js", "counter.js",
+  "./", "index.html", "locales.js", "i18n.js", "release.js", "styles.css", "app.js", "ui.js", "checks.js", "data.js", "theories.js", "theory-links.js", "disciplines.js", "procedures.js", "community.js", "report.js", "tour.js", "projects.js", "protocol.js", "conversations.js", "offline.js", "counter.js",
   "manifest.webmanifest", "assets/fonts/fonts.css", "assets/logo/wordmark.svg", "assets/logo/wordmark-on-dark.svg", "icons/icon-192.png", "icons/icon-512.png", "icons/maskable-192.png", "icons/maskable-512.png",
   "vendor/pdfjs/pdf.min.mjs", "vendor/pdfjs/pdf.worker.min.mjs", "vendor/mammoth/mammoth.browser.min.js"
 ];

@@ -5,12 +5,15 @@ type: software
 authors:
   - family-names: Onuh
     given-names: Frank
-version: 1.6.0
+version: 1.7.0
 date-released: 2026-11-27
 license: MIT
 doi: 10.5281/zenodo.24521711
 url: "https://thefrankonuh.github.io/scholarly-prompt-lab/"
 repository-code: "https://github.com/TheFrankOnuh/scholarly-prompt-lab"
+abstract: >-
+  Design, document and examine how scholarly knowledge develops through human–AI interaction. Free and open-source research software for the humanities and social sciences. Supports single-prompt analysis, prompt-sensitivity studies
+  and documented multi-turn research conversations, organised by the CONTEXT framework.
 keywords:
   - digital humanities
   - prompt engineering
