@@ -1,6 +1,6 @@
 # SPL Research Session Protocol
 
-**Version 0.1 (draft).** This version has not yet been tested empirically. Its reliability across AI systems and conversation lengths is under study (see [Validation](#10-known-limitations-and-validation)). Until that study is done it should be described as an instruction-based documentation mechanism whose reliability is under study, not as a validated method.
+**Version 0.2 (draft).** Version 0.2 (Scholarly Prompt Lab 1.8.0) separates the AI provider from the product, adds the metadata fields of the full specification, and lets an AI-generated record mark reconstructed turns, suggest follow-up purposes, claims and decisions, and record a change of model. Records made under version 0.1 are read unchanged. This version has not yet been tested empirically. Its reliability across AI systems and conversation lengths is under study (see [Validation](#10-known-limitations-and-validation)). Until that study is done it should be described as an instruction-based documentation mechanism whose reliability is under study, not as a validated method.
 
 The protocol is part of [Scholarly Prompt Lab](../README.md), but it is written so that other tools and researchers can use it on their own. This document is the authoritative specification. The protocol wording and the command texts below are generated from `protocol.js`, the code the Lab itself uses, by `node tools/protocol-docs.mjs`.
 
@@ -39,7 +39,7 @@ The core protocol accompanies the initial research prompt, above it, followed by
 
 <!-- generated:core -->
 ```text
-SPL RESEARCH SESSION PROTOCOL · version 0.1 · session SPL-S-20261127-7F3K
+SPL RESEARCH SESSION PROTOCOL · version 0.2 · session SPL-S-20261127-7F3K
 This conversation is a scholarly research session documented with Scholarly Prompt Lab. Answer the research prompt that follows this protocol as you normally would. Throughout the session:
 1. Keep to the research question, sources and methodological instructions in this first message unless the researcher explicitly revises them. If you revise an earlier claim or depart from an instruction, say so, identify the earlier claim, and state whether the revision rests on new evidence or on a change of instructions, theoretical orientation or researcher preference.
 2. Keep observations grounded in the sources apart from interpretations, hypotheses and methodological suggestions. Give the supporting evidence where the research design requires it. Mark source material introduced later in the session as additional.
@@ -47,8 +47,8 @@ This conversation is a scholarly research session documented with Scholarly Prom
 4. Keep the cultural, linguistic and historical context established for this session in later answers.
 5. Never invent quotations, source identifiers, dates, model details, settings, researcher decisions or earlier exchanges. Report information about yourself and this session only if it is actually available to you. Otherwise write "unknown" or "not exposed by provider". Do not present an advertised model name as an exact version.
 6. The researcher's decisions and final assessment are theirs to state. Do not assume agreement because the conversation continues.
-7. After your first substantive answer, add a short section headed "SPL Research Session — Initial Record": the AI system, model and settings you can actually establish, the session start date if available to you, and for each item you cannot establish, one line on where the researcher might find it. The research answer comes first.
-8. Do not reproduce the conversation record unless the researcher sends a message beginning "SPL:". Those messages carry their own instructions. About every 10 substantive researcher messages, and when the model, sources or procedure change, add one line reminding the researcher to confirm outstanding metadata and save a checkpoint with "SPL: SAVE RESEARCH CHECKPOINT". Do not ask again for information already supplied. Stop the reminders if asked. If the researcher says the session has ended, mention "SPL: END RESEARCH SESSION".
+7. After your first substantive answer, add a short section headed "SPL Research Session — Initial Record": the AI provider, product, model and settings you can actually establish, the session start date if available to you, and for each item you cannot establish, one line on where the researcher might find it. The research answer comes first.
+8. Do not reproduce the conversation record unless the researcher sends a message beginning "SPL:". Those messages carry their own instructions. About every 10 substantive researcher messages, and when the model, sources or procedure change, an analytical stage ends, or the researcher says they will continue later, add one line headed "SPL Research Session — Checkpoint reminder" naming only the metadata still outstanding and the command "SPL: SAVE RESEARCH CHECKPOINT". Do not ask again for information already supplied. Stop the reminders if asked. If the researcher says the session has ended, mention "SPL: END RESEARCH SESSION".
 9. Never ask for passwords, keys, tokens or private system instructions.
 ```
 <!-- /generated -->
@@ -131,14 +131,14 @@ There are two forms.
 
 Long verbatim text is fragile inside JSON written by a language model: every quotation mark, line break and code block must be escaped, and one mistake breaks the whole record. The AI system therefore writes:
 
-1. a line `SPL-HEADER` and a short JSON object with the metadata, the turn range covered, the coverage it claims and the gaps it knows of;
+1. a line `SPL-HEADER` and a short JSON object with the metadata, the turn range covered, the coverage it claims, whether it can see the start of the conversation, the gaps it knows of, and (as suggestions for the researcher) the claims it traced and the decisions the researcher stated;
 2. each turn between delimiters that need no escaping:
    ```text
    <<<SPL-TURN 7 role=researcher>>>
    (the exact text)
    <<<SPL-END 7>>>
    ```
-   with `kind=admin` for administrative turns;
+   with `kind=admin` for administrative turns, `exact=no` where the AI is not certain of the wording (the Lab records the turn as reconstructed), `purpose=` with suggested follow-up purposes, and `model="…"` on the first response from a different model;
 3. a GAP block wherever a turn is missing:
    ```text
    <<<SPL-GAP after=6 missing=researcher_prompt>>>
@@ -165,10 +165,18 @@ The Research Session Record, defined by [`schemas/spl-research-session-record.sc
 - **AI-reproduced wording** stays labelled as such until it is compared with an original or confirmed by the researcher.
 - **Reconstructed wording** must be labelled `reconstructed` and is never counted as original.
 - **Researcher corrections** are layered: the text before, the text after, the reason and the time are kept.
-- **Edited prompts and regenerated responses** are siblings in a tree: each turn has a parent, a regenerated response is a sibling under the same prompt (`regenerated_from`), and an edited prompt is a sibling of the original (`edited_from`). Inside a chat, an AI system sees only the active path, so branch structure must come from a provider export or from the researcher. Version 0.1 of the Lab records a single path; the tree fields are reserved in the schema for provider exports.
+- **Edited prompts and regenerated responses** are siblings in a tree: each turn has a parent (`parent_id`), a regenerated response is a sibling under the same prompt (`regenerated_from`), and an edited prompt is a sibling of the original (`edited_from`). The record names the branch the researcher has selected (`active_leaf`); every other branch is kept with its parents. Inside a chat, an AI system sees only the active path, so branch structure comes from a provider export, which records it, or from the researcher, who can add a regenerated response or an edited prompt to any turn. AI-generated records are compared with the active path only.
+- **Reproduced records inside turns.** A completed record reproduces earlier turns verbatim, including the researcher's own SPL commands and any earlier checkpoint. Markers inside a turn's text belong to that text: a reader must take the outermost `<<<SPL-TURN n>>>` … `<<<SPL-END n>>>` pairs as the structure, and look for headers, gaps and notes only outside them.
+- **Gaps filled later.** A gap is marked filled when a later record supplies a turn at that place; the turn keeps its own text status. A turn an AI record leaves out without declaring a gap is recorded as an omission; a gap the AI declared is not.
 - **Sequential checkpoints**: each import is aligned with the turns already recorded. Turns already present are linked, not copied; only new turns are added. A complete available conversation is assembled from several checkpoints this way, and a later transcript fills the gaps the checkpoints declared.
 
 ## 9. Versioning
+
+| Version | Lab release | Changes |
+|---|---|---|
+| 0.1 | 1.7.0 | First draft. |
+| 0.2 | 1.8.0 | Provider and product recorded separately; tools used, retrieval, custom instructions, message timestamps added; `exact=`, `purpose=` and `model=` turn attributes; claims and decisions in the header; whether the AI can see the start of the conversation; the closing review produces the record at once, with missing items marked. |
+
 
 - Any change to the wording of the core protocol, a command or the transfer format produces a new protocol version.
 - Every conversation and every record keeps the protocol version it was made under (`protocol_version`), and the schema version it was written in (`schema_version`).
@@ -200,6 +208,6 @@ A conforming tool:
 
 Cite the protocol with its version and the software release it shipped in:
 
-> Onuh, F. (2026). *SPL Research Session Protocol* (Version 0.1, draft). In *Scholarly Prompt Lab* (Version 1.7.0) [Computer software]. https://doi.org/10.5281/zenodo.24521711
+> Onuh, F. (2026). *SPL Research Session Protocol* (Version 0.2, draft). In *Scholarly Prompt Lab* (Version 1.8.0) [Computer software]. https://doi.org/10.5281/zenodo.24521711
 
 The concept DOI resolves to the latest release; cite the version DOI of the release you used where one is listed in the [README](../README.md).

@@ -1121,11 +1121,16 @@ textarea, .prompt, .report p, .report li, .report td, .report pre, .qlist li, .c
 }
 .i18n-note { margin: 0 0 8px; }
 
-/* ---------- 1.7.0: header wording ---------- */
-.brand-block .headline { font-family: var(--serif); font-weight: 600; font-size: clamp(1.75rem, 3.4vw, 2.6rem); line-height: 1.1; letter-spacing: -0.02em; margin: 14px 0 0; color: var(--ink); }
-.brand-block .tagline { font-size: var(--fs-read); font-weight: 500; color: var(--ink); margin-top: 6px; max-width: 52ch; line-height: 1.45; }
-.brand-block .tagline-2 { font-size: var(--fs-hint); color: var(--muted); margin: 4px 0 0; }
-@media (max-width: 640px) { .brand-block .headline { margin-top: 10px; } .brand-block .tagline { font-size: var(--fs-label); } }
+/* ---------- header wording (1.7.0), set within the approved 1.4.0 hierarchy ----------
+   The wordmark keeps its approved size and place and stays the principal identity. "The prompt as method." keeps the
+   approved tagline style (.tagline above). The description and the free-software line sit below it, smaller and lighter. */
+.brand-block .tagline-desc { margin: 3px 0 0; color: var(--muted); font-size: var(--fs-hint); font-weight: 400; line-height: 1.45; max-width: 62ch; }
+.brand-block .tagline-2 { margin: 2px 0 0; color: var(--muted); font-size: var(--fs-caption); font-weight: 400; line-height: 1.45; }
+/* the wordmark returns to the start of the Lab: no underline or colour change, a quiet hover */
+.brand-link { display: inline-block; border-radius: 6px; text-decoration: none; color: inherit; transition: opacity 0.15s; }
+.brand-link:hover { opacity: 0.78; }
+.brand-link:focus-visible { outline: 2px solid var(--focus); outline-offset: 4px; }
+@media (prefers-reduced-motion: reduce) { .brand-link { transition: none; } }
 
 /* ---------- 1.7.0: research conversations in Build ---------- */
 .conv-opts { margin: 4px 0 0 26px; padding: 4px 0 0 14px; border-left: 2px solid var(--line); }
@@ -1226,3 +1231,56 @@ dialog.wide-dlg h2 { margin-top: 0; }
 .cv-dl dd { margin: 0; overflow-wrap: anywhere; }
 @media (forced-colors: active) { .ctag, .cv-disc, .cv-gap { border: 1px solid CanvasText; } .cv-diff del, .cv-diff ins { background: transparent; } }
 .cv-export > summary::before { display: none; }
+
+/* ---------- 1.8.0: conversational research, complete ---------- */
+.cv-fieldrow { margin-top: 2px; }
+.cv-fieldrow > .hint { margin-top: 4px; }
+.cv-about .row, .cv-claim-add, .cv-obform .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0 16px; }
+.cv-views { flex-wrap: wrap; }
+.cv-views button { min-height: 40px; }
+.cv-versions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 6px; padding: 6px 10px; border: 1px dashed var(--field); border-radius: 8px; }
+.cv-tid:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 3px; }
+.cv-sug { margin: 6px 0; padding: 8px 10px; background: var(--warn-soft); border-radius: 8px; }
+.cv-sug .row-inline { display: inline-flex; gap: 6px; align-items: center; margin: 2px 10px 2px 0; }
+.cv-flags { display: grid; gap: 6px; margin: 8px 0; }
+.cv-flag { display: grid; grid-template-columns: minmax(220px, 1fr) minmax(0, 2fr); gap: 4px 10px; align-items: center; }
+.cv-flag > *:nth-child(n+3) { grid-column: 2; }
+@media (max-width: 640px) { .cv-flag { grid-template-columns: minmax(0, 1fr); } .cv-flag > *:nth-child(n+3) { grid-column: 1; } }
+.mono, .cv-dl .mono { font-family: var(--mono); font-size: var(--fs-caption); overflow-wrap: anywhere; }
+.cv-plist { padding-left: 22px; display: grid; gap: 14px; }
+.cv-claim { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin: 12px 0; background: var(--surface); }
+.cv-claim:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.cv-claim h4 { margin: 0 0 6px; font-family: var(--serif); font-size: var(--fs-label); }
+.cv-claim blockquote { margin: 6px 0; padding: 6px 12px; border-left: 3px solid var(--accent); background: var(--bg); white-space: pre-wrap; overflow-wrap: anywhere; }
+.cv-claim table td, .cv-claim table th { font-size: var(--fs-hint); }
+.cv-analysis h4 { margin: 20px 0 6px; font-family: var(--serif); }
+.cv-analysis h5 { margin: 12px 0 4px; font-size: var(--fs-label); }
+.cv-guide { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; margin: 8px 0; }
+.cv-guide p { margin: 2px 0; }
+.cv-oblist { padding-left: 18px; display: grid; gap: 6px; font-size: var(--fs-hint); }
+.cv-tl { border-collapse: collapse; font-size: var(--fs-caption); }
+.cv-tl th, .cv-tl td { border: 1px solid var(--line); padding: 3px 6px; text-align: center; vertical-align: middle; min-width: 3.2em; }
+.cv-tl tbody th { text-align: left; white-space: nowrap; position: sticky; left: 0; background: var(--surface); z-index: 1; font-weight: 600; }
+.cv-tl td { max-width: 9em; overflow-wrap: anywhere; }
+.cv-tl .tl-ai { background: var(--code); }
+.cv-tl .tl-err { color: var(--error); font-weight: 600; }
+.cv-tl .tl-gap { box-shadow: inset 0 0 0 2px var(--warn); }
+.cv-tl .tl-na, .cv-tl .tl-missing { color: var(--muted); }
+.tl-score { display: inline-block; min-width: 1.6em; border-radius: 4px; font-weight: 600; }
+.tl-score.s1, .tl-score.s2 { box-shadow: inset 0 0 0 1.5px var(--error); color: var(--error); }
+.tl-score.s3 { box-shadow: inset 0 0 0 1.5px var(--warn); color: var(--warn); }
+.tl-score.s4, .tl-score.s5 { box-shadow: inset 0 0 0 1.5px var(--ok); color: var(--ok); }
+button.tl-turn { min-height: 30px; padding: 2px 6px; font-family: var(--serif); color: var(--rubric); }
+.cv-tree, .cv-tree ul { list-style: none; padding-left: 18px; margin: 4px 0; border-left: 1px solid var(--line); }
+.cv-tree li { margin: 4px 0; font-size: var(--fs-hint); }
+.cv-tree li.on-path > .cv-tid { text-decoration: underline; text-decoration-color: var(--accent); text-decoration-thickness: 2px; }
+.cv-export-h { margin: 8px 0 2px; font-weight: 600; font-size: var(--fs-caption); text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+.cv-export-list ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.cv-pvlist { max-height: 40vh; overflow: auto; border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; display: grid; gap: 4px; }
+.cv-pvlist small { display: block; color: var(--muted); }
+.cv-resolve { margin: 8px 0; padding: 8px 12px; background: var(--warn-soft); border-radius: 8px; }
+.study-convs { margin-top: 18px; }
+.cv-cmp th, .cv-cmp td { vertical-align: top; font-size: var(--fs-hint); min-width: 14em; }
+.cv-cmp tbody th { min-width: 9em; }
+.cv-cmp tr.differs th { color: var(--warn); }
+.cv-tree li { overflow-wrap: anywhere; }

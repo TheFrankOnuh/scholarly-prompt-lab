@@ -1,35 +1,44 @@
 # Research metadata and provenance
 
-**SPL Research Session Protocol, version 0.1 (draft).** How a documented conversation records what is known about the AI system and the session, where each value came from, and whether it has been checked.
+**SPL Research Session Protocol, version 0.2 (draft).** How a documented conversation records what is known about the AI system and the session, where each value came from, and whether it has been checked.
 
 ## Fields
 
 <!-- generated:fields -->
 | Field | Key | Required | Can the AI usually establish it? | May remain unavailable | Where to look |
 |---|---|---|---|---|---|
-| AI provider and product | `ai_system` | Yes | Partly | No | The application's name and its provider, as shown in the interface or your account. |
-| Model name as shown | `model_name` | Yes | Partly | No | The model selector in the application; the model field of an API request; the file name of a local model. |
-| Model version or release identifier | `model_version` | Yes | Rarely | Yes | API responses usually return the exact model identifier. Consumer applications often do not show it: record it as not exposed by the provider. |
-| Access method | `access_method` | Yes | No | No | How you reached the system: web browser, desktop application, mobile application, API, or a model run on your own computer. |
-| Session start date | `session_start` | Yes | Rarely | No | The conversation's date in the application's history, a data export, or your own note of when you began. |
-| Session end date | `session_end` | Where available | Rarely | No | The date of the last message, in the application, a data export or your own note. |
-| Time zone of the dates | `time_zone` | Where available | No | Yes | Your device's time zone, or the offset given in a data export. |
-| Reasoning or thinking mode | `reasoning_mode` | Where available | Partly | Yes | Usually beside the model selector, or in the API request. |
-| Temperature | `temperature` | Where available | Rarely | Yes | API request settings. Consumer applications usually do not show it: record it as not exposed by the provider. |
-| Top-p | `top_p` | Where available | Rarely | Yes | API request settings. Usually not exposed in consumer applications. |
-| Maximum output length | `max_output` | Where available | Rarely | Yes | API request settings; sometimes the application's documentation. |
-| Other settings | `other_settings` | Where available | Partly | Yes | The application's settings, or your API request. |
-| Tools available and used | `tools` | Where available | Partly | Yes | The tools shown as switched on in the conversation, and any tool use visible in the responses. |
-| Web browsing | `web_browsing` | Where available | Partly | Yes | The application's search or browsing switch for this conversation. |
-| Uploaded files or retrieval | `uploaded_files` | Where available | Partly | Yes | The files attached to the conversation or project in the application. |
-| Memory or personalisation | `memory` | Where available | Rarely | Yes | The application's personalisation or memory settings. You may record only that they exist, without their content. |
-| Knowledge cutoff | `knowledge_cutoff` | Where available | Partly | Yes | The provider's model documentation. |
-| Model changes during the conversation | `model_changes` | Where available | Partly | Yes | The model shown beside each response, or a data export's per-message model field. |
+| AI provider | `ai_provider` | Yes | Partly | No | [object Object] |
+| AI product or application | `ai_product` | Yes | Partly | No | [object Object] |
+| Model name | `model_name` | Yes | Partly | No | [object Object] |
+| Model version or release identifier | `model_version` | Yes | Rarely | Yes | [object Object] |
+| Research session start date | `session_start` | Yes | Rarely | No | [object Object] |
+| Research session end date | `session_end` | Yes | Rarely | No | [object Object] |
+| Individual message timestamps | `message_timestamps` | Where available | Rarely | Yes | [object Object] |
+| Time and time zone | `time_zone` | Where available | No | Yes | [object Object] |
+| Knowledge cutoff | `knowledge_cutoff` | Where available | Partly | Yes | [object Object] |
+| Reasoning or thinking mode | `reasoning_mode` | Where available | Partly | Yes | [object Object] |
+| Temperature | `temperature` | Where available | Rarely | Yes | [object Object] |
+| Top-p | `top_p` | Where available | Rarely | Yes | [object Object] |
+| Maximum output settings | `max_output` | Where available | Rarely | Yes | [object Object] |
+| Other relevant generation settings | `other_settings` | Where available | Partly | Yes | [object Object] |
+| Tools available | `tools_available` | Where available | Partly | Yes | [object Object] |
+| Tools actually used | `tools_used` | Where available | Partly | Yes | [object Object] |
+| Web browsing | `web_browsing` | Where available | Partly | Yes | [object Object] |
+| External retrieval or search | `retrieval` | Where available | Partly | Yes | [object Object] |
+| Uploaded files | `uploaded_files` | Where available | Partly | Yes | [object Object] |
+| Memory or personalisation | `memory` | Where available | Rarely | Yes | [object Object] |
+| Relevant custom instructions | `custom_instructions` | Where available | Rarely | Yes | [object Object] |
+| AI application or access method | `access_method` | Where available | No | No | [object Object] |
+| Model changes during the conversation | `model_changes` | Where available | Partly | Yes | [object Object] |
 <!-- /generated -->
 
 The Lab also records, itself, the protocol version, the session identifier, the record schema version, the Lab version, and the times of its own events: prompt generated, prompt copied, record imported, record confirmed, evaluation recorded, report generated. These are Lab events. They are never used as the time a prompt was submitted or a response generated.
 
 Counts of researcher prompts, AI responses, administrative messages and gaps are derived from the turns and kept separately; they are never assumed to be equal.
+
+Fields marked "Where available" are recorded when they can be established. Session end date is required once the session has ended. Every required field is present in an exported record, with "Unknown" where nothing is known. The model can also be recorded for each turn, where a conversation changed model part-way.
+
+The Lab also derives a statement of how the model was identified, written only from the recorded assertions, for example: "The AI system identified its model through self-reported metadata. The researcher confirmed the displayed model name. The exact backend release identifier was not exposed by the provider."
 
 ## Value statuses
 
@@ -73,7 +82,7 @@ Whatever basis an AI system claims for a value ("shown by the application", for 
 1. Assertions are never overwritten. A field holds every assertion ever made, oldest first.
 2. Confirmation adds a verification status to an assertion. It never changes its origin.
 3. A correction adds a new assertion, with its reason, and the earlier one remains.
-4. When assertions conflict, both are shown. The researcher records a resolution with a reason, or leaves the disagreement documented.
+4. When assertions from different sources give different values, the field is marked "Sources disagree" and is not counted as documented. The researcher chooses the value to report and gives a reason (stored as the field's resolution), or leaves the disagreement documented. Nothing is deleted.
 5. The methods report writes only what the assertions support. With an AI-reported model name confirmed by the researcher against the model selector, and the backend version marked not exposed, it can say exactly that; without the confirmation, it cannot say the name was confirmed.
 
 ## Guidance by environment

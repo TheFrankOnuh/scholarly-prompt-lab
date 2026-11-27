@@ -28,7 +28,8 @@ Single-output records, research designs and reports from earlier versions are un
 - **Turn by turn.** Add a researcher prompt, then the response. Text pasted from the conversation is recorded as original.
 - **Transcript.** Paste the whole conversation. The Lab proposes turns and speakers from common labels ("You said:", "User:", "Assistant:", "ChatGPT said:" and others). Review every turn: change a speaker, merge turns that belong together, remove interface text, before saving.
 - **SPL record or checkpoint.** Paste what the AI system produced for a checkpoint or the end of a session. The Lab reads its header and turns, reports problems in plain words, and adds only turns not already recorded.
-- **Provider data exports** (planned). The ChatGPT export is a tree of messages with times and model fields; there is no official schema, so the importer will be built and tested against real sample exports. Other providers will follow once their exports have been examined.
+- **Provider data exports.** Choose the ZIP file of a ChatGPT or Claude data export, or its `conversations.json`, then the conversation. The Lab keeps the provider's times, the model recorded for each message and, for ChatGPT, the branches (regenerated responses and edited prompts). System, tool and hidden messages are not turned into turns; they stay in the stored copy of the export. See [provider-exports.md](provider-exports.md) for what is and is not known about these formats.
+- **Research Session Record (JSON).** A record exported from the Lab, or written by another tool to the schema, is added as a new conversation.
 
 ## Verification
 
@@ -58,17 +59,54 @@ Conversations are stored in the browser's IndexedDB database, separately from th
 
 ## Exports
 
-Each conversation can be exported as:
+| Export | Formats |
+|---|---|
+| Research Session Record ([schema](../schemas/spl-research-session-record.schema.json)) | JSON |
+| Checkpoints and imported records, with their original text | JSON |
+| Metadata with provenance, every assertion | CSV |
+| Complete transcript, with all branches | Markdown, Word, PDF (print) |
+| All turns with evaluations | CSV |
+| Researcher prompt history | Markdown, CSV, Word; plain text sequence for reproduction |
+| AI response history | Markdown |
+| Classified sequence of researcher interventions | CSV |
+| Turn evaluations, each with the prompt it answers | CSV |
+| Analytical records: observations, decisions, developments, Claim History | Markdown, CSV |
+| Claim histories | CSV, JSON |
+| Redacted copies | Markdown, Word, PDF, CSV |
 
-- the Research Session Record (JSON, [schema](../schemas/spl-research-session-record.schema.json));
-- a transcript (Markdown), with turn identifiers, text statuses, classifications and gaps;
-- the researcher's prompt history (Markdown and CSV);
-- all turns with their evaluations (CSV).
+Turn identifiers are the same in every export, so separate files can be read together.
 
 ## In the methods report
 
 Section 2.8 summarises the conversations included in the report: the systems and how they were identified, dates, counts of researcher prompts, AI responses, administrative messages and gaps (each counted separately), follow-up purposes, protocol use and version, the reviews that took place, and the provenance and coverage of each record. Appendix H reproduces each conversation with its metadata table and every turn. An AI-generated record is never described as a verified transcript.
 
-## Planned for later versions
+## Views of a conversation
 
-Branching (regenerated responses and edited prompts), provider export import, Claim History, conversation-level observations, the follow-up prompt builder, conversations as conditions in the Sensitivity study, timelines, redaction, and a worked teaching case (SPL-UC-003).
+| View | What it shows |
+|---|---|
+| Conversation | The branch selected, turn by turn: each prompt with its purpose, each response with its evaluation, versions where the conversation branched, gaps, differences from AI records, and Details for each turn |
+| Prompts | Every researcher prompt with its text status, for checking against the original: confirm, correct, or restore an omitted prompt |
+| Claims | Claim History |
+| Analysis | Conversation-level observations, researcher decisions, developments recorded on turns, persistent errors, the metadata reviews found in the AI's turns, imported checkpoints, and notes the AI system wrote |
+| Timeline | One column per turn: purposes, developments, claims, checkpoints, gaps, model changes, versions, and the six scores, each a separate mark with nothing drawn between them |
+| Branches | Every turn as a tree, with the branch shown marked |
+
+## Branches
+
+A conversation is a tree. On any response, "Add a regenerated response" records another version of it; on any prompt, "Add an edited version of this prompt" records a revised prompt, and what follows it is recorded on the new branch. Where a turn has several versions, the Conversation view shows "version 2 of 3" with buttons to move between them. ChatGPT exports bring their branches with them. An AI-generated record describes one branch only and is compared with the branch shown.
+
+## Designing follow-up prompts
+
+"Design a follow-up prompt" offers a starting wording for each purpose in the follow-up taxonomy, and one for testing susceptibility to the researcher's influence. Choose the response and the claim you are examining, add material such as counter-evidence, choose methodological requirements, then edit freely and copy. Saving it gives it an identifier (FP-001…). When the prompt you actually sent is recorded, it is linked to the design, automatically if the wording is identical, and any difference between the designed and the submitted wording is shown. The builder is optional: nothing else depends on it.
+
+## Comparing conversations
+
+In the Sensitivity study, "Conversations as study conditions" lists the project's conversations with their condition, comparison group, follow-up design (standardised or adaptive), protocol and model. Comparing two or more shows the conditions and model information side by side, marking where they differ or are unavailable; the substantive researcher prompts by position, with identical wording marked; the researcher's classification and the scores of the response that followed; and claims with the same comparable label. It warns when standardised and adaptive sequences are mixed, and when missing metadata limits comparability. The prompt sequence of each conversation can be copied to reproduce it.
+
+## Redacted copies
+
+"Redacted copy" withholds words or passages wherever they appear (with whole-word matching if wanted), or whole turns, each replaced by [withheld: reason]. It can find e-mail addresses and telephone numbers for you to consider. The record in the Lab is not changed. Redacted exports (transcript as Markdown, Word or PDF; prompts; all turns as CSV) say at the top that they are redacted and are not verbatim records, and their file names say REDACTED.
+
+## Teaching case SPL-UC-003
+
+A conversational extension of SPL-UC-001, opened from the Worked example menu as a project of its own. See [research-use-cases.md](research-use-cases.md#spl-uc-003-equality-in-two-declarations-as-a-research-conversation).

@@ -154,9 +154,21 @@
         return ["Not addressed", "No commitment to research documentation and no recorded outputs."];
       }
     };
+    // conversation records document a dimension when the single outputs do not (f.conv is empty in studies without conversations)
+    var cv = f.conv || null;
+    var convRules = cv && cv.n ? {
+      c: function () { return cv.theory ? "The theoretical orientation appears in the initial prompt of " + plural(cv.theory, "research conversation") + "." : cv.theoryChanges ? plural(cv.theoryChanges, "change") + " of theoretical orientation " + (cv.theoryChanges === 1 ? "is" : "are") + " recorded in the conversations." : ""; },
+      o: function () { return cv.procedure ? "The analytical procedure appears in the initial prompt of " + plural(cv.procedure, "research conversation") + (cv.instructionChanges ? ", and " + plural(cv.instructionChanges, "change") + " to the instructions " + (cv.instructionChanges === 1 ? "is" : "are") + " recorded by turn" : "") + "." : ""; },
+      n: function () { return cv.context || cv.contextCorrections ? (cv.context ? "Context appears in the initial prompt of " + plural(cv.context, "research conversation") + "." : "") + (cv.contextCorrections ? " " + plural(cv.contextCorrections, "contextual correction") + " " + (cv.contextCorrections === 1 ? "is" : "are") + " recorded in the conversations." : "") : ""; },
+      t1: function () { return cv.checked ? "Quotation checks are recorded for " + plural(cv.checked, "AI response") + " in the conversations." : cv.evidence ? plural(cv.evidence, "turn") + " introducing evidence, with source identifiers, " + (cv.evidence === 1 ? "is" : "are") + " recorded in the conversations." : ""; },
+      e: function () { return cv.scored || cv.observations ? (cv.scored ? "Researcher scores are recorded for " + plural(cv.scored, "AI response") + " in the conversations" : "") + (cv.scored && cv.observations ? ", and " : "") + (cv.observations ? plural(cv.observations, "conversation-level observation") : "") + " (section 2.8, Appendix H)." : ""; },
+      x: function () { return cv.compared ? plural(cv.compared, "research conversation") + " are compared across AI systems or conversational conditions (section 2.8)." : ""; },
+      t2: function () { return cv.preserved ? "Every recorded researcher prompt is preserved in its original wording, or checked by the researcher, in " + plural(cv.preserved, "research conversation") + ", with metadata provenance and the protocol version (Appendix H)." : ""; }
+    } : null;
     return DIMS.map(function (dm) {
       var why = String((f.na || {})[dm.key] || "").trim();
       var r = why ? ["Not applicable", why] : rules[dm.key]();
+      if (!why && r[0] !== "Documented" && convRules) { var b = convRules[dm.key](); if (b) r = ["Documented", b.trim()]; }
       return { key: dm.key, l: dm.l, name: dm.name, label: dimLabel(dm), status: r[0], basis: r[1] };
     });
   }
@@ -328,7 +340,8 @@
       prompts: prompts.reduce(function (a, pr) { return a.concat(pr.outputs.map(function () { return pr.text; })); }, []),
       outputs: n, checked: withChecks.length, confirmed: confirmedOutputs,
       complete: entries.filter(function (e) { return (e.model || "").trim() && e.date; }).length,
-      systems: Math.max(namedSystems.length, sysKeys.length && !namedSystems.length ? 1 : 0), conditions: conds.length, repeats: repeats, na: st.na || {}
+      systems: Math.max(namedSystems.length, sysKeys.length && !namedSystems.length ? 1 : 0), conditions: conds.length, repeats: repeats, na: st.na || {},
+      conv: convs.length ? conversationFacts(convs) : null
     });
     var ctxCount = {}; ctx.forEach(function (c) { ctxCount[c.status] = (ctxCount[c.status] || 0) + 1; });
     var compared = namedSystems.length >= 2 || conds.length >= 2 || repeats >= 2;
@@ -599,122 +612,209 @@
   function fieldValue(c, id) {
     var f = c.metadata[id], a = f ? PR.currentAssertion(f) : null;
     if (!a) return { text: "not recorded", a: null };
-    var t = a.status === "known" || a.status === "confirmation_required" ? "\u201c" + esc(a.value) + "\u201d" : a.status === "not_exposed" ? "not exposed by the provider" : a.status === "not_applicable" ? "not applicable" : "not established";
+    var t = a.status === "known" || a.status === "confirmation_required" ? "“" + esc(a.value) + "”" : a.status === "not_exposed" ? "not exposed by the provider" : a.status === "not_applicable" ? "not applicable" : "not established";
     return { text: t, a: a };
   }
   function covSentence(c) {
     var cov = PR.coverage(c), k = PR.counts(c);
-    if (cov.status === "complete") return "The researcher confirmed that the record is complete" + (cov.basis === "compared_with_original" ? ", after it was compared with the original conversation." : ".");
+    if (cov.status === "complete") return "The researcher confirmed that the record is complete" + (cov.basis === "compared_with_original" ? ", after it was compared with the original conversation." : cov.basis === "provider_export" ? ", from the provider's data export." : ".");
     if (cov.status === "partial") return "The record is incomplete: " + plural(k.gaps, "gap") + " " + (k.gaps === 1 ? "is" : "are") + " recorded" + (cov.prompts_missing != null ? ", with " + plural(cov.prompts_missing, "researcher prompt") + " and " + plural(cov.responses_missing, "AI response") + " missing" : ", and the number of missing turns is not known") + ".";
     return cov.basis === "ai_reported" ? "Only a record written by the AI system is available; its completeness has not been established against the original conversation." : "Its completeness has not been confirmed.";
   }
-  var REVIEW_RE = { initial: /SPL Research Session \u2014 Initial Record/, fin: /SPL Research Session \u2014 Final Record/ };
+  // a precise statement about unavailable settings, made only when the records say so
+  function unavailableSentence(c) {
+    var gone = ["temperature", "top_p", "max_output", "reasoning_mode"].filter(function (k) { var a = PR.currentAssertion(c.metadata[k]); return a && a.status === "not_exposed"; });
+    if (!gone.length) return "";
+    var names = { temperature: "the temperature", top_p: "top-p", max_output: "the maximum output setting", reasoning_mode: "the reasoning mode" };
+    var env = PR.environmentOf(c.metadata);
+    return " " + joinAnd(gone.map(function (k) { return names[k]; })).replace(/^./, function (x) { return x.toUpperCase(); }) + (gone.length === 1 ? " was" : " were") + " unavailable" + (env === "consumer" ? " through the consumer AI application" : env === "api" ? " through the API" : "") + ".";
+  }
+  // what the conversation records document, for the CONTEXT assessment
+  function conversationFacts(convs) {
+    var f = { n: convs.length, theory: 0, procedure: 0, context: 0, theoryChanges: 0, instructionChanges: 0, contextCorrections: 0, checked: 0, evidence: 0, scored: 0, observations: 0, compared: 0, preserved: 0 };
+    var groups = {};
+    convs.forEach(function (c) {
+      var path = PR.activePath(c), first = path.filter(function (t) { return t.role === "researcher"; })[0], txt = first ? first.text : c.prompt || "";
+      if (/THEORETICAL ORIENTATION:/.test(txt)) f.theory++;
+      if (/\nPROCEDURE:\n/.test(txt)) f.procedure++;
+      if (/CULTURAL, LINGUISTIC AND HISTORICAL CONTEXT:|CONTESTED TERMINOLOGY:/.test(txt)) f.context++;
+      path.forEach(function (t) {
+        var fl = t.flags || {};
+        if (fl.theory && fl.theory.on) f.theoryChanges++;
+        if (fl.instruction && fl.instruction.on) f.instructionChanges++;
+        if (fl.evidence && fl.evidence.on) f.evidence++;
+        if (t.classification.some(function (x) { return x.category === "contextual_correction" && x.status !== "suggested"; })) f.contextCorrections++;
+        if (t.evaluation && t.evaluation.checks) f.checked++;
+        if (t.role === "ai" && t.evaluation && Object.keys(t.evaluation.scores).length) f.scored++;
+      });
+      f.observations += c.observations.length;
+      if (c.group) groups[c.group] = (groups[c.group] || 0) + 1;
+      var prompts = path.filter(function (t) { return t.role === "researcher"; });
+      if (prompts.length && prompts.every(function (t) { return t.text_status === "original" || t.text_status === "researcher_corrected" || t.provenance.verification !== "unreviewed"; }) && P_ok(c)) f.preserved++;
+    });
+    Object.keys(groups).forEach(function (g) { if (groups[g] > 1) f.compared += groups[g]; });
+    return f;
+  }
+  function P_ok(c) { return !c.gaps.some(function (g) { return !g.resolved; }); }
+  // a quotation closes the sentence when it already ends in a full stop
+  function endq(t) { t = String(t).trim(); return "“" + esc(t) + "”" + (/[.!?]$/.test(t) ? "" : "."); }
   function conversationSection(convs, L) {
     var o = ["<h3>2.8 Conversational research</h3>"];
     var k = convs.map(function (c) { return PR.counts(c); });
     var sum = function (f) { return k.reduce(function (m, x) { return m + x[f]; }, 0); };
-    o.push(p("The study documents " + plural(convs.length, "research conversation") + " with generative AI systems, in which the researcher's follow-up prompts form part of the method. Across them the records hold " + plural(sum("researcher_prompts"), "researcher prompt") + ", " + plural(sum("ai_responses"), "AI response") + " and " + plural(sum("administrative"), "administrative message") + ", counted separately, and " + plural(sum("gaps"), "recorded gap") + ". Each conversation is reproduced in Appendix H."));
-    o.push(table(["Record", "Conversation", "AI system and model", "Session dates", "Prompts", "Responses", "Gaps", "Coverage"], convs.map(function (c, i) {
-      var sys = fieldValue(c, "ai_system"), mod = fieldValue(c, "model_name"), s0 = fieldValue(c, "session_start"), s1 = fieldValue(c, "session_end"), kk = k[i];
-      return ["H" + (i + 1), esc(c.title), (sys.a ? sys.text + "; " : "") + "model " + mod.text, s0.a ? s0.text + (s1.a ? " to " + s1.text : "") : gap("session dates"), String(kk.researcher_prompts), String(kk.ai_responses), String(kk.gaps), esc(PR.COVERAGE_LABELS[PR.coverage(c).status])];
+    var purposes = convs.filter(function (c) { return (c.purpose || "").trim(); });
+    o.push(p("The study documents " + plural(convs.length, "research conversation") + " with generative AI systems, in which the researcher's follow-up prompts form part of the research instrument. Across them the records hold " + plural(sum("researcher_prompts"), "researcher prompt") + ", " + plural(sum("ai_responses"), "AI response") + " and " + plural(sum("administrative"), "administrative message") + ", counted separately, " + plural(sum("turns"), "recorded turn") + " in all" + (sum("branches") > convs.length ? " across " + sum("branches") + " branches (regenerated responses and edited prompts)" : "") + ", and " + plural(sum("gaps"), "recorded gap") + ". Each conversation is reproduced in Appendix H."));
+    o.push(p(purposes.length ? "Purpose of the conversational research, as recorded by the researcher: " + purposes.map(function (c) { return convs.length > 1 ? "“" + esc(c.purpose.trim()) + "” (H" + (convs.indexOf(c) + 1) + ")" : endq(c.purpose); }).join("; ") + (convs.length > 1 ? "." : "") : gap("why the research was conducted as a conversation")));
+    o.push(table(["Record", "Conversation", "AI provider, product and model", "Session dates", "Prompts", "Responses", "Gaps", "Coverage"], convs.map(function (c, i) {
+      var pv = fieldValue(c, "ai_provider"), pd = fieldValue(c, "ai_product"), mod = fieldValue(c, "model_name"), s0 = fieldValue(c, "session_start"), s1 = fieldValue(c, "session_end"), kk = k[i];
+      return ["H" + (i + 1), esc(c.title), [pv.a ? pv.text : "", pd.a ? pd.text : "", "model " + mod.text].filter(Boolean).join("; "), s0.a ? s0.text + (s1.a ? " to " + s1.text : "") : gap("session dates"), String(kk.researcher_prompts), String(kk.ai_responses), String(kk.gaps), esc(PR.COVERAGE_LABELS[PR.coverage(c).status])];
     })));
-    // how each system was identified: only what the provenance of each value supports
     convs.forEach(function (c, i) {
-      var mod = fieldValue(c, "model_name"), ver = fieldValue(c, "model_version");
-      o.push(p("<strong>H" + (i + 1) + ".</strong> Model " + mod.text + (mod.a ? ", " + provPhrase(mod.a) : "") + "; version " + ver.text + (ver.a ? ", " + provPhrase(ver.a) : "") + ". " + covSentence(c) +
-        (mod.a ? "" : " " + gap("model as shown in the application"))));
+      var settings = ["reasoning_mode", "temperature", "top_p", "web_browsing", "memory"].map(function (f) { var v = fieldValue(c, f); return v.a && (v.a.status === "known" || v.a.status === "confirmation_required") ? PR.FIELDS.filter(function (x) { return x.id === f; })[0].label.toLowerCase() + " " + v.text : ""; }).filter(Boolean);
+      o.push(p("<strong>H" + (i + 1) + ".</strong> " + esc(PR.modelIdentification(c.metadata)) + esc(unavailableSentence(c)) + (settings.length ? " Recorded settings: " + settings.join("; ") + "." : "") + " " + covSentence(c) +
+        (fieldValue(c, "model_name").a ? "" : " " + gap("model as shown in the application"))));
     });
-    // protocol use, and the reviews it asks for
+    // protocol use, and the reviews it asks for: what was intended is kept apart from what the records show
     var withP = convs.filter(function (c) { return c.protocolVersion; });
     if (withP.length) {
       var versions = {}; withP.forEach(function (c) { versions[c.protocolVersion] = 1; });
-      var initial = withP.filter(function (c) { return c.turns.some(function (t) { return t.role === "ai" && REVIEW_RE.initial.test(t.text); }); }).length;
-      var fin = withP.filter(function (c) { return c.turns.some(function (t) { return t.role === "ai" && REVIEW_RE.fin.test(t.text); }); }).length;
-      o.push(p(plural(withP.length, "conversation") + (withP.length === convs.length ? "" : " of " + convs.length) + " began with the SPL Research Session Protocol (version " + esc(Object.keys(versions).join(", ")) + "), which asks the AI system to keep to the research design, to report only what it can establish about itself, and to produce structured records on request. The protocol is a draft whose reliability has not been validated, and its instructions and reminders may have influenced the conversations. The AI system's initial metadata record appears in " + (initial ? plural(initial, "conversation") : "none of them") + ", and its final record in " + (fin ? plural(fin, "conversation") : "none") + ". " +
-        (withP.length < convs.length ? plural(convs.length - withP.length, "conversation") + " " + (convs.length - withP.length === 1 ? "was" : "were") + " recorded without the protocol." : "")));
+      var rv = { opening: 0, intermediate: 0, closing: 0 };
+      withP.forEach(function (c) { var seen = {}; PR.detectReviews(c).forEach(function (r) { if (!seen[r.type]) { rv[r.type]++; seen[r.type] = 1; } }); });
+      o.push(p(plural(withP.length, "conversation") + (withP.length === convs.length ? "" : " of " + convs.length) + " began with the SPL Research Session Protocol (version " + esc(Object.keys(versions).join(", ")) + "), which asks the AI system to keep to the research design, to report only what it can establish about itself, and to produce structured records on request. The protocol is a draft whose reliability has not been validated, and its instructions and reminders may have influenced the conversations. In the recorded turns, the AI system's opening metadata review appears in " + (rv.opening ? plural(rv.opening, "conversation") : "none") + ", a checkpoint reminder in " + (rv.intermediate || "none") + ", and the closing review in " + (rv.closing || "none") + "." +
+        (withP.length < convs.length ? " " + plural(convs.length - withP.length, "conversation") + " " + (convs.length - withP.length === 1 ? "was" : "were") + " recorded without the protocol." : "")));
     } else o.push(p("The conversations were recorded without the SPL Research Session Protocol."));
     // where the records came from, and what was checked
-    var orig = 0, aiOnly = 0, disc = { ai_differs: 0, ai_omitted: 0, ai_only: 0 };
+    var orig = 0, aiOnly = 0, rec = 0, disc = { ai_differs: 0, ai_omitted: 0, ai_only: 0 }, ck = 0, prov = 0, filled = 0;
     convs.forEach(function (c) {
-      c.turns.forEach(function (t) { if (t.text_status === "original" || t.text_status === "researcher_corrected") orig++; else if (t.provenance.verification === "unreviewed") aiOnly++; });
+      c.turns.forEach(function (t) { if (t.text_status === "original" || t.text_status === "researcher_corrected") orig++; else if (t.text_status === "reconstructed") rec++; else if (t.provenance.verification === "unreviewed") aiOnly++; });
       c.discrepancies.forEach(function (d) { if (disc[d.status] !== undefined) disc[d.status]++; });
+      ck += (c.checkpoints || []).length; if (c.fromProviderExport) prov++;
+      filled += c.gaps.filter(function (g) { return g.resolved && g.reported_by !== "researcher"; }).length;
     });
-    var rec = [plural(orig, "turn") + " " + (orig === 1 ? "is" : "are") + " taken from the original conversations"];
-    if (aiOnly) rec.push(plural(aiOnly, "turn") + " " + (aiOnly === 1 ? "is" : "are") + " known only from records written by the AI system and " + (aiOnly === 1 ? "has" : "have") + " not been verified against the original");
-    o.push(p("Of the recorded turns, " + rec.join("; ") + "." + (disc.ai_differs + disc.ai_omitted + disc.ai_only ? " Comparing the AI-generated records with the original conversations found " + [disc.ai_differs ? plural(disc.ai_differs, "turn") + " reproduced with different wording" : "", disc.ai_omitted ? plural(disc.ai_omitted, "turn") + " left out" : "", disc.ai_only ? plural(disc.ai_only, "turn") + " not present in the original" : ""].filter(Boolean).join(", ") + ". The original wording is used throughout." : "")));
-    // the purposes of the researcher's follow-up prompts
-    var cats = {}, follow = 0, classified = 0;
+    var parts = [plural(orig, "turn") + " " + (orig === 1 ? "is" : "are") + " taken from the original conversations" + (prov ? " (" + plural(prov, "conversation") + " from the provider's data export)" : "")];
+    if (aiOnly) parts.push(plural(aiOnly, "turn") + " " + (aiOnly === 1 ? "is" : "are") + " known only from records written by the AI system and " + (aiOnly === 1 ? "has" : "have") + " not been verified against the original");
+    if (rec) parts.push(plural(rec, "turn") + " " + (rec === 1 ? "is" : "are") + " marked as reconstructed, not exact");
+    o.push(p("Of the recorded turns, " + parts.join("; ") + "." + (ck ? " " + plural(ck, "AI-generated checkpoint or session record") + " " + (ck === 1 ? "was" : "were") + " imported." : "") +
+      (disc.ai_differs + disc.ai_omitted + disc.ai_only ? " Comparing the AI-generated records with the original conversations found " + [disc.ai_differs ? plural(disc.ai_differs, "turn") + " reproduced with different wording" : "", disc.ai_omitted ? plural(disc.ai_omitted, "turn") + " left out" : "", disc.ai_only ? plural(disc.ai_only, "turn") + " not present in the original" : ""].filter(Boolean).join(", ") + ". The original wording is used throughout." : "") +
+      (filled ? " " + plural(filled, "gap") + " in the AI-generated records " + (filled === 1 ? "was" : "were") + " later filled from another record." : "")));
+    // the researcher's interventions: purposes, changes of instruction or theory, evidence introduced, errors and corrections
+    var cats = {}, follow = 0, classified = 0, fl = {}, designed = 0, designedChanged = 0;
     convs.forEach(function (c) {
-      var rs = c.turns.filter(function (t) { return t.role === "researcher" && t.kind !== "administrative"; }).slice(1);
+      var path = PR.activePath(c), rs = path.filter(function (t) { return t.role === "researcher" && t.kind !== "administrative"; }).slice(1);
       follow += rs.length;
-      rs.forEach(function (t) { if (t.classification.length) classified++; t.classification.forEach(function (x) { var lb = PR.labelOf(x.category) + (x.note ? " (" + x.note + ")" : ""); cats[lb] = (cats[lb] || 0) + 1; }); });
+      rs.forEach(function (t) { var mine = t.classification.filter(function (x) { return x.status !== "suggested"; }); if (mine.length) classified++; mine.forEach(function (x) { var lb = PR.labelOf(x.category) + (x.note ? " (" + x.note + ")" : ""); cats[lb] = (cats[lb] || 0) + 1; }); });
+      path.forEach(function (t) { Object.keys(t.flags || {}).forEach(function (f) { if (t.flags[f] && t.flags[f].on) fl[f] = (fl[f] || 0) + 1; }); if (t.designedId) { designed++; var d = c.designedPrompts.filter(function (x) { return x.id === t.designedId; })[0]; if (d && PR.normaliseText(d.text) !== PR.normaliseText(t.text)) designedChanged++; } });
     });
     if (follow) o.push(p("The researcher classified " + classified + " of " + plural(follow, "follow-up prompt") + " by purpose, using the Lab's follow-up taxonomy (version " + esc(PR.TAXONOMY_VERSION) + "; a prompt may have several purposes)" +
-      (classified ? ": " + Object.keys(cats).sort(function (a, b) { return cats[b] - cats[a]; }).map(function (x) { return esc(x.charAt(0).toLowerCase() + x.slice(1)) + " (" + cats[x] + ")"; }).join(", ") + "." : ".") + (classified < follow ? " " + gap("purpose of the remaining follow-up prompts, if relevant") : "")));
+      (classified ? ": " + Object.keys(cats).sort(function (a, b) { return cats[b] - cats[a]; }).map(function (x) { return esc(x.charAt(0).toLowerCase() + x.slice(1)) + " (" + cats[x] + ")"; }).join(", ") + "." : ".") + (classified < follow ? " " + gap("purpose of the remaining follow-up prompts, if relevant") : "") +
+      (designed ? " " + plural(designed, "follow-up prompt") + " " + (designed === 1 ? "was" : "were") + " designed with the Lab's follow-up builder" + (designedChanged ? ", of which " + designedChanged + " " + (designedChanged === 1 ? "was" : "were") + " changed before submission; both wordings are kept" : " and submitted unchanged") + "." : "")));
+    var flagText = [["evidence", "turn introducing additional evidence or source material", "turns introducing additional evidence or source material"], ["instruction", "change to the analytical instructions", "changes to the analytical instructions"], ["theory", "change of theoretical orientation", "changes of theoretical orientation"], ["scope", "change of analytical scope", "changes of analytical scope"], ["error", "response in which an error was identified", "responses in which an error was identified"], ["correction", "researcher correction", "researcher corrections"]].filter(function (f) { return fl[f[0]]; }).map(function (f) { return plural(fl[f[0]], f[1], f[2]); });
+    var pers = convs.reduce(function (m, c) { return m + PR.persistentErrors(c).length; }, 0);
+    if (flagText.length || pers) o.push(p("The researcher recorded " + joinAnd(flagText) + (pers ? (flagText.length ? "; " : "") + plural(pers, "recurrence") + " of an earlier error" : "") + ". These are listed by turn in Appendix H."));
     // researcher evaluation of responses
     var scored = 0, na = {}, vals = {};
-    convs.forEach(function (c) { c.turns.forEach(function (t) {
-      if (t.role !== "ai" || t.kind === "administrative" || !t.evaluation) return;
+    convs.forEach(function (c) { PR.activePath(c).forEach(function (t) {
+      if (t.role !== "ai" || (t.kind === "administrative" && !c.scoreAdmin) || !t.evaluation) return;
       var e = t.evaluation; if (Object.keys(e.scores).length) scored++;
       Object.keys(e.scores).forEach(function (id) { (vals[id] = vals[id] || []).push(parseInt(e.scores[id], 10)); });
       Object.keys(e.na).forEach(function (id) { na[id] = (na[id] || 0) + 1; });
     }); });
     if (scored) {
-      o.push(p("The researcher scored " + plural(scored, "AI response") + " in the conversations on the six criteria, from 1 (poor) to 5 (strong). These scores are reported separately from those for single outputs. A criterion marked not applicable is not a score and is not averaged; the reasons are given in Appendix H."));
+      o.push(p("The researcher scored " + plural(scored, "AI response") + " in the conversations on the six criteria, from 1 (poor) to 5 (strong). These scores are reported separately from those for single outputs. A criterion marked not applicable is not a score and is not averaged; the reasons are given in Appendix H." + (convs.some(function (c) { return c.scoreAdmin; }) ? " Administrative messages were included in scoring for at least one conversation, at the researcher's choice." : "")));
       o.push(table(["Criterion", "Responses scored", "Mean", "Range", "Not applicable"], L.criteria.map(function (c) {
         var v = vals[c.id] || [];
-        return [esc(c.label), String(v.length), v.length ? (v.reduce(function (a, b) { return a + b; }, 0) / v.length).toFixed(1) : "\u2013", v.length ? (Math.min.apply(null, v) === Math.max.apply(null, v) ? String(v[0]) : Math.min.apply(null, v) + "\u2013" + Math.max.apply(null, v)) : "\u2013", String(na[c.id] || 0)];
+        return [esc(c.label), String(v.length), v.length ? (v.reduce(function (a, b) { return a + b; }, 0) / v.length).toFixed(1) : "–", v.length ? (Math.min.apply(null, v) === Math.max.apply(null, v) ? String(v[0]) : Math.min.apply(null, v) + "–" + Math.max.apply(null, v)) : "–", String(na[c.id] || 0)];
       })));
     } else o.push(p(gap("researcher evaluation of the AI responses in the conversations, if part of the design")));
-    var lim = ["The records describe the conversations as conducted with the recorded systems; the same follow-up prompts may produce different responses on another occasion or system."];
-    if (withP.length) lim.push("The SPL Research Session Protocol adds instructions and reminders to the conversation, so the conversations it documents may differ from conversations held without it.");
+    // conversation-level observations, claims and decisions
+    var obs = convs.reduce(function (m, c) { return m + c.observations.length; }, 0), cl = convs.reduce(function (m, c) { return m + c.claims.filter(function (x) { return x.status !== "suggested"; }).length; }, 0);
+    var dec = convs.reduce(function (m, c) { return m.concat(c.decisions.filter(function (d) { return d.status === "explicit" || d.status === "recorded"; })); }, []);
+    if (obs) {
+      var oc = {}; convs.forEach(function (c) { c.observations.forEach(function (x) { oc[x.category] = (oc[x.category] || 0) + 1; }); });
+      o.push(p("The researcher recorded " + plural(obs, "conversation-level observation") + " (" + PR.OBSERVATION_CATEGORIES.filter(function (x) { return oc[x.id]; }).map(function (x) { return x.label.toLowerCase() + " " + oc[x.id]; }).join(", ") + "). These are qualitative observations, not measures; the categories have not been validated as instruments, and an observed sequence of turns is not presented as a cause."));
+    }
+    if (cl) o.push(p("Claim histories trace " + plural(cl, "claim") + " through the conversations (Appendix H). They record the order in which claims were challenged, supported, qualified or withdrawn; they do not establish that a later formulation is an improvement or that it was caused by a particular prompt."));
+    if (dec.length) o.push(p("Decisions the researcher recorded about the use of AI-generated interpretations: " + dec.map(function (d) { return "“" + esc(d.text) + "”" + (d.turn_id ? " (" + esc(d.turn_id) + ")" : ""); }).join("; ") + "."));
+    var finals = convs.filter(function (c) { return (c.finalInterpretation || "").trim(); });
+    if (finals.length) o.push(p("The researcher's final interpretation" + (finals.length > 1 ? "s" : "") + ", in their own words: " + finals.map(function (c) { return convs.length > 1 ? "“" + esc(c.finalInterpretation.trim()) + "” (H" + (convs.indexOf(c) + 1) + ")" : endq(c.finalInterpretation); }).join("; ") + (convs.length > 1 ? "." : "")));
+    // comparison across conversations in the same group
+    var groups = {}; convs.forEach(function (c) { if (c.group) (groups[c.group] = groups[c.group] || []).push(c); });
+    Object.keys(groups).filter(function (g) { return groups[g].length > 1; }).forEach(function (g) {
+      var cmp = PR.compareConversations(groups[g], L.criteria), diffs = cmp.conditions.concat(cmp.meta).filter(function (r) { return r.differs; }).map(function (r) { return r.label.toLowerCase(); });
+      o.push(p("Comparison group “" + esc(g) + "”: " + plural(groups[g].length, "conversation") + " (" + groups[g].map(function (c) { return "H" + (convs.indexOf(c) + 1); }).join(", ") + ") were compared" + (diffs.length ? "; they differ in " + esc(joinAnd(diffs)) : "") + ". " + esc(cmp.warnings.join(" ")) + " Differences in scores between the conversations are not presented as effects of the conditions."));
+    });
+    var lim = ["The records describe the conversations as conducted with the recorded systems; the same follow-up prompts may produce different responses on another occasion or system.", "The researcher's interventions may themselves have shaped the AI-generated interpretations; a later response following an intervention is not evidence that the intervention caused it."];
+    if (withP.length) lim.push("The SPL Research Session Protocol adds instructions, metadata reviews and reminders to the conversation, so the conversations it documents may differ from conversations held without it. An initial prompt cannot guarantee continued adherence to its instructions.");
     if (convs.some(function (c) { return Object.keys(c.metadata).some(function (kk) { var a = PR.currentAssertion(c.metadata[kk]); return a && a.provenance.origin === "ai_reported" && a.provenance.verification === "unreviewed"; }); }))
-      lim.push("Some details about the AI systems were reported by the AI systems themselves and were not confirmed by the researcher; AI systems often do not know their exact version or the date.");
+      lim.push("Some details about the AI systems were reported by the AI systems themselves and were not confirmed by the researcher; AI systems often do not know their exact version or the date. A researcher's confirmation is itself not independent verification.");
     if (aiOnly) lim.push("Turns known only from AI-generated records may differ from what was actually said.");
     if (convs.some(function (c) { return PR.coverage(c).status !== "complete"; })) lim.push("The completeness of " + (convs.length === 1 ? "the conversation record" : "some conversation records") + " has not been established.");
-    lim.push("Regenerated responses and edited prompts are not represented: each conversation is recorded as a single path.");
+    if (!convs.some(function (c) { return PR.counts(c).branches > 1; })) lim.push("No regenerated responses or edited prompts are recorded; if the conversations contained them, they are not represented.");
+    lim.push("The absence of a recorded error does not establish that a response is accurate, and agreement between AI systems does not establish that an interpretation is valid. Content fingerprints show that stored text has not changed since it was recorded, not that it was authentic.");
     o.push(p("<strong>Limitations specific to the conversations:</strong>") + list(lim.map(esc)));
     return o.join("\n");
   }
+  function turnLine(c, t, pos) {
+    var bits = [t.role === "ai" ? "AI response" : "Researcher prompt"];
+    if (t.kind === "administrative") bits.push("administrative");
+    bits.push(PR.TEXT_STATUSES[t.text_status].charAt(0).toLowerCase() + PR.TEXT_STATUSES[t.text_status].slice(1));
+    if (t.provenance.verification !== "unreviewed") bits.push(PR.VERIFICATIONS[t.provenance.verification].toLowerCase());
+    if (t.timestamp) bits.push(t.timestamp);
+    if (t.model && t.model.value) bits.push("model " + t.model.value);
+    if (t.regenerated_from) bits.push("regenerated response (another version of " + t.regenerated_from + ")");
+    if (t.edited_from) bits.push("edited prompt (revising " + t.edited_from + ")");
+    var mine = t.classification.filter(function (x) { return x.status !== "suggested"; });
+    if (mine.length) bits.push("purpose: " + mine.map(function (x) { return PR.labelOf(x.category).toLowerCase() + (x.note ? " (" + x.note + ")" : ""); }).join(", "));
+    Object.keys(t.flags || {}).forEach(function (f) { if (t.flags[f] && t.flags[f].on) bits.push(PR.FLAG_LABELS[f].toLowerCase() + (t.flags[f].note ? ": " + t.flags[f].note : "") + (t.flags[f].ref ? " (same as " + t.flags[f].ref + ")" : "")); });
+    if (t.designedId) bits.push("designed in the Lab as " + t.designedId);
+    return "<p><strong>" + esc(t.turn_id) + "</strong>" + (pos && parseInt(t.turn_id.slice(1), 10) !== pos ? " (turn " + pos + " in the conversation)" : "") + (!pos ? " (follows " + esc(t.parent_id || "the start") + ")" : "") + " · " + esc(bits.join(" · ")) + "</p>";
+  }
   function conversationAppendix(convs, L) {
     var o = ["<h2>Appendix H. Conversational research records</h2>"];
-    o.push(p("Each conversation is reproduced with its metadata and every recorded turn, in order, with stable turn identifiers. For each value, the table gives where it came from and whether it was checked. Text status: <strong>original</strong>, taken from the conversation itself; <strong>reproduced by the AI, unverified</strong>, known only from a record the AI system wrote; <strong>corrected by the researcher</strong>, original wording with a recorded correction. Administrative messages are the SPL commands and the AI system's replies to them."));
+    o.push(p("Each conversation is reproduced with its metadata and every recorded turn, in order, with stable turn identifiers. For each value, the table gives where it came from and whether it was checked. Text status: <strong>original</strong>, taken from the conversation itself; <strong>reproduced by the AI, unverified</strong>, known only from a record the AI system wrote; <strong>reconstructed</strong>, not exact; <strong>corrected by the researcher</strong>, original wording with a recorded correction. Administrative messages are the SPL commands and the AI system's replies to them. Where a conversation branched, the branch the researcher selected is given first and the other branches follow."));
     convs.forEach(function (c, i) {
-      var k = PR.counts(c), cov = PR.coverage(c);
+      var k = PR.counts(c), cov = PR.coverage(c), path = PR.activePath(c);
       o.push("<h3>H" + (i + 1) + ". " + esc(c.title) + "</h3>");
-      var rows = [["Session identifier", esc(c.sessionId || "None"), "Recorded by Scholarly Prompt Lab", "\u2013"], ["Protocol", c.protocolVersion ? "SPL Research Session Protocol " + esc(c.protocolVersion) + (c.reminders ? (c.reminders === "off" ? ", no reminders" : ", reminders about every " + esc(c.reminders) + " messages") : "") : "Not used", "Recorded by Scholarly Prompt Lab", "\u2013"]];
+      var rows = [["Session identifier", esc(c.sessionId || "None"), "Recorded by Scholarly Prompt Lab", "–"], ["Protocol", c.protocolVersion ? "SPL Research Session Protocol " + esc(c.protocolVersion) + (c.reminders ? (c.reminders === "off" ? ", no reminders" : ", reminders about every " + esc(c.reminders) + " messages") : "") : "Not used", "Recorded by Scholarly Prompt Lab", "–"]];
+      if (c.sourceSha256) rows.push(["Source text (SHA-256)", "<code>" + esc(c.sourceSha256) + "</code>", "Recorded by Scholarly Prompt Lab", "–"]);
       PR.FIELDS.forEach(function (f) {
-        var a = c.metadata[f.id] ? PR.currentAssertion(c.metadata[f.id]) : null;
-        if (!a && !f.required) return;
-        rows.push([esc(f.label), a ? (a.status === "known" || a.status === "confirmation_required" ? esc(a.value) : esc(PR.STATUSES[a.status])) + (a.reason && a.provenance.origin === "researcher_reported" && a.status !== "known" ? " (" + esc(a.reason) + ")" : "") : gap(f.label.toLowerCase()), a ? esc(PR.ORIGINS[a.provenance.origin]) : "\u2013", a ? esc(PR.VERIFICATIONS[a.provenance.verification]) + (c.metadata[f.id].assertions.length > 1 ? "; " + plural(c.metadata[f.id].assertions.length - 1, "earlier value") + " kept" : "") : "\u2013"]);
+        var fl = c.metadata[f.id], a = fl ? PR.currentAssertion(fl) : null;
+        if (!a && !PR.isRequired(f, c)) return;
+        rows.push([esc(f.label), a ? (a.status === "known" || a.status === "confirmation_required" ? esc(a.value) : esc(PR.STATUSES[a.status])) + (a.reason && a.provenance.origin === "researcher_reported" && a.status !== "known" ? " (" + esc(a.reason) + ")" : "") : gap(f.label.toLowerCase()), a ? esc(PR.ORIGINS[a.provenance.origin]) : "–",
+          a ? esc(PR.VERIFICATIONS[a.provenance.verification]) + (PR.fieldConflict(fl) ? "; sources disagree" : "") + (fl.resolution ? "; resolved by the researcher: " + esc(fl.resolution.reason) : "") + (fl.assertions.length > 1 ? "; " + plural(fl.assertions.length - 1, "earlier value") + " kept" : "") : "–"]);
       });
       o.push(table(["Item", "Value", "Origin", "Verification"], rows));
-      o.push(p(plural(k.researcher_prompts, "researcher prompt") + ", " + plural(k.ai_responses, "AI response") + ", " + plural(k.administrative, "administrative message") + ", " + plural(k.gaps, "gap") + ". Coverage: " + esc(PR.COVERAGE_LABELS[cov.status]) + ". " + covSentence(c)));
+      o.push(p(plural(k.researcher_prompts, "researcher prompt") + ", " + plural(k.ai_responses, "AI response") + ", " + plural(k.administrative, "administrative message") + ", " + plural(k.gaps, "gap") + (k.branches > 1 ? ", " + k.branches + " branches" : "") + ". Coverage: " + esc(PR.COVERAGE_LABELS[cov.status]) + ". " + covSentence(c) +
+        ((c.checkpoints || []).length ? " Imported AI-generated records: " + c.checkpoints.map(function (x) { return esc(x.id) + " (" + (x.record_type === "completed_session" ? "completed session" : "checkpoint") + ", turns " + esc(x.firstTurn || "?") + " to " + esc(x.lastTurn || "?") + ")"; }).join("; ") + "." : "")));
       var chars = c.turns.reduce(function (m, t) { return m + t.text.length; }, 0);
       var long = c.turns.length > 60 || chars > 120000;
-      if (long) o.push(p("This conversation is long, so the researcher prompts are reproduced here and the AI responses are listed by identifier. The complete transcript, with every response, is exported separately from the Lab (Log &amp; evaluate, Conversation, Export)."));
+      if (long) o.push(p("This conversation is long, so the researcher prompts are reproduced here and the AI responses are listed by identifier. The complete transcript, with every response and the same turn identifiers, is exported separately from the Lab (Log &amp; evaluate, Conversation, Export, Transcript)."));
       var gapP = function (g) { return '<p class="note">' + (g.resolved ? "Gap, since filled: " : "Gap: ") + esc({ researcher_prompt: "a researcher prompt is missing", ai_response: "an AI response is missing", both: "a prompt and its response are missing", unknown: "something is missing" }[g.missing]) + (g.reason ? " (" + esc(g.reason) + ")" : "") + ".</p>"; };
-      c.gaps.filter(function (g) { return !g.after_turn; }).forEach(function (g) { o.push(gapP(g)); });
-      c.turns.forEach(function (t) {
-        var bits = [t.role === "ai" ? "AI response" : "Researcher prompt"];
-        if (t.kind === "administrative") bits.push("administrative");
-        bits.push(PR.TEXT_STATUSES[t.text_status].charAt(0).toLowerCase() + PR.TEXT_STATUSES[t.text_status].slice(1));
-        if (t.provenance.verification !== "unreviewed") bits.push(PR.VERIFICATIONS[t.provenance.verification].toLowerCase());
-        if (t.timestamp) bits.push(t.timestamp);
-        if (t.classification.length) bits.push("purpose: " + t.classification.map(function (x) { return PR.labelOf(x.category).toLowerCase() + (x.note ? " (" + x.note + ")" : ""); }).join(", "));
-        var pos = c.turns.indexOf(t) + 1;
-        var head = "<p><strong>" + esc(t.turn_id) + "</strong>" + (parseInt(t.turn_id.slice(1), 10) === pos ? "" : " (turn " + pos + " in the conversation)") + " \u00b7 " + esc(bits.join(" \u00b7 ")) + "</p>";
-        if (long && t.role === "ai") o.push(head);
-        else o.push(head + "<pre>" + esc(t.text) + "</pre>");
+      var turnBlock = function (t, pos) {
+        o.push(turnLine(c, t, pos) + (long && t.role === "ai" ? "" : "<pre>" + esc(t.text) + "</pre>"));
         if (t.evaluation && (Object.keys(t.evaluation.scores).length || Object.keys(t.evaluation.na).length)) {
           var sc = L.criteria.filter(function (cr) { return t.evaluation.scores[cr.id]; }).map(function (cr) { return esc(cr.label) + " " + esc(t.evaluation.scores[cr.id]); });
           var nas = L.criteria.filter(function (cr) { return t.evaluation.na[cr.id]; }).map(function (cr) { return esc(cr.label) + " not applicable (" + esc(t.evaluation.na[cr.id]) + ")"; });
           o.push(p("<em>Researcher scores:</em> " + sc.concat(nas).join("; ") + (t.evaluation.evaluator ? ". Evaluator: " + esc(t.evaluation.evaluator) : "") + "." + (t.evaluation.notes ? " " + esc(t.evaluation.notes) : "")));
         }
+        var sg = t.evaluation && (t.evaluation.checks || t.evaluation.second);
+        if (sg) o.push(p("<em>Suggestions, not counted as scores:</em> " + [t.evaluation.checks ? "automatic quotation checks: " + esc(t.evaluation.checks.summary) : "", t.evaluation.second ? "second-model assessment" + (t.evaluation.second.model ? " by " + esc(t.evaluation.second.model) : "") + ": " + L.criteria.filter(function (cr) { return t.evaluation.second.scores[cr.id] && t.evaluation.second.scores[cr.id].score != null; }).map(function (cr) { return esc(cr.label) + " " + t.evaluation.second.scores[cr.id].score; }).join("; ") + (t.evaluation.second.overall ? " (\u201c" + esc(t.evaluation.second.overall) + "\u201d)" : "") : ""].filter(Boolean).join(". ") + "."));
         if (t.corrections.length) o.push(p("<em>Corrected by the researcher:</em> " + t.corrections.map(function (x) { return esc(x.reason || "no reason given"); }).join("; ") + "."));
-        c.gaps.filter(function (g) { return g.after_turn === t.turn_id; }).forEach(function (g) { o.push(gapP(g)); });
-      });
+      };
+      c.gaps.filter(function (g) { return !g.after_turn; }).forEach(function (g) { o.push(gapP(g)); });
+      path.forEach(function (t, j) { turnBlock(t, j + 1); c.gaps.filter(function (g) { return g.after_turn === t.turn_id; }).forEach(function (g) { o.push(gapP(g)); }); });
+      var others = c.turns.filter(function (t) { return path.indexOf(t) === -1; });
+      if (others.length) { o.push(p("<strong>Other branches.</strong> Turns not on the branch above, each with the turn it follows:")); others.forEach(function (t) { turnBlock(t, 0); }); }
       if (c.discrepancies.length) o.push(p("<strong>Differences between the AI-generated record and the original:</strong>") + list(c.discrepancies.map(function (d) { return (d.turn_id ? esc(d.turn_id) + ": " : "") + esc(PR.DISCREPANCY_LABELS[d.status]) + (d.resolved ? " (reviewed by the researcher)" : ""); })));
+      var claims = c.claims.filter(function (x) { return x.status !== "suggested"; });
+      claims.forEach(function (cl) {
+        o.push(p("<strong>Claim History " + esc(cl.id) + "</strong>" + (cl.key ? " (comparable label: " + esc(cl.key) + ")" : "") + ": “" + esc(cl.text) + "”, first in " + esc(cl.turn_id || "an unlocated turn") + (cl.sources ? "; sources: " + esc(cl.sources) : "") + "." +
+          (cl.aiLater ? " The AI's later formulation: “" + esc(cl.aiLater) + "”." : "") + (cl.researcherReading ? " The researcher's interpretation: " + esc(cl.researcherReading) + "." : "") + (cl.outstanding ? " Outstanding disagreement: " + esc(cl.outstanding) + "." : "")));
+        if (cl.events.length) o.push(table(["Turn", "Development", "Note"], cl.events.map(function (e) { return [esc(e.turn_id), esc(PR.CLAIM_EVENTS[e.type]), esc(e.note || "")]; })));
+      });
+      if (c.observations.length) o.push(p("<strong>Conversation-level observations:</strong>") + list(c.observations.map(function (x) { var cat = PR.OBSERVATION_CATEGORIES.filter(function (y) { return y.id === x.category; })[0]; return esc(x.id + " · " + cat.label + (x.turns.length ? " (" + x.turns.join(", ") + ")" : "") + (x.confidence ? ", confidence " + x.confidence : "") + ": " + x.text); })));
+      var decs = c.decisions;
+      if (decs.length) o.push(p("<strong>Researcher decisions:</strong>") + list(decs.map(function (d) { return esc(d.id + " · " + PR.DECISION_STATUSES[d.status] + (d.turn_id ? " (" + d.turn_id + ")" : "") + ": " + d.text); })));
     });
     return o.join("\n");
   }
@@ -828,6 +928,7 @@
     var html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>' +
       esc($("rpTitle").value.trim() || "AI methods report") + "</title><style>" + css + "</style></head><body>" + $("reportPreview").innerHTML + "</body></html>";
     A.download(fileName("doc"), "﻿" + html, "application/msword");
+    if (window.LAB_CONV && window.LAB_CONV.noteEvent) window.LAB_CONV.noteEvent("report_generated", "Word");
     var gaps = $("reportPreview").querySelectorAll(".gap").length;
     A.flash("rpStatus", "Downloaded. It opens in Word, Google Docs and LibreOffice." + (gaps ? " " + gaps + " part" + (gaps === 1 ? " is" : "s are") + " still marked [To complete]." : ""));
   });
@@ -836,6 +937,7 @@
     var done = function () { document.body.classList.remove("printing-report"); window.removeEventListener("afterprint", done); };
     window.addEventListener("afterprint", done);
     window.print();
+    if (window.LAB_CONV && window.LAB_CONV.noteEvent) window.LAB_CONV.noteEvent("report_generated", "print or PDF");
     setTimeout(done, 60000);
   });
   $("rpCopyStmt").addEventListener("click", function () {

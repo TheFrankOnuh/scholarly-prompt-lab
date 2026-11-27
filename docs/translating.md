@@ -41,7 +41,7 @@ A dictionary has two flags. `offered: true` puts the language in the Language me
 | French | fr | Yes | Not yet: drafted, awaiting review by a fluent speaker |
 | Spanish | es | Yes | Not yet: drafted, awaiting review by a fluent speaker |
 
-Both translations cover the interface: labels, headings, buttons, help text, the six evaluation criteria, the analytical standards, the prompting techniques, the CONTEXT framework tab, the categories of AI use, and the privacy statement. The theory library, the worked examples, some messages that contain changing details (such as counts), the prompt and the methods report remain in English. The research conversation screens added in version 1.7.0 (Log & evaluate, Conversation) are not yet translated; the SPL Research Session Protocol and its commands stay in English by design, like the prompt they accompany.
+Both translations cover the interface: labels, headings, buttons, help text, the six evaluation criteria, the analytical standards, the prompting techniques, the CONTEXT framework tab, the categories of AI use, and the privacy statement. The theory library, the worked examples, some messages that contain changing details (such as counts), the prompt and the methods report remain in English. The research conversation screens added in versions 1.7.0 and 1.8.0 (Log & evaluate, Conversation, and conversations in the Sensitivity study) are not yet translated; the SPL Research Session Protocol and its commands stay in English by design, like the prompt they accompany.
 
 ## Adding a language
 

@@ -417,3 +417,46 @@ Extend the comparison to the complete articles and additional provisions concern
 7. Generate the AI methods report. Inspect the disclosure, source citations and appendices. Complete missing information and export the report for your research records.
 
 The two examples are starting points for empirical work. Their small corpora permit close verification and methodological discussion. A researcher seeking publishable substantive findings should expand the evidence base and justify the revised design.
+
+
+# SPL-UC-003: Equality in two declarations, as a research conversation
+
+*Added in Scholarly Prompt Lab 1.8.0. A conversational extension of Use case 01. The two cases above are unchanged.*
+
+> **Constructed teaching specimen.** Every AI response in this case was written for instruction. It is not a transcript of a model run, and the model names (Example Provider, Example Assistant, Example Model) are placeholders. The scores are illustrative applications of the evaluation rubric, not empirical measurements. Nothing here is presented as a finding about any AI system.
+
+## What the case shows
+
+Use case 01 asks how the Declaration of Sentiments (1848) reworks the language of equality in the Declaration of Independence (1776). Here the same question is pursued as a conversation, documented with the SPL Research Session Protocol (version 0.2). It shows how a single claim develops as the researcher corrects its scope, asks for evidence, tests their own reading and introduces counter-evidence, and how the record of that conversation is checked.
+
+| Turn | Who | What happens | Shown in the Lab as |
+|---|---|---|---|
+| 1 | Researcher | The prompt from Build, with the protocol and session SPL-S-20261127-UC3K | Matches the prompt copied from the Lab |
+| 2 | AI | First answer; Finding 1 (CL-001) overstates what DOC-01 shows; the opening metadata review, with the model version not exposed and guidance on the rest | Error identified; Claim CL-001 introduced; opening review |
+| 3–4 | Both | `SPL: CONFIRM RESEARCH METADATA`: the researcher supplies the displayed model, product and provider, and records that the backend version and temperature are not exposed | Administrative; excluded from scoring |
+| 5 | Researcher | A contextual correction: the excerpts cannot show that “men” included women in 1776 | Contextual correction, scope correction |
+| 6 | AI | The claim is narrowed to the textual change | Claim narrowed |
+| 7 | Researcher | A request for supporting evidence | Evidence examination |
+| 8 | AI | Exact quotations of DOC-01 P1 and DOC-02 P1 | Three criteria not applicable, with reasons |
+| 9 | Researcher | The researcher's own reading (“simply copies”) put to the AI | Interpretive challenge |
+| 10 | AI | Tests the reading against both passages and accepts it only for P2; an intermediate checkpoint reminder | Susceptibility to researcher influence observed |
+| 11 | Researcher | Counter-evidence: a further passage, labelled DOC-03 | Counter-evidence; additional source DOC-03 |
+| 12 | AI | A revised interpretation, resting on new evidence | Claim qualified |
+| 13–14 | Both | `SPL: SAVE RESEARCH CHECKPOINT`; the AI's checkpoint | Imported as CK-001 |
+| 15 | Researcher | A decision: use the revised finding, but reject the implication about authorial intention | Researcher decision; outstanding disagreement |
+| 16 | AI | Acknowledges the distinction | |
+| 17–18 | Both | `SPL: END RESEARCH SESSION`; the closing metadata review and the completed session record | Imported as CK-002; closing review |
+
+## An incomplete and inaccurate AI record, and how it is checked
+
+The checkpoint at turn 14 claims to be complete. It is not: it leaves out turn 9, the researcher's own reading, without declaring a gap, and it paraphrases turn 7 (“Give the exact quotations from both documents that support Finding 1”) instead of reproducing it. When the checkpoint is imported, the Lab marks a gap where turn 9 is missing from the numbering, and labels every turn as reproduced by the AI and unverified. The completed record at turn 18 restores turn 9, which fills the gap, and gives turn 7 differently, which the Lab records as two records disagreeing. The researcher then imports the original transcript. Its wording replaces the AI's, the paraphrase is kept as a recorded difference that can be compared word by word, and only then does the researcher confirm that the record is complete.
+
+## Unavailable metadata
+
+The AI system cannot identify its exact backend version or its generation settings. The researcher records the advertised model as displayed, marks the backend version, temperature, top-p and reasoning mode as not exposed by the provider, and confirms the start and end dates from the conversation history. The methods report then states: “The AI system identified its model through self-reported metadata. The researcher confirmed the displayed model name. The exact backend release identifier was not exposed by the provider.”, and that the temperature, top-p and reasoning mode were unavailable through the consumer AI application.
+
+## Opening the case
+
+Choose **Teaching case SPL-UC-003** from the Worked example menu. It opens as a new project, so the project you are working on is kept as it is, and its conversation is in Log & evaluate, under Conversation. Look at the Prompts view to see each prompt's status, the Claims view for the history of CL-001, the Analysis view for the observations and the decision, and the Timeline for the whole sequence. The Methods report tab produces the sample report, with section 2.8 and Appendix H.
+
+The full conversation, with the exact wording of every researcher prompt beside each response, and the analytical records, are in [teaching/spl-uc-003-transcript.md](teaching/spl-uc-003-transcript.md). The case is generated by `tools/build-uc003.mjs`, which uses the Lab's own import code, so the case is rebuilt whenever that code changes.

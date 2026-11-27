@@ -8,6 +8,28 @@ This page lists every version of the Scholarly Prompt Lab, newest first.
 
 To cite the Lab, use the DOI that always opens the latest version: [10.5281/zenodo.24521711](https://doi.org/10.5281/zenodo.24521711).
 
+## 1.8.0, November 2026
+
+**The header.** The product name, Scholarly Prompt Lab, is again the principal identity, with the wordmark at its approved size and position. Version 1.7.0 had set "The prompt as method." larger and bolder than the product name; it now has the tagline style approved in 1.4.0, with the description and the free-software line below it in a lighter, smaller type. The wording approved for 1.7.0 is unchanged. The wordmark is now a link back to the start of the Lab (Build, top of the page). It does not reload the page, saves typed work first, closes any open dialog, works offline, and keeps keyboard focus visible; it has no underline and only a quiet change on hover.
+
+**Conversational research, completed.**
+- *SPL Research Session Protocol, version 0.2 (draft).* AI provider and product are recorded separately; tools used, external retrieval, custom instructions and message timestamps are added; a record can mark a turn as not exact, suggest follow-up purposes, claims and decisions, and record a change of model; the closing review produces the record at once with missing items marked. Records made under version 0.1 are read unchanged.
+- *Branches.* A conversation is a tree: regenerated responses and edited prompts are kept as versions, with a Branches view and "version 2 of 3" controls. AI-generated records are compared with the branch shown.
+- *Provider exports.* ChatGPT and Claude data exports (the ZIP file or conversations.json) can be imported: the conversation chosen, its times, the model of each message and, for ChatGPT, its branches. Tested with constructed samples; not yet with real exports.
+- *Records within records.* A checkpoint that reproduces the researcher's commands, or a completed record that reproduces an earlier checkpoint, is now read correctly: markers inside a turn's text stay part of the text. A reworded prompt is recognised as the same turn with different wording. A turn found only in the AI's record leaves the conversation when the original is imported, and is kept as a recorded difference. Gaps are marked filled when a later record supplies the turn.
+- *Claim History*, *conversation-level observations* and *researcher decisions*, with definitions, guidance and limitations; developments recorded on each turn (evidence introduced, changes of instruction, scope or theory, errors and whether they recur, corrections, decisions).
+- *Follow-up prompt builder*, with designed and submitted prompts compared.
+- *Timeline* of each conversation, with discrete marks and no lines between scores.
+- *Conversations in the Sensitivity study*: each condition can be copied as a documented conversation; conversations can be compared by group, with their conditions, model information, prompts by position and equivalent claims, and warnings where designs or metadata limit comparison.
+- *Redacted copies* for sharing, marked as redacted; the original is unchanged.
+- *Exports*: transcripts as Word and PDF; AI response history; classified interventions; turn evaluations; analytical records; claim histories; metadata with every assertion; checkpoints with their original text.
+- *Metadata*: guidance by environment; sources that disagree are flagged until the researcher resolves them; a statement of how the model was identified; the session end date is required once the session has ended.
+- *Evaluation*: quotation checks and a second-model assessment for each response, recorded as suggestions apart from the researcher's scores; administrative messages can be included in scoring.
+- *Prompt verification view*, with "restore an omitted prompt".
+- *Methods report*: section 2.8 and Appendix H now cover branches, checkpoints, the three reviews, developments, observations, Claim History, decisions, comparisons and suggestions; Appendix E counts conversation records.
+- *Teaching case SPL-UC-003*: the first teaching case pursued as a documented conversation, built from the Lab's own import code.
+- *Documentation*: provider exports; software testing and empirical validation; a requirements traceability matrix for the 33-section specification.
+
 ## 1.7.0, November 2026
 
 - **Research conversations.** Log & evaluate records either a single output, as before, or a whole conversation with an AI system: every researcher prompt verbatim, every response, administrative exchanges kept apart, and gaps recorded where turns are missing. Conversations are kept with their project in the browser's IndexedDB storage, travel with project backups (backup format version 2; earlier backups still restore), and are copied or deleted with their project.

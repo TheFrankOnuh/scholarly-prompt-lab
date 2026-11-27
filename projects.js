@@ -253,16 +253,18 @@
   }
 
   // a teaching case opens as a project of its own, so the open project is kept exactly as it is
-  root.LAB_PROJECTS.startProject = function (name, draft, report) {
+  // after: an optional step, returning a promise, that adds material (such as a teaching conversation) to the new project first
+  root.LAB_PROJECTS.startProject = function (name, draft, report, after) {
     if (demoRunning()) { say("End the demo before opening a teaching case."); return false; }
     saveNow();
     var data = { "spl.draft.v1": JSON.stringify(draft) };
     if (report) data["spl.report.v1"] = JSON.stringify(report);
     var r = P.create(name, data);
     if (!r.ok) { failed(r); return false; }
-    var s = P.switchTo(r.id);
-    if (s.ok) { reload(); return true; }
-    failed(s); render(); return false;
+    var open = function () { var s = P.switchTo(r.id); if (s.ok) { if (after) { try { localStorage.setItem("spl.ui.logmode", "conv"); } catch (e) { /* ignore */ } } reload(); } else { failed(s); render(); } };
+    if (after) after(r.id).then(open, function () { say("The project was created, but its teaching conversation could not be stored in this browser."); open(); });
+    else open();
+    return true;
   };
 
   $("projSelect").addEventListener("change", function () { go($("projSelect").value); });

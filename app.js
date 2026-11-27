@@ -1140,11 +1140,22 @@
       const status = el("p", { class: "status", id: "st_" + c.id, role: "status" });
       const btn = el("button", { type: "button", text: "Copy condition " + c.n });
       btn.addEventListener("click", () => { rememberCopied(c.id, text); copy(text, "st_" + c.id); });
+      // with the conversation option on in Build, a condition can begin a documented conversation of its own
+      let convBtn = null;
+      if (s.planConv && PROTO && window.LAB_CONV) {
+        convBtn = el("button", { type: "button", class: "ghost", text: "Copy as a documented conversation" });
+        convBtn.addEventListener("click", () => {
+          const sid = PROTO.newSessionId(), full = PROTO.withProtocol(text, { session: sid, reminders: s.convReminders, initialRecord: s.convInitial });
+          copy(full, "st_" + c.id);
+          window.LAB_CONV.registerSession({ sessionId: sid, prompt: full, copiedAt: new Date().toISOString(), reminders: s.convReminders, initialRecord: s.convInitial, question: s.question, sourceText: s.sourceText, sourceDesc: s.sourceDesc, condition: c.id, titleSuffix: " (condition " + c.n + ": " + c.name + ")" })
+            .then(() => flash("st_" + c.id, "Copied with the protocol. Session " + sid + " is ready in Log & evaluate, under Conversation, as condition " + c.n + "."), () => flash("st_" + c.id, "Copied, but this browser could not store the session."));
+        });
+      }
       wrap.append(el("div", { class: "card" }, [
         el("h3", { text: c.n + ". " + c.name }),
         el("p", { class: "muted", text: c.adds }),
         (() => { const pre = el("pre", { class: "prompt", tabindex: "0", "aria-label": "Prompt for condition " + c.n }); renderPrompt(pre, text); return pre; })(),
-        el("div", { class: "actions" }, [btn]), status
+        el("div", { class: "actions" }, [btn, convBtn].filter(Boolean)), status
       ]));
     });
     const runs = Math.max(1, parseInt(s.runs, 10) || 1);
@@ -1862,8 +1873,15 @@
       const P = window.LAB_PROJECTS;
       if (!P || !P.startProject) return;
       const draft = Object.assign({}, BLANK, chosen, { procAuto: !chosen.procedure, exampleId: chosen.id, teachingCase: chosen.teachingCase });
+      // a conversational teaching case brings its specimen conversation into the new project before it opens;
+      // the conversation is loaded only now, from the Lab itself (it is in the offline copy)
+      const addConversation = chosen.teachingConversation && window.LAB_CONV && window.LAB_CONV.addRecordToProject ? (pid) => new Promise((resolve, reject) => {
+        const go = () => { const T = (window.LAB_TEACHING_CASES || {})[chosen.teachingCase]; if (!T) { reject(new Error("missing")); return; } window.LAB_CONV.addRecordToProject(pid, T.record, T.artefacts).then(resolve, reject); };
+        if ((window.LAB_TEACHING_CASES || {})[chosen.teachingCase]) { go(); return; }
+        const sc = document.createElement("script"); sc.src = chosen.teachingConversation + "?v=" + encodeURIComponent(VERSION); sc.onload = go; sc.onerror = reject; document.head.append(sc);
+      }) : null;
       P.startProject("Teaching case " + chosen.teachingCase + ": " + chosen.caseTitle, draft,
-        { title: "Teaching case " + chosen.teachingCase + ": " + chosen.caseTitle, roles: chosen.reportRoles || [], rolesVersion: 2 });
+        { title: "Teaching case " + chosen.teachingCase + ": " + chosen.caseTitle, roles: chosen.reportRoles || [], rolesVersion: 2 }, addConversation);
       return;
     }
     const hasOwnWork = $("question").value.trim() && !matchingExample();
@@ -1897,7 +1915,7 @@
     const s = readState();
     if (s.planConv && window.LAB_CONV && window.LAB_CONV.registerSession) {
       // the session is registered in Log & evaluate with the exact prompt and the time it was copied
-      window.LAB_CONV.registerSession({ sessionId: s.convSession, prompt: text, copiedAt: new Date().toISOString(), reminders: s.convReminders, initialRecord: s.convInitial, question: s.question })
+      window.LAB_CONV.registerSession({ sessionId: s.convSession, prompt: text, copiedAt: new Date().toISOString(), reminders: s.convReminders, initialRecord: s.convInitial, question: s.question, sourceText: s.sourceText, sourceDesc: s.sourceDesc })
         .then((msg) => { if (msg) flash("sessionStatus", msg); })
         .catch(() => flash("sessionStatus", "The prompt was copied, but this browser could not store the session. Record the conversation in Log & evaluate by transcript."));
     }
@@ -1984,7 +2002,33 @@
   function flush() { clearTimeout(buildTimer); renderBuild(); clearTimeout(lfTimer); saveLogForm(); }
   const hash = location.hash.replace("#", "");
   if (hash && $("tab-" + hash)) showTab("tab-" + hash);
+  // The wordmark returns to the start of the Lab (Build, top of the page) without reloading: typed work is saved first,
+  // nothing is cleared, and it works offline. Back and forward move between tabs reached by links.
+  $("brandHome").addEventListener("click", (e) => {
+    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;   // a new tab or window behaves as usual
+    e.preventDefault();
+    flush();
+    for (const d of document.querySelectorAll("dialog[open]")) { try { d.close(); } catch (er) { d.removeAttribute("open"); } }
+    showTab("tab-build");
+    window.scrollTo({ top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+    $("tab-build").focus({ preventScroll: true });
+  });
+  window.addEventListener("hashchange", () => {
+    const h = location.hash.replace("#", "");
+    if (h && $("tab-" + h) && $("tab-" + h).getAttribute("aria-selected") !== "true") showTab("tab-" + h);
+  });
   // a small, read-only window onto the Lab's records for the report module
-  window.LAB_APP = { VERSION, RELEASE, sha256, flush, BLANK, L, CONDITIONS, readState, getLog: () => log, fullPrompt, coverage, harvard, theoryLines, condName, techniqueOf, conventionFor, download, copy, flash, today, countsScore };
+  // the automatic quotation checks, for one AI response in a conversation: a summary and suggestions only, never a score
+  function checkOutput(text) {
+    const s = readState();
+    if (!s.sourceText.trim()) return { summary: "No source text is loaded in Build, so quotations cannot be checked.", suggested: {} };
+    const r = CK.analyse(text, s.sourceText, buildPrompt(s, 4) + "\n" + s.question + "\n" + s.context), sg = CK.suggestScores(r), suggested = {};
+    L.criteria.forEach((c) => { if (sg[c.id] && sg[c.id].score != null) suggested[c.id] = { score: sg[c.id].score, reason: sg[c.id].reason || "" }; });
+    return { suggested, summary: r.quotations.length + " quotations checked against " + (r.sourceWords || 0) + " words of source text: " + r.exact + " exact, " + r.near + " with different wording, " + (r.missing + r.termsMissing.length) + " not found" +
+      (r.outsideFacts.length ? "; " + r.outsideFacts.length + " names or figures do not appear in the source" : "") };
+  }
+  const evalPrompt = (prompt, output) => CK.evaluatorPrompt({ prompt, source: readState().sourceText.trim(), output, criteria: L.criteria });
+  const parseEval = (text) => CK.parseEvaluatorReply(text, L.criteria);
+  window.LAB_APP = { VERSION, RELEASE, sha256, flush, BLANK, L, CONDITIONS, readState, getLog: () => log, fullPrompt, coverage, harvard, theoryLines, condName, techniqueOf, conventionFor, download, copy, flash, today, countsScore, checkOutput, evalPrompt, parseEval };
   { const lv = document.getElementById("labVersion"); if (lv) lv.textContent = "Version " + VERSION + "."; }
 })();

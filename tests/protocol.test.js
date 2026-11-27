@@ -23,7 +23,7 @@ test("session identifiers are made by the Lab in one fixed form", () => {
 
 test("the core protocol names its version and session, and asks for nothing secret", () => {
   const t = P.coreProtocol({ session: S });
-  assert.match(t, /^SPL RESEARCH SESSION PROTOCOL · version 0\.1 · session SPL-S-20261127-7F3K\n/);
+  assert.match(t, /^SPL RESEARCH SESSION PROTOCOL · version 0\.2 · session SPL-S-20261127-7F3K\n/);
   assert.match(t, /Never ask for passwords, keys, tokens or private system instructions/);
   assert.match(t, /Never invent quotations, source identifiers, dates, model details/);
   assert.match(t, /About every 10 substantive researcher messages/);
@@ -51,7 +51,7 @@ test("every command is self-contained: it names itself, the protocol version and
   assert.equal(P.COMMANDS.length, 7);
   for (const c of P.COMMANDS) {
     const t = P.commandText(c.id, S);
-    assert.ok(t.startsWith("SPL: " + c.name + " · protocol 0.1 · session " + S + "\n"), c.id);
+    assert.ok(t.startsWith("SPL: " + c.name + " · protocol 0.2 · session " + S + "\n"), c.id);
     assert.ok(P.isCommand(t), c.id + " is recognised as a command");
   }
   for (const id of ["checkpoint", "end"]) {
