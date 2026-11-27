@@ -8,6 +8,7 @@ if (!/^\d+\.\d+\.\d+$/.test(v || "")) { console.error("Give a version such as 0.
 const edit = (file, fn) => { const p = path.join(ROOT, file); const a = fs.readFileSync(p, "utf8"); const b = fn(a); if (a !== b) fs.writeFileSync(p, b); };
 edit("release.js", (s) => s.replace(/version: "[^"]*"/, 'version: "' + v + '"').replace(/versionDoi: "[^"]*"/, 'versionDoi: "' + doi + '"').replace(/released: "[^"]*"/, 'released: "' + new Date().toISOString().slice(0, 10) + '"'));
 edit("index.html", (s) => s.replace(/\?v=[0-9.]+"/g, '?v=' + v + '"'));
+edit("codemeta.json", (s) => s.replace(/"version": "[^"]*"/, '"version": "' + v + '"').replace(/"dateModified": "[^"]*"/, '"dateModified": "' + new Date().toISOString().slice(0, 10) + '"'));
 edit("CITATION.cff", (s) => s.replace(/^version: .*$/m, "version: " + v).replace(/^date-released: .*$/m, "date-released: " + new Date().toISOString().slice(0, 10)));
 edit("README.md", (s) => s.replace(/\(Version [0-9.]+\) \[Computer software\]/, "(Version " + v + ") [Computer software]"));
 console.log("Version set to " + v + (doi ? " with DOI " + doi : ""));

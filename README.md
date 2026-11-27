@@ -70,7 +70,7 @@ The Lab has no server and no accounts, and it never contacts an AI system. Every
 | **X** | Cross-model examination | To what extent are my findings influenced by the AI system or the way I formulate my instructions? |
 | **T** | Transparency | Does my documentation allow another researcher to examine how I arrived at my findings? |
 
-The full methodological guide is available in [`docs/CONTEXT-framework.md`](docs/CONTEXT-framework.md) in the repository.
+The full methodological guide is available in [`docs/CONTEXT-framework.md`](docs/CONTEXT-framework.md) in the repository. It also sets out how CONTEXT relates to existing work: guidance on disclosing AI use, datasheets and model cards, tool criticism, and the FAIR and CARE principles for research data.
 
 ## Teaching cases
 
@@ -82,9 +82,13 @@ In the Lab, choose a teaching case from the Worked example menu. It opens as a n
 
 When you log an output, the Lab records a SHA-256 fingerprint of the exact source text analysed and prints it in the methods report, so a reader can confirm which text a result refers to. Every prompt tells the AI system that source text is material to analyse and not instructions to follow, and the Lab warns you when a source contains wording that reads like an instruction to an AI.
 
+## Languages
+
+The interface is available in English, French and Spanish: choose from the Language menu at the top right. The French and Spanish translations are awaiting review by fluent speakers, and the Lab says so while they are. Prompts, methods reports and anything you type stay in the language in which they were written. Text fields follow the direction of the script typed into them, so sources in Arabic, Hebrew, Persian or Urdu read right to left. See [`docs/translating.md`](docs/translating.md) to review a translation or add a language.
+
 ## Accessibility
 
-Version 1.4.0 was checked with the axe-core automated checker (WCAG 2.0, 2.1 and 2.2, levels A and AA, plus best-practice rules) on all five tabs in light and dark mode, at phone, tablet and desktop widths, with no failures remaining. Every control was checked for a visible focus indicator when reached by keyboard, text pairs meet a contrast of at least 4.5:1, controls are at least 44 pixels tall on touch screens, and all animation stops when the device asks for reduced motion. Automated checks cannot find every barrier, and the Lab has not yet been tested by people who use screen readers. If you meet a barrier, please [open an issue](https://github.com/TheFrankOnuh/scholarly-prompt-lab/issues).
+Version 1.4.0 was checked with the axe-core automated checker (WCAG 2.0, 2.1 and 2.2, levels A and AA, plus best-practice rules) on all five tabs in light and dark mode, at phone, tablet and desktop widths, with no failures remaining. Every control was checked for a visible focus indicator when reached by keyboard, text pairs meet a contrast of at least 4.5:1, controls are at least 44 pixels tall on touch screens, and all animation stops when the device asks for reduced motion. Automated checks cannot find every barrier, and the Lab has not yet been tested by people who use screen readers. A [screen-reader test script](docs/accessibility-testing.md) sets out twelve tasks that anyone can work through in about 30 minutes with NVDA, VoiceOver or TalkBack. If you meet a barrier, please [open an issue](https://github.com/TheFrankOnuh/scholarly-prompt-lab/issues).
 
 ## Versions
 
@@ -114,6 +118,6 @@ Code: [MIT](LICENSE). Documentation and the CONTEXT framework guide: [CC BY 4.0]
 
 If you use the Lab or the framework in research, please cite it:
 
-> Onuh, F. (2026). *Scholarly Prompt Lab: The Prompt as Method* (Version 1.5.1) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.24521711
+> Onuh, F. (2026). *Scholarly Prompt Lab: The Prompt as Method* (Version 1.6.0) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.24521711
 
 The DOI above always points to the latest version. Each release also has its own DOI on [Zenodo](https://doi.org/10.5281/zenodo.24521711). See also [CITATION.cff](CITATION.cff).

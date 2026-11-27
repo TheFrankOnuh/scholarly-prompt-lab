@@ -1,0 +1,29 @@
+{
+  "@context": "https://w3id.org/codemeta/3.0",
+  "@type": "SoftwareSourceCode",
+  "name": "Scholarly Prompt Lab: The Prompt as Method",
+  "description": "A free, open-source, browser-only tool for designing, documenting and evaluating generative AI prompts in humanities and social science research, organised by the CONTEXT framework. Research data stays in the researcher's browser.",
+  "version": "1.6.0",
+  "dateModified": "2026-11-27",
+  "license": "https://spdx.org/licenses/MIT",
+  "identifier": "https://doi.org/10.5281/zenodo.24521711",
+  "codeRepository": "https://github.com/TheFrankOnuh/scholarly-prompt-lab",
+  "url": "https://thefrankonuh.github.io/scholarly-prompt-lab/",
+  "issueTracker": "https://github.com/TheFrankOnuh/scholarly-prompt-lab/issues",
+  "readme": "https://github.com/TheFrankOnuh/scholarly-prompt-lab/blob/main/README.md",
+  "releaseNotes": "https://github.com/TheFrankOnuh/scholarly-prompt-lab/blob/main/CHANGELOG.md",
+  "author": [
+    {
+      "@type": "Person",
+      "givenName": "Frank",
+      "familyName": "Onuh"
+    }
+  ],
+  "programmingLanguage": ["JavaScript", "HTML", "CSS"],
+  "runtimePlatform": "Web browser",
+  "operatingSystem": ["Windows", "macOS", "Linux", "Android", "iOS"],
+  "applicationCategory": "Research methods",
+  "developmentStatus": "active",
+  "isAccessibleForFree": true,
+  "keywords": ["digital humanities", "prompt engineering", "generative AI", "research methods", "humanities", "social sciences", "research transparency", "CONTEXT framework"]
+}

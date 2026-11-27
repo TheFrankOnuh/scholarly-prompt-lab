@@ -68,3 +68,12 @@ test("text-style buttons stay readable on hover: they are never given the filled
     assert.ok(mine.some(([, body]) => /background: transparent/.test(body)), sel + " must keep a clear background on hover");
   }
 });
+
+test("codemeta.json describes the software and states the current version", () => {
+  const cm = JSON.parse(read("codemeta.json"));
+  assert.equal(cm["@type"], "SoftwareSourceCode");
+  assert.equal(cm.version, REL.version, "codemeta.json version disagrees with release.js");
+  assert.equal(cm.identifier, "https://doi.org/" + REL.conceptDoi);
+  assert.match(cm.license, /MIT$/);
+  assert.ok(cm.codeRepository && cm.author && cm.author.length);
+});

@@ -5,6 +5,7 @@
    3. In the Sensitivity study, each condition's prompt shows its first lines until opened in full.
    4. The privacy statement in the footer opens and closes when the researcher selects it.
    5. Evaluation scores from 1 to 5 as a row of buttons, kept in step with the original menus.
+   6. The theory library folds away. 7. Text fields follow the direction of the script typed into them.
    Nothing here reads or stores research content. Only the chosen layout and step are remembered. */
 (function () {
   "use strict";
@@ -17,6 +18,8 @@
   }
   function read(store, k) { try { return store.getItem(k); } catch (e) { return null; } }
   function write(store, k, v) { try { store.setItem(k, v); } catch (e) { /* storage blocked: layout still works */ } }
+  // the interface language (i18n.js); English when no translation is active
+  var tr = (window.LAB_I18N && window.LAB_I18N.t) || function (x) { return x; };
   var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   // a step counts as started once any of its own answers has content (search boxes and add-forms do not count)
@@ -120,7 +123,7 @@
         nav.append(back);
       }
       if (i < sets.length - 1) {
-        var next = el("button", { type: "button", text: "Next: " + titles[i + 1] });
+        var next = el("button", { type: "button", text: tr("Next:") + " " + titles[i + 1] });
         next.addEventListener("click", function () { go(i + 1, true); });
         nav.append(next);
       } else if (o.finish) {
@@ -245,6 +248,18 @@
     });
   }
 
+  /* ---------- 7. text in any script: each text field follows the direction of what is typed in it,
+     so Arabic, Hebrew, Persian or Urdu sources read right to left. Fields the Lab adds later are included. ---------- */
+  var TEXTY = 'textarea, input:not([type]), input[type="text"], input[type="search"]';
+  function autoDir(root) {
+    if (!root || !root.querySelectorAll) return;
+    if (root.matches && root.matches(TEXTY) && !root.hasAttribute("dir")) root.setAttribute("dir", "auto");
+    root.querySelectorAll(TEXTY).forEach(function (f) { if (!f.hasAttribute("dir")) f.setAttribute("dir", "auto"); });
+  }
+  autoDir(document);
+  new MutationObserver(function (list) { list.forEach(function (m) { m.addedNodes.forEach(autoDir); }); })
+    .observe(document.body, { childList: true, subtree: true });
+
   /* ---------- 6. the theory library folds away, so the step stays short; the chosen theories stay visible as chips ----------
      The researcher's choice is remembered on this device. Without one, the library starts folded when the design
      already has theories and open when it has none. */
@@ -279,7 +294,7 @@
   /* ---------- the letter of each CONTEXT dimension in a step's label, set in rubric (the words are unchanged) ---------- */
   document.querySelectorAll(".ctx-tag").forEach(function (t) {
     if (t.querySelector(".dim-l")) return;
-    var parts = t.textContent.split(/\b([A-Z])(?=:)/);
+    var parts = t.textContent.split(/\b([A-Z])(?= ?:)/);   // French puts a space before the colon
     if (parts.length < 3) return;
     t.replaceChildren.apply(t, parts.map(function (p, i) { return i % 2 ? el("span", { class: "dim-l", text: p }) : document.createTextNode(p); }));
   });

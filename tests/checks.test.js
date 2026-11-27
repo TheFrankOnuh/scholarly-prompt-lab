@@ -240,3 +240,10 @@ test("a misquotation that also drops diacritics is reported as differing wording
   assert.match(r.quotations[0].note, /diacritics/);
   assert.match(r.quotations[0].source, /ajụjụ/);
 });
+
+test("quotations in right-to-left scripts are checked like any other", () => {
+  const src = "[DOC-01] قال الشيخ في خطبته إن العلم نور والجهل ظلام، وإن الأمة تنهض بالمعرفة والعمل الصالح.\n[DOC-02] שלום עליכם וברוכים הבאים לכנס השנתי של החוקרים";
+  const out = "\"العلم نور والجهل ظلام\" [DOC-01]. \"الأمة تنهض بالمال والعمل الصالح\" [DOC-01]. \"וברוכים הבאים לכנס השנתי\" [DOC-02].";
+  const st = C.analyse(out, src).quotations.map((q) => q.status);
+  assert.deepEqual(st, ["exact", "near", "exact"]);
+});

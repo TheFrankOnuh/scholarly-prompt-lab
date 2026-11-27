@@ -1105,3 +1105,18 @@ button.step-mode:hover { color: var(--ink); }
 .lib-toggle[aria-expanded="true"]::after { transform: rotate(180deg); }
 @media (prefers-reduced-motion: no-preference) { .lib-toggle::after { transition: transform 0.2s cubic-bezier(.2, .7, .2, 1); } }
 @media (pointer: coarse) { .lib-toggle { min-height: 44px; } }
+
+/* text in any script: each paragraph takes the direction of its own first letters, so English and Arabic can share a field */
+textarea, .prompt, .report p, .report li, .report td, .report pre, .qlist li, .chip, #entries td { unicode-bidi: plaintext; }
+
+/* the Language menu, top right of the header */
+.header-inner { grid-template-areas: "brand lang" "brand projects" "tabs tabs"; }
+.site-header .lang-switch { grid-area: lang; display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
+.lang-switch label { margin: 0; font: 500 var(--fs-caption)/1.2 var(--sans); color: var(--muted); }
+.lang-switch select { width: auto; min-height: 36px; padding-top: 4px; padding-bottom: 4px; font-size: var(--fs-hint); }
+@media (pointer: coarse) { .lang-switch select { min-height: 44px; } }
+@media (max-width: 959px) {
+  .header-inner { grid-template-areas: "brand" "lang" "projects" "tabs"; }
+  .site-header .lang-switch { justify-content: flex-start; }
+}
+.i18n-note { margin: 0 0 8px; }

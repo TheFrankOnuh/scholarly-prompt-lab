@@ -8,6 +8,15 @@ This page lists every version of the Scholarly Prompt Lab, newest first.
 
 To cite the Lab, use the DOI that always opens the latest version: [10.5281/zenodo.24521711](https://doi.org/10.5281/zenodo.24521711).
 
+## 1.6.0, November 2026
+
+- The interface is available in English, French and Spanish, chosen from the Language menu at the top right and remembered on the device. The French and Spanish translations are awaiting review by fluent speakers, and the Lab says so in a line in the footer. The prompt, the methods report, the theory library and everything the researcher types are never translated. An automated test checks that every translated entry matches wording the Lab really uses, and that the languages cover the same wording.
+- Text in any script: every text field follows the direction of the script typed into it, and each paragraph takes its own direction, so sources in Arabic, Hebrew, Persian or Urdu read right to left beside English. Quotation checks were tested with Arabic and Hebrew sources.
+- The framework guide sets out how CONTEXT relates to existing work: guidance on disclosing AI use, datasheets and model cards, tool criticism, and the FAIR and CARE principles. Dimension N now asks researchers to apply the CARE Principles for Indigenous Data Governance where their sources concern Indigenous peoples. Every reference was checked against Crossref or the publisher's page.
+- codemeta.json describes the software in the format used by research-software archives, and is kept in step with each version.
+- A screen-reader test script (docs/accessibility-testing.md) sets out twelve tasks for testing with NVDA, VoiceOver or TalkBack.
+- A draft paper for the Journal of Open Source Software is in paper/.
+
 ## 1.5.1, November 2026
 
 - The theory library under Theoretical orientation can be folded away with "Hide the theory library", in one step at a time and when all steps are shown on one page. The chosen theories stay visible. The choice is remembered on the device; without one, the library starts folded when the design already has theories. The guided demo opens it when it needs to.

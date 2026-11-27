@@ -40,6 +40,7 @@ Consider the cultural, linguistic and historical conditions in which knowledge i
 - List contested terms and ask the model to comment on them.
 - Keep indigenous-language terms in their original form with a gloss.
 - Linguistic fluency in a model is not cultural validity. Plan for review by people with the relevant expertise.
+- Where the sources concern Indigenous peoples, apply the CARE Principles for Indigenous Data Governance: collective benefit, authority to control, responsibility and ethics (Carroll et al., 2020).
 
 ### T — Traceability
 Establish a verifiable connection between AI-generated claims and their supporting evidence.
@@ -122,9 +123,28 @@ To test how much the prompt shapes the result, run one research task under four 
 
 A small study (for example 10 research items × 4 conditions × 3 runs × 3 models = 360 outputs) is enough to show patterns worth reporting descriptively. Keep the results open: a fuller prompt may help, may introduce new errors, or may only make the model agree with you.
 
-## Status
+## How CONTEXT relates to existing work
 
-The relationship of CONTEXT to existing frameworks for AI-assisted research should be established through a literature review before strong claims of novelty are made.
+CONTEXT builds on established practices. It does not replace them.
+
+**Disclosure of AI use.** The Committee on Publication Ethics asks authors to state in the methods section of a paper how an AI tool was used and which tool was used (COPE Council, 2023). Such a statement records that AI was used. CONTEXT adds what a reader needs to judge how that use shaped the findings: the conceptual frame given to the model, the procedure it was asked to follow, the situated knowledge it was likely to lack, the evidence behind each claim, the criteria used to evaluate its outputs, comparisons across systems and prompts, and the records that make the process open to inspection. The Lab's methods report turns these into a disclosure statement and a methods section.
+
+**Documentation of data and models.** Datasheets for datasets (Gebru et al., 2021) and model cards (Mitchell et al., 2019) document how a dataset or a model was made and where it should and should not be used. CONTEXT applies the same documentary discipline at a different point: to a researcher's use of a model in a particular study, where the prompt, the sources and the evaluation are what must be documented.
+
+**Tool criticism.** Digital humanities asks researchers to examine how their tools shape what they find (van Es, Wieringa and Schäfer, 2018). CONTEXT treats the prompt as such a tool: an instrument whose design, effects and limits are examined and reported, as in the prompt-sensitivity study.
+
+**Principles for research data.** The FAIR principles ask that research data be findable, accessible, interoperable and reusable (Wilkinson et al., 2016). The Lab's exports (the research design, the log in JSON and CSV, and the methods report) are designed to make an AI-assisted analysis reusable in that sense. The CARE principles add that data about Indigenous peoples should serve collective benefit and respect Indigenous peoples' authority to control it, with responsibility and ethics (Carroll et al., 2020). Dimension N asks researchers to apply them where their sources concern Indigenous peoples.
+
+What remains to be established is empirical: whether working with CONTEXT improves AI-assisted research in the humanities and social sciences. That question needs studies with researchers. The framework cannot settle it by itself.
+
+### References for this section
+
+- Carroll, S. R., Garba, I., Figueroa-Rodríguez, O. L., Holbrook, J., Lovett, R., Materechera, S., Parsons, M., Raseroka, K., Rodriguez-Lonebear, D., Rowe, R., Sara, R., Walker, J. D., Anderson, J., & Hudson, M. (2020). The CARE Principles for Indigenous Data Governance. *Data Science Journal*, 19(1), 43. https://doi.org/10.5334/dsj-2020-043
+- COPE Council. (2023). *COPE position: Authorship and AI tools*. Committee on Publication Ethics. https://doi.org/10.24318/cCVRZBms
+- Gebru, T., Morgenstern, J., Vecchione, B., Vaughan, J. W., Wallach, H., Daumé III, H., & Crawford, K. (2021). Datasheets for datasets. *Communications of the ACM*, 64(12), 86–92. https://doi.org/10.1145/3458723
+- Mitchell, M., Wu, S., Zaldivar, A., Barnes, P., Vasserman, L., Hutchinson, B., Spitzer, E., Raji, I. D., & Gebru, T. (2019). Model cards for model reporting. In *Proceedings of the Conference on Fairness, Accountability, and Transparency* (pp. 220–229). ACM. https://doi.org/10.1145/3287560.3287596
+- van Es, K., Wieringa, M., & Schäfer, M. T. (2018). Tool criticism: From digital methods to digital methodology. In *Proceedings of the 2nd International Conference on Web Studies* (pp. 24–27). ACM. https://doi.org/10.1145/3240431.3240436
+- Wilkinson, M. D., Dumontier, M., Aalbersberg, I. J., et al. (2016). The FAIR Guiding Principles for scientific data management and stewardship. *Scientific Data*, 3, 160018. https://doi.org/10.1038/sdata.2016.18
 
 ## Background reading
 

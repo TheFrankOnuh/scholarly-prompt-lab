@@ -139,3 +139,24 @@ test("approved community entries are well formed and do not clash with the libra
   }
   for (const d of com.disciplines) { assert.ok(groups.has(d.group), d.name); assert.ok(!/[<>`]/.test(d.name)); }
 });
+
+test("translations: every entry matches wording the Lab really uses, and drafts are not offered to users", () => {
+  const root = path.join(__dirname, "..");
+  global.window = global.window || {};
+  require(path.join(root, "locales.js"));
+  const L = global.window.LAB_LOCALES;
+  const norm = (s) => s.replace(/\s+/g, " ").trim();
+  const pages = norm(["index.html", "app.js", "ui.js", "report.js", "projects.js", "offline.js", "tour.js", "data.js", "i18n.js"].map((f) => fs.readFileSync(path.join(root, f), "utf8")).join(" ")
+    .replace(/&amp;/g, "&"));
+  for (const [code, loc] of Object.entries(L)) {
+    assert.ok(loc.meta && loc.meta.name && typeof loc.meta.reviewed === "boolean" && typeof loc.meta.offered === "boolean", code + " has its name, review status and whether it is offered");
+    assert.ok(new RegExp('<option value="' + code + '"').test(fs.readFileSync(path.join(root, "index.html"), "utf8")) || !loc.meta.offered, code + " is offered, so it is in the Language menu");
+    for (const [en, tr] of Object.entries(loc.strings)) {
+      assert.ok(pages.includes(norm(en)), code + ": no such English wording in the Lab: " + en);
+      assert.ok(typeof tr === "string" && tr.trim(), code + ": empty translation for " + en);
+    }
+  }
+  // every offered language translates the same wording, so no language is left half done
+  const keys = (c) => Object.keys(L[c].strings).sort().join("|");
+  for (const c of Object.keys(L)) assert.equal(keys(c), keys("fr"), c + " covers the same wording as French");
+});
