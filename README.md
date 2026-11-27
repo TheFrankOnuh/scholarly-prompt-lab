@@ -100,7 +100,7 @@ The tool is plain HTML, CSS and JavaScript with no build step. Its fonts are sto
 
 ## Author
 
-Created by [Frank Onuh](https://www.linkedin.com/in/frank-onuh/).
+Developed by [Frank Onuh](https://www.linkedin.com/in/frank-onuh/).
 
 ## Licence
 
