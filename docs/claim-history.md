@@ -1,6 +1,6 @@
 # Claim History
 
-Claim History follows a knowledge claim through a conversation: where it first appears, how it is challenged, what evidence is brought to it, and how it is reworded, qualified or withdrawn. In the Lab: Log & evaluate, Conversation, Claims. From any AI response, "Record a claim from this response" starts a claim with the words you select.
+Claim History follows a knowledge claim through a conversation: where it first appears, how it is challenged, what evidence is brought to it, and how it is reworded, qualified or withdrawn. In the Lab: Log and evaluate, Research conversation, Claims. From any AI response, "Record a claim from this response" starts a claim with the words you select.
 
 ## Structure
 

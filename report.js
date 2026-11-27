@@ -788,7 +788,7 @@
         ((c.checkpoints || []).length ? " Imported AI-generated records: " + c.checkpoints.map(function (x) { return esc(x.id) + " (" + (x.record_type === "completed_session" ? "completed session" : "checkpoint") + ", turns " + esc(x.firstTurn || "?") + " to " + esc(x.lastTurn || "?") + ")"; }).join("; ") + "." : "")));
       var chars = c.turns.reduce(function (m, t) { return m + t.text.length; }, 0);
       var long = c.turns.length > 60 || chars > 120000;
-      if (long) o.push(p("This conversation is long, so the researcher prompts are reproduced here and the AI responses are listed by identifier. The complete transcript, with every response and the same turn identifiers, is exported separately from the Lab (Log &amp; evaluate, Conversation, Export, Transcript)."));
+      if (long) o.push(p("This conversation is long, so the researcher prompts are reproduced here and the AI responses are listed by identifier. The complete transcript, with every response and the same turn identifiers, is exported separately from the Lab (Log and evaluate, Research conversation, Export, Transcript)."));
       var gapP = function (g) { return '<p class="note">' + (g.resolved ? "Gap, since filled: " : "Gap: ") + esc({ researcher_prompt: "a researcher prompt is missing", ai_response: "an AI response is missing", both: "a prompt and its response are missing", unknown: "something is missing" }[g.missing]) + (g.reason ? " (" + esc(g.reason) + ")" : "") + ".</p>"; };
       var turnBlock = function (t, pos) {
         o.push(turnLine(c, t, pos) + (long && t.role === "ai" ? "" : "<pre>" + esc(t.text) + "</pre>"));

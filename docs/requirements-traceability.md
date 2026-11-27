@@ -23,9 +23,9 @@ The partial rows are: provider-specific guidance (§6, by design), the record of
 
 | Requirement | Status | Where |
 |---|---|---|
-| Single-prompt analysis kept as it was | Implemented | Log & evaluate → Single output; reports and prompts unchanged without conversations (report test, comparison with 1.7.0) |
+| Single-prompt analysis kept as it was | Implemented | Log and evaluate → Single output; reports and prompts unchanged without conversations (report test, comparison with 1.7.0) |
 | Prompt-sensitivity study | Implemented | Sensitivity study, four conditions |
-| Conversational research | Implemented | Build step 7; Log & evaluate → Conversation |
+| Conversational research | Implemented | Build (Testing and record-keeping); Log and evaluate → Research conversation |
 | Conversational research within a sensitivity study | Implemented | Each condition can be copied as a documented conversation; conversations carry a condition and comparison group; comparison in the Sensitivity study |
 | No duplication; established workflows uncomplicated | Implemented | Conversations live inside Log & evaluate; protocol off by default |
 
@@ -67,7 +67,7 @@ The partial rows are: provider-specific guidance (§6, by design), the record of
 | Requirement | Status | Where |
 |---|---|---|
 | Model-independent, no plugins or APIs | Implemented | Text instructions only |
-| Enable or disable | Implemented | Build step 7, off by default |
+| Enable or disable | Implemented | Build, Testing and record-keeping, off by default |
 | Optional where instructions would affect the phenomenon studied | Implemented | Advice beside the option; protocol use recorded as a condition |
 | Exact version recorded | Implemented | `protocol_version` on every conversation and record |
 | Documented in the methods report | Implemented | Section 2.8; Appendix H |
@@ -126,7 +126,7 @@ All 25 are mapped to core rules, commands or Lab behaviour in the [specification
 | Suspension of reminders on request | Partial | The AI is told to stop when asked; the Lab does not record the request as a separate field. Recommendation: classify the request as administrative, which the record keeps |
 | Closing review; never blocks the record; complete later in the Lab | Implemented | End command produces the record at once with missing items marked; metadata panel |
 | Reviews part of the record; administrative; excluded or included in scoring | Implemented | Administrative designation; per-conversation option to score them |
-| Protocol and reminders can be disabled | Implemented | Build step 7 |
+| Protocol and reminders can be disabled | Implemented | Build, Testing and record-keeping |
 
 ## §8 Commands
 

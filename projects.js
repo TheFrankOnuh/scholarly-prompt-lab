@@ -202,6 +202,22 @@
     if (r.ok) reload(); else { failed(r); render(); }
   }
 
+  // a backup file holds the whole project, with its research conversations; the message says what it holds
+  function backup(p) {
+    saveNow();
+    var name = p.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "project";
+    var write = function (convs, failed) {
+      var file = P.exportProject(p.id, A.VERSION, convs);
+      if (A.download) A.download(name + ".spl-project.json", JSON.stringify(file, null, 2), "application/json");
+      var msg = failed ? "Backup file saved for “" + p.name + "”, but WITHOUT its research conversations, which could not be read."
+        : "Backup file saved for “" + p.name + "”" + (convs && convs.conversations && convs.conversations.length ? ", with its research conversations." : ".");
+      say(msg);
+      return msg;
+    };
+    return C() ? C().exportProject(p.id).then(function (d) { return write(d, false); }, function () { return write(null, true); }) : Promise.resolve(write(null, false));
+  }
+  root.LAB_PROJECTS.backupCurrent = function () { var cur = P.list().filter(function (x) { return x.current; })[0]; return cur ? backup(cur) : Promise.reject(new Error("no project")); };
+
   function render() {
     var items = P.list(), sel = $("projSelect"), body = $("projList");
     sel.textContent = "";
@@ -223,16 +239,7 @@
         var done = function () { say("A copy of “" + p.name + "” was made."); render(); };
         if (C()) C().copyProject(p.id, r.id).then(done, function () { say("A copy of “" + p.name + "” was made, but its research conversations could not be copied."); render(); }); else done();
       });
-      btn("Back up", function () {
-        saveNow();
-        var name = p.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "project";
-        var write = function (convs) {
-          var file = P.exportProject(p.id, A.VERSION, convs);
-          if (A.download) A.download(name + ".spl-project.json", JSON.stringify(file, null, 2), "application/json");
-          say("Backup file saved for “" + p.name + "”" + (convs && convs.conversations && convs.conversations.length ? ", with its research conversations." : "."));
-        };
-        if (C()) C().exportProject(p.id).then(write, function () { write(null); say("Backup file saved for “" + p.name + "”, but WITHOUT its research conversations, which could not be read."); }); else write(null);
-      });
+      btn("Back up", function () { backup(p); });
       if (items.length > 1) btn("Delete", function () {
         if (demoRunning()) { say("End the demo before deleting a project."); return; }
         if (!confirm("Delete the project “" + p.name + "” with its " + count(p.sources, "source") + " and " + count(p.runs, "logged run") + "? This cannot be undone. Back it up first if you may need it.")) return;

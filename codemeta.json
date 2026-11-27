@@ -3,7 +3,7 @@
   "@type": "SoftwareSourceCode",
   "name": "Scholarly Prompt Lab: The Prompt as Method",
   "description": "Design, document and examine how scholarly knowledge develops through human–AI interaction. Free and open-source research software for the humanities and social sciences. It supports single-prompt analysis, four-condition prompt-sensitivity studies and documented multi-turn research conversations (the SPL Research Session Protocol and the Research Session Record), organised by the CONTEXT framework. Runs in the browser; research data stays on the researcher's device.",
-  "version": "1.8.0",
+  "version": "1.9.0",
   "dateModified": "2026-11-27",
   "license": "https://spdx.org/licenses/MIT",
   "identifier": "https://doi.org/10.5281/zenodo.24521711",

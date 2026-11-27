@@ -14,7 +14,7 @@ The protocol does three things:
 2. It asks the AI system to report what it can establish about itself and the session, and to say what it cannot establish.
 3. It gives the researcher commands that ask the AI system to produce a structured record of the conversation, which the Lab then checks.
 
-**The record of truth is the original conversation, not the AI's record of it.** A record that an AI system writes about its own conversation is itself an AI output. It can drop, shorten or alter turns, especially long ones, and it cannot see turns that have left its context. The Lab therefore treats the original conversation (a transcript copied from the application, or a provider's data export) as the record of truth, and compares the AI-generated record with it turn by turn. Where only the AI-generated record exists, every view and every report says so.
+**Original conversation records take precedence over AI-generated session records.** A record that an AI system writes about its own conversation is itself an AI output. It can drop, shorten or alter turns, especially long ones, and it cannot see turns that have left its context. The Lab therefore treats the original conversation (a transcript copied from the application, or a provider's data export) as the reference for verification, compares the AI-generated record with it turn by turn, and documents every discrepancy. Where only the AI-generated record exists, every view and every report says so.
 
 ## 2. Terms
 
@@ -196,7 +196,7 @@ A conforming tool:
 1. generates a session identifier and inserts it into the core protocol and every command;
 2. keeps the protocol and command wording of the version it claims, unchanged;
 3. stores what the AI system reports as AI-reported and unreviewed;
-4. treats an original transcript or provider export as the record of truth, and keeps every discrepancy;
+4. treats an original transcript or provider export as the reference against which an AI-generated record is verified, and documents every discrepancy;
 5. never marks coverage as complete while a gap is recorded or on the AI system's word alone;
 6. never overwrites a metadata assertion, and keeps corrections with their reasons;
 7. records the protocol version and schema version with every record;

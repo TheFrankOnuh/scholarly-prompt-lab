@@ -18,8 +18,8 @@
   <link rel="apple-touch-icon" href="icons/icon-192.png">
   <link rel="preload" href="assets/fonts/ibm-plex-sans-normal-400-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="assets/fonts/source-serif-4-normal-400-700-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="assets/fonts/fonts.css?v=1.8.0">
-  <link rel="stylesheet" href="styles.css?v=1.8.0">
+  <link rel="stylesheet" href="assets/fonts/fonts.css?v=1.9.0">
+  <link rel="stylesheet" href="styles.css?v=1.9.0">
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to the main content</a>
@@ -255,7 +255,8 @@
             <div class="checks">
               <label class="check"><input type="checkbox" id="planCross"> <span><strong>Cross-model examination.</strong> I will test the prompt through repeated runs and compare results across at least two AI systems or prompt formulations. <span class="muted">(Sensitivity study tab)</span></span></label>
               <label class="check"><input type="checkbox" id="planLog"> <span><strong>Research documentation.</strong> I will record the AI system, its version, the date of use, relevant settings and who reviewed the output. <span class="muted">(Log &amp; evaluate tab)</span></span></label>
-              <label class="check"><input type="checkbox" id="planConv"> <span><strong>Research conversation.</strong> I will document the whole conversation with the AI system: every follow-up prompt, every response, and what is known about the system. The prompt gains the SPL Research Session Protocol and a session identifier. <span class="muted">(Log &amp; evaluate tab, Conversation)</span></span></label>
+              <label class="check"><input type="checkbox" id="planConv" aria-describedby="planConvHint"> <span><strong>Document this as a research conversation.</strong> I will document the whole conversation with the AI system: every follow-up prompt, every response, and what is known about the system. The prompt gains the SPL Research Session Protocol and a session identifier. <span class="muted">(Log &amp; evaluate tab, Research conversation)</span></span></label>
+              <p class="hint conv-start-hint" id="planConvHint" hidden>Tick “Document this as a research conversation”, then copy your research prompt. The Lab will register the session automatically, and you can continue the conversation in your preferred AI system.</p>
             </div>
             <div class="conv-opts no-progress" id="convOpts" hidden>
               <label for="convReminders">Reminders from the AI system to confirm metadata and save a checkpoint</label>
@@ -333,19 +334,19 @@
       <div class="actions">
         <button type="button" id="dlStudy">Download study protocol (.md)</button>
       </div>
-      <section class="card study-convs" id="studyConvs" aria-label="Conversations as study conditions"></section>
+      <section class="card study-convs" id="studyConvs" aria-label="Research conversations as study conditions"></section>
     </section>
 
     <!-- LOG -->
     <section id="panel-log" role="tabpanel" aria-labelledby="tab-log" hidden>
       <div class="card tab-intro">
-        <h2>Log and evaluate an output</h2>
-        <p class="hint">Record each run of your prompt, check the AI's quotations against your sources, score the answer and save it. Saved entries feed the summary, the Sensitivity study and your Methods report.</p>
+        <h2>Log and evaluate</h2>
+        <p class="hint">Document AI-generated outputs and research conversations, verify supporting evidence and evaluate the results. Saved records inform your Sensitivity study and Methods report.</p>
         <div class="log-mode">
-          <span class="label-like" id="logModeLabel">Record</span>
-          <div class="seg" id="logMode" role="group" aria-labelledby="logModeLabel">
+          <span class="label-like" id="logModeLabel">Record type</span>
+          <div class="seg-switch" id="logMode" role="group" aria-labelledby="logModeLabel">
             <button type="button" aria-pressed="true" data-mode="single">Single output</button>
-            <button type="button" aria-pressed="false" data-mode="conv">Conversation</button>
+            <button type="button" aria-pressed="false" data-mode="conv">Research conversation</button>
           </div>
         </div>
       </div>
@@ -472,20 +473,62 @@
       </div>
 
       <section id="convWrap" class="conv" aria-labelledby="convTitle" hidden>
-        <div class="card conv-intro">
-          <h2 class="h-small" id="convTitle">Research conversations</h2>
-          <p class="hint">Record a whole conversation with an AI system: every researcher prompt, every response, and what is known about the system. The original conversation is the record of truth. A record written by the AI system is checked against it, and every difference is kept. <a href="https://github.com/TheFrankOnuh/scholarly-prompt-lab/blob/main/docs/conversational-research.md" target="_blank" rel="noopener">How conversations are recorded</a></p>
-          <p class="hint">Conversations are stored only in this browser. What you sent to an AI system is held by that provider under its own terms; the Lab cannot change or delete it there.</p>
+        <div class="conv-intro">
+          <h2 id="convTitle">Research conversations</h2>
+          <p class="hint">Document your interactions with AI, including the initial prompt, subsequent researcher prompts, corresponding responses and available system metadata.</p>
+          <p class="hint">Compare AI-generated session records with the original conversation. Any discrepancies are retained for scholarly examination.</p>
           <p class="notice warn" id="convUnavailable" hidden>This browser does not let the Lab store conversations (this happens in some private windows). The rest of the Lab works as usual.</p>
         </div>
-        <div class="conv-grid">
+
+        <section class="conv-empty" id="convEmpty" aria-labelledby="convEmptyTitle" hidden>
+          <svg class="ce-icon" viewBox="0 0 48 40" width="48" height="40" aria-hidden="true" focusable="false"><path d="M3 3h24a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H13l-6 5v-5H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M33 13h10a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2h-2v5l-6-5H21a2 2 0 0 1-2-2v-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+          <h3 id="convEmptyTitle">No conversations recorded yet</h3>
+          <p>Start a research session or import an existing conversation.</p>
+          <div class="ac-grid">
+            <button type="button" class="action-card" id="cardNew"><svg class="ac-icon" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><path d="M4 4h12a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H9l-4 3.5V15H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M19 15v6M16 18h6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span class="ac-arrow" aria-hidden="true">&rarr;</span><span class="ac-title">New conversation</span><span class="ac-desc">Design a research prompt and initialise a research session.</span></button>
+            <button type="button" class="action-card" id="cardImport"><svg class="ac-icon" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><path d="M6 3h8l4 4v6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M14 3v4h4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M6 3a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M18 22v-7M15 18l3-3 3 3" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="ac-arrow" aria-hidden="true">&rarr;</span><span class="ac-title">Import conversation</span><span class="ac-desc">Add a transcript or an SPL Research Session Record.</span></button>
+          </div>
+          <details class="conv-help">
+            <summary>Recording and verification guide</summary>
+            <div class="conv-help-body">
+              <h4>Starting a new research conversation?</h4>
+              <p>Enable “Document this as a research conversation” in the <a href="#build" class="go-build">Build</a> tab and copy your research prompt. The Lab will register the session automatically.</p>
+              <h4>Documenting an existing conversation?</h4>
+              <p>Create a new conversation and import its transcript or SPL Research Session Record. Import conversation does both in one step; you can also <button type="button" class="link-btn" id="convNewEmpty">create an empty conversation</button> and add turns by hand.</p>
+              <p><a href="https://github.com/TheFrankOnuh/scholarly-prompt-lab/blob/main/docs/conversational-research.md" target="_blank" rel="noopener">Full recording and verification guide<span class="vh"> (opens in a new tab)</span></a></p>
+            </div>
+          </details>
+        </section>
+
+        <div class="conv-grid" id="convGrid" hidden>
           <section class="card conv-side" aria-labelledby="convListTitle">
             <h3 class="h-small" id="convListTitle">Conversations in this project</h3>
             <ul class="conv-list" id="convList"></ul>
-            <div class="actions"><button type="button" id="convNew">New conversation</button></div>
-            <p class="hint" id="convStorage"></p>
+            <div class="actions">
+              <button type="button" id="convNew">New conversation</button>
+              <button type="button" class="ghost" id="convImportNew">Import conversation</button>
+            </div>
+            <p class="small"><a href="https://github.com/TheFrankOnuh/scholarly-prompt-lab/blob/main/docs/conversational-research.md" target="_blank" rel="noopener">Recording and verification guide<span class="vh"> (opens in a new tab)</span></a></p>
           </section>
           <div class="card conv-main" id="convMain"></div>
+        </div>
+
+        <div class="conv-storage" id="convStorageBox">
+          <details class="cs-details" id="convStorageDetails">
+            <summary><span class="cs-sum">Local storage<span id="convStorageUsed"></span></span></summary>
+            <div class="cs-body">
+              <dl class="cs-figures">
+                <dt>Storage used</dt><dd id="convStorageUsedFull">Not available in this browser</dd>
+                <dt>Estimated storage quota</dt><dd id="convStorageQuota">Not available in this browser</dd>
+                <dt>Kept by the browser</dt><dd id="convStoragePersist">Not known</dd>
+              </dl>
+              <p class="hint" id="convStorageAdvice"></p>
+              <p class="hint">Your research records are stored locally in your browser. Export a project backup regularly to protect against data loss.</p>
+              <p class="hint">The storage used is what the Lab occupies on this device, including its offline copy. The quota is the browser's estimate, not guaranteed available space. What you send to an AI system is held by that provider under its own terms.</p>
+            </div>
+          </details>
+          <button type="button" class="link-btn cs-backup" id="convBackup">Back up project</button>
+          <p class="status" id="convBackupStatus" role="status"></p>
         </div>
         <p class="vh" id="convAnnounce" role="status"></p>
       </section>
@@ -631,24 +674,24 @@
     <p><span id="offlineStatus" role="status"></span> <button type="button" id="installBtn" class="ghost small-btn" hidden>Install the Lab on this device</button> <span class="hint" id="installHelp" role="status"></span></p>
   </footer>
 
-  <script src="locales.js?v=1.8.0"></script>
-  <script src="i18n.js?v=1.8.0"></script>
-  <script src="release.js?v=1.8.0"></script>
-  <script src="theories.js?v=1.8.0"></script>
-  <script src="theory-links.js?v=1.8.0"></script>
-  <script src="disciplines.js?v=1.8.0"></script>
-  <script src="community.js?v=1.8.0"></script>
-  <script src="procedures.js?v=1.8.0"></script>
-  <script src="data.js?v=1.8.0"></script>
-  <script src="checks.js?v=1.8.0"></script>
-  <script src="protocol.js?v=1.8.0"></script>
-  <script src="app.js?v=1.8.0"></script>
-  <script src="ui.js?v=1.8.0"></script>
-  <script src="report.js?v=1.8.0"></script>
-  <script src="tour.js?v=1.8.0"></script>
-  <script src="projects.js?v=1.8.0"></script>
-  <script src="conversations.js?v=1.8.0"></script>
-  <script src="offline.js?v=1.8.0"></script>
-  <script src="counter.js?v=1.8.0"></script>
+  <script src="locales.js?v=1.9.0"></script>
+  <script src="i18n.js?v=1.9.0"></script>
+  <script src="release.js?v=1.9.0"></script>
+  <script src="theories.js?v=1.9.0"></script>
+  <script src="theory-links.js?v=1.9.0"></script>
+  <script src="disciplines.js?v=1.9.0"></script>
+  <script src="community.js?v=1.9.0"></script>
+  <script src="procedures.js?v=1.9.0"></script>
+  <script src="data.js?v=1.9.0"></script>
+  <script src="checks.js?v=1.9.0"></script>
+  <script src="protocol.js?v=1.9.0"></script>
+  <script src="app.js?v=1.9.0"></script>
+  <script src="ui.js?v=1.9.0"></script>
+  <script src="report.js?v=1.9.0"></script>
+  <script src="tour.js?v=1.9.0"></script>
+  <script src="projects.js?v=1.9.0"></script>
+  <script src="conversations.js?v=1.9.0"></script>
+  <script src="offline.js?v=1.9.0"></script>
+  <script src="counter.js?v=1.9.0"></script>
 </body>
 </html>

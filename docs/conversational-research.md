@@ -6,15 +6,15 @@ How to document a multi-turn research conversation with a generative AI system, 
 
 | Mode | Where | What it records |
 |---|---|---|
-| Single-prompt analysis | Build, then Log & evaluate → Single output | One prompt and one output, as in earlier versions |
+| Single-prompt analysis | Build, then Log and evaluate → Single output | One prompt and one output, as in earlier versions |
 | Prompt-sensitivity study | Sensitivity study | The same question under four prompt conditions |
-| Conversational research | Build step 7, then Log & evaluate → Conversation | A whole conversation: every researcher prompt, every response, the metadata and their provenance |
+| Conversational research | Build (Testing and record-keeping), then Log and evaluate → Research conversation | A whole conversation: every researcher prompt, every response, the metadata and their provenance |
 
 Single-output records, research designs and reports from earlier versions are unchanged.
 
 ## The workflow
 
-1. **Start.** In Build, step 7, tick *Document this as a research conversation*. The prompt gains the SPL Research Session Protocol and a session identifier. Copy it. The Lab registers the session in Log & evaluate, with the exact prompt and the time it was copied.
+1. **Start.** In Build, under Testing and record-keeping, tick *Document this as a research conversation*. The prompt gains the SPL Research Session Protocol and a session identifier. Copy it. The Lab registers the session in Log & evaluate, with the exact prompt and the time it was copied.
    If the AI system's own behaviour is what you are studying, leave the protocol off: its instructions and reminders change that behaviour. Record the conversation by transcript instead.
 2. **Converse.** Work naturally in the AI system you are using.
 3. **Confirm and checkpoint.** Confirm what you can of the metadata; save a checkpoint when useful. The command texts are beside the prompt.
@@ -101,7 +101,7 @@ A conversation is a tree. On any response, "Add a regenerated response" records 
 
 ## Comparing conversations
 
-In the Sensitivity study, "Conversations as study conditions" lists the project's conversations with their condition, comparison group, follow-up design (standardised or adaptive), protocol and model. Comparing two or more shows the conditions and model information side by side, marking where they differ or are unavailable; the substantive researcher prompts by position, with identical wording marked; the researcher's classification and the scores of the response that followed; and claims with the same comparable label. It warns when standardised and adaptive sequences are mixed, and when missing metadata limits comparability. The prompt sequence of each conversation can be copied to reproduce it.
+In the Sensitivity study, "Research conversations as study conditions" lists the project's conversations with their condition, comparison group, follow-up design (standardised or adaptive), protocol and model. Comparing two or more shows the conditions and model information side by side, marking where they differ or are unavailable; the substantive researcher prompts by position, with identical wording marked; the researcher's classification and the scores of the response that followed; and claims with the same comparable label. It warns when standardised and adaptive sequences are mixed, and when missing metadata limits comparability. The prompt sequence of each conversation can be copied to reproduce it.
 
 ## Redacted copies
 

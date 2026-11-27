@@ -476,3 +476,38 @@ test("the schema lists every claim development and observation category the Lab 
   assert.deepEqual(sc.properties.decisions.items.properties.status.enum.slice().sort(), Object.keys(P.DECISION_STATUSES).sort());
   assert.deepEqual(sc.$defs.turn.properties.developments.items.properties.type.enum.slice().sort(), Object.keys(P.FLAG_LABELS).sort());
 });
+
+/* ---------- 1.9.0: Log and evaluate, and the research conversation empty state ---------- */
+test("Log and evaluate uses the approved wording, a record-type switch, and an empty state with two actions", () => {
+  const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
+  for (const s of ["<h2>Log and evaluate</h2>", "Document AI-generated outputs and research conversations, verify supporting evidence and evaluate the results. Saved records inform your Sensitivity study and Methods report.",
+    ">Record type<", ">Single output<", ">Research conversation<", "<h2 id=\"convTitle\">Research conversations</h2>",
+    "Document your interactions with AI, including the initial prompt, subsequent researcher prompts, corresponding responses and available system metadata.",
+    "Compare AI-generated session records with the original conversation. Any discrepancies are retained for scholarly examination.",
+    "No conversations recorded yet", "Start a research session or import an existing conversation.",
+    "<span class=\"ac-title\">New conversation</span><span class=\"ac-desc\">Design a research prompt and initialise a research session.</span>",
+    "<span class=\"ac-title\">Import conversation</span><span class=\"ac-desc\">Add a transcript or an SPL Research Session Record.</span>",
+    "Starting a new research conversation?", "Documenting an existing conversation?", "Recording and verification guide",
+    "Your research records are stored locally in your browser. Export a project backup regularly to protect against data loss.", ">Back up project<", "Estimated storage quota", "Document this as a research conversation."])
+    assert.ok(html.includes(s), "missing: " + s);
+  assert.match(html, /<button type="button" class="action-card" id="cardNew">/);
+  assert.match(html, /<button type="button" class="action-card" id="cardImport">/);
+  assert.ok(!/No conversation open/.test(html + fs.readFileSync(path.join(root, "conversations.js"), "utf8")));
+});
+
+test("no interface text or documentation calls the original the \"record of truth\", or sends researchers to numbered steps", () => {
+  const files = ["index.html", "app.js", "conversations.js", "report.js", "protocol.js", "README.md"].concat(fs.readdirSync(path.join(root, "docs")).filter((f) => f.endsWith(".md")).map((f) => "docs/" + f));
+  for (const f of files) {
+    const s = fs.readFileSync(path.join(root, f), "utf8");
+    assert.ok(!/record of truth/i.test(s), f + " uses \"record of truth\"");
+    assert.ok(!/\bstep 7\b/i.test(s), f + " refers to step 7");
+  }
+});
+
+test("the empty state gives way to the workspace once a conversation exists, and import can create the conversation", () => {
+  const conv = fs.readFileSync(path.join(root, "conversations.js"), "utf8");
+  assert.match(conv, /\$\("convEmpty"\)\.hidden = !empty; \$\("convGrid"\)\.hidden = empty;/);
+  assert.match(conv, /\$\("cardImport"\)\.addEventListener\("click", \(\) => openImport\(null\)\)/);
+  assert.match(conv, /function importTarget\(c, o\)/);
+  assert.match(fs.readFileSync(path.join(root, "projects.js"), "utf8"), /root\.LAB_PROJECTS\.backupCurrent = /);
+});

@@ -1148,7 +1148,7 @@
           const sid = PROTO.newSessionId(), full = PROTO.withProtocol(text, { session: sid, reminders: s.convReminders, initialRecord: s.convInitial });
           copy(full, "st_" + c.id);
           window.LAB_CONV.registerSession({ sessionId: sid, prompt: full, copiedAt: new Date().toISOString(), reminders: s.convReminders, initialRecord: s.convInitial, question: s.question, sourceText: s.sourceText, sourceDesc: s.sourceDesc, condition: c.id, titleSuffix: " (condition " + c.n + ": " + c.name + ")" })
-            .then(() => flash("st_" + c.id, "Copied with the protocol. Session " + sid + " is ready in Log & evaluate, under Conversation, as condition " + c.n + "."), () => flash("st_" + c.id, "Copied, but this browser could not store the session."));
+            .then(() => flash("st_" + c.id, "Copied with the protocol. Session " + sid + " is ready in Log and evaluate, under Research conversation, as condition " + c.n + "."), () => flash("st_" + c.id, "Copied, but this browser could not store the session."));
         });
       }
       wrap.append(el("div", { class: "card" }, [

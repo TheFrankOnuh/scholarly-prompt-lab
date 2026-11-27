@@ -4,7 +4,7 @@
 # SPL-UC-003 teaching specimen: equality in two declarations, as a conversation
 
 - Session: SPL-S-20261127-UC3K
-- Conversation: CV-MWYVR56NQE
+- Conversation: CV-MWZ3U51DUS
 - Protocol: SPL-RSP 0.2
 - Researcher prompts: 6; AI responses: 6; administrative messages: 6; gaps: 0
 - Coverage: Complete (compared with original)

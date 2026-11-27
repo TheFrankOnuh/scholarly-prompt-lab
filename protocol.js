@@ -709,7 +709,7 @@
     if (o.after === undefined) conv.activeLeaf = turn.turn_id;
     return turn;
   }
-  // The original conversation is the record of truth. An AI-reproduced record is compared with it, never put in its place,
+  // Original conversation records take precedence over AI-generated session records. An AI-reproduced record is compared with the original, never put in its place,
   // and every difference is kept as a discrepancy: the wording the AI gave, where it differs, or a turn it left out or added.
   // The comparison runs along the active path, which is what an AI system can see.
   // incoming: { turns: [{ role, kind, text, n, reconstructed, purposes, model, timestamp }], gaps: [{ after: n, missing, reason, reported_by }],

@@ -1,6 +1,6 @@
 # Research session commands
 
-**SPL Research Session Protocol, version 0.2 (draft).** The seven commands a researcher sends during a documented conversation. In the Lab, each command has a copy button beside the prompt (Build, step 7, when "Research conversation" is ticked). Each command is self-contained: it restates what it needs, so it works even when the AI system no longer has the original protocol in its context.
+**SPL Research Session Protocol, version 0.2 (draft).** The seven commands a researcher sends during a documented conversation. In the Lab, each command has a copy button beside the prompt (Build, under Testing and record-keeping, when "Document this as a research conversation" is ticked). Each command is self-contained: it restates what it needs, so it works even when the AI system no longer has the original protocol in its context.
 
 The texts below are generated from `protocol.js` and show the session identifier `SPL-S-20261127-7F3K`. The Lab inserts the identifier of the session in use.
 
@@ -10,7 +10,7 @@ The texts below are generated from `protocol.js` and show the session identifier
 2. Work as you normally would. When the AI system gives its Initial Record, confirm what you can with **Confirm metadata**, adding your values after the command.
 3. Save a checkpoint before a conversation grows long, before you stop for the day, and before switching AI system.
 4. When you have finished, send **End the session**. Then also save the provider's data export, or copy the whole conversation: the Lab compares the AI's record with it.
-5. In Log & evaluate, choose Conversation, then import the record and the transcript.
+5. In Log and evaluate, choose Research conversation, then import the record and the transcript.
 
 Administrative exchanges (the commands and the AI system's replies to them) are kept in the record, marked as administrative, and excluded from scoring by default.
 

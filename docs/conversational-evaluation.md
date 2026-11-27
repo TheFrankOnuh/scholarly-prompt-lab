@@ -14,7 +14,7 @@ The six criteria the Lab already uses apply to each AI response in a conversatio
 
 ## The conversation as a whole
 
-Seven analytical categories for qualitative observation (Log & evaluate, Conversation, Analysis). Each observation records the category, the observation in the researcher's words, the turns it rests on, and the researcher's confidence. The Lab shows each category's definition, how to assess it, an example and its limitation beside the form. There is no composite conversational score.
+Seven analytical categories for qualitative observation (Log and evaluate, Research conversation, Analysis). Each observation records the category, the observation in the researcher's words, the turns it rests on, and the researcher's confidence. The Lab shows each category's definition, how to assess it, an example and its limitation beside the form. There is no composite conversational score.
 
 On each turn, under Details, the researcher can record developments: additional evidence or source material (with its identifiers), a change of analytical instructions, scope or theoretical orientation, an error identified in a response (and whether it is the same error as an earlier one, which makes it persistent), a correction, and a decision. These feed the Timeline, the Analysis view and the report.
 

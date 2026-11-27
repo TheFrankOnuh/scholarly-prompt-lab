@@ -1,4 +1,4 @@
-// Checks the SPL Research Session Protocol, the record format, and the rule that the original conversation is the record of truth.
+// Checks the SPL Research Session Protocol, the record format, and the rule that original conversation records take precedence over AI-generated session records.
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");

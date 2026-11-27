@@ -1,8 +1,8 @@
-/* Scholarly Prompt Lab: research conversations (Log & evaluate → Conversation, and the Sensitivity study).
+/* Scholarly Prompt Lab: research conversations (Log and evaluate → Research conversation, and the Sensitivity study).
    A conversation is kept with its project in the browser's IndexedDB database, apart from the rest of the Lab's data,
    because long conversations would exhaust ordinary browser storage. Imported records, transcripts and provider exports
-   are kept unchanged beside the conversation. The original conversation is the record of truth; a record written by the
-   AI system is compared with it and every difference is kept (protocol.js). Imported text is only ever shown as text.
+   are kept unchanged beside the conversation. Original conversation records take precedence over AI-generated session
+   records: a record written by the AI system is compared with the original and every discrepancy is documented (protocol.js). Imported text is only ever shown as text.
    Nothing here sends anything anywhere. */
 (function () {
   "use strict";
@@ -278,16 +278,35 @@
       else storageLine();
     } catch (e) { /* not supported */ }
   }
-  function storageLine() {
-    const box = $("convStorage");
-    if (!available) { box.textContent = ""; return; }
-    if (!navigator.storage || !navigator.storage.estimate) { box.textContent = "Stored in this browser only. Back up the project to keep a copy."; return; }
-    Promise.all([navigator.storage.estimate(), navigator.storage.persisted ? navigator.storage.persisted() : Promise.resolve(false)]).then(([est, persisted]) => {
-      const mb = (n) => (n / 1048576 < 10 ? (n / 1048576).toFixed(1) : Math.round(n / 1048576)) + " MB";
-      box.textContent = "Storage used by the Lab: " + mb(est.usage || 0) + (est.quota ? " of about " + mb(est.quota) + " available" : "") + ". " +
-        (persisted ? "The browser has agreed to keep this data." : "The browser may clear this data if the device runs short of space.") + " Back up the project to keep a copy.";
-    }).catch(() => { box.textContent = "Stored in this browser only. Back up the project to keep a copy."; });
+  // sizes in the unit a reader expects, rounded for reading
+  function size(n) {
+    if (!(n >= 0)) return "unknown";
+    const u = [["GB", 1073741824], ["MB", 1048576], ["KB", 1024]];
+    for (const [name, v] of u) if (n >= v) { const x = n / v; return (x < 10 ? x.toFixed(1) : Math.round(x)) + " " + name; }
+    return Math.round(n) + " bytes";
   }
+  function storageLine() {
+    const used = $("convStorageUsed"), full = $("convStorageUsedFull"), quota = $("convStorageQuota"), keep = $("convStoragePersist"), advice = $("convStorageAdvice");
+    if (!used) return;
+    if (!available) { used.textContent = " · not available in this browser"; advice.textContent = "This browser does not let the Lab store conversations here, for example in some private windows. Back up projects before closing the window."; return; }
+    if (!navigator.storage || !navigator.storage.estimate) { used.textContent = ""; advice.textContent = "This browser does not report how much storage is used. Back up the project regularly."; return; }
+    Promise.all([navigator.storage.estimate(), navigator.storage.persisted ? navigator.storage.persisted() : Promise.resolve(null)]).then(([est, persisted]) => {
+      used.textContent = " · " + size(est.usage || 0) + " used";
+      full.textContent = size(est.usage || 0);
+      quota.textContent = est.quota ? "about " + size(est.quota) + " (the browser's estimate)" : "not reported by this browser";
+      keep.textContent = persisted === true ? "Yes: the browser has agreed not to clear this data automatically" : persisted === false ? "Not guaranteed: the browser may clear this data if the device runs short of space" : "Not known in this browser";
+      const share = est.quota ? (est.usage || 0) / est.quota : 0;
+      advice.textContent = share > 0.8 ? "Storage is nearly full. Back up this project now, then delete projects or conversations you no longer need." :
+        persisted === false ? "Because the browser may clear this data, keep a recent project backup." : "";
+      advice.hidden = !advice.textContent;
+    }).catch(() => { used.textContent = ""; advice.textContent = "This browser did not report its storage. Back up the project regularly."; advice.hidden = false; });
+  }
+  $("convBackup").addEventListener("click", () => {
+    const st = $("convBackupStatus");
+    const go = window.LAB_PROJECTS && window.LAB_PROJECTS.backupCurrent;
+    if (!go) { st.textContent = "Back up the project under Manage projects, at the top of the page."; return; }
+    flushPending().then(() => go()).then((msg) => { st.textContent = msg || "Backup file saved."; }, () => { st.textContent = "The backup could not be made. Try Manage projects, at the top of the page."; });
+  });
   function artefactsOf(convId) { return byIndex("artefacts", "convId", convId); }
 
   /* ---------- projects: backups, copies and deletions carry the conversations ---------- */
@@ -365,7 +384,7 @@
       c.events.push({ type: "prompt_copied", at: o.copiedAt, lab_version: A.VERSION, detail: copy.id });
       await save(c);
       selectedId = c.id; renderAll(); renderStudy();
-      return "Session " + o.sessionId + " is ready in Log & evaluate, under Conversation. When you have finished, import its record and the transcript there.";
+      return "Session " + o.sessionId + " is ready in Log and evaluate, under Research conversation. When you have finished, import its record and the transcript there.";
     }
     if (!c.promptHistory.some((x) => x.sha256 === sh)) c.promptHistory.push(copy);
     c.events.push({ type: "prompt_copied_again", at: o.copiedAt, lab_version: A.VERSION, detail: copy.id + (c.turns.length ? "; turns already recorded: the recorded prompt is unchanged" : "") });
@@ -381,7 +400,7 @@
     $("singleWrap").hidden = conv; $("convWrap").hidden = !conv;
     document.querySelectorAll("#logMode button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.mode === (conv ? "conv" : "single"))));
     try { localStorage.setItem("spl.ui.logmode", conv ? "conv" : "single"); } catch (e) { /* ignore */ }
-    if (conv) storageLine();
+    if (conv) renderAll();
   }
   document.querySelectorAll("#logMode button").forEach((b) => b.addEventListener("click", () => setMode(b.dataset.mode)));
   try { if (localStorage.getItem("spl.ui.logmode") === "conv") setMode("conv"); } catch (e) { /* ignore */ }
@@ -389,7 +408,12 @@
   /* ---------- rendering: the list and the open conversation ---------- */
   function current() { return convs.find((c) => c.id === selectedId) || null; }
   function select(id) { selectedId = id; try { sessionStorage.setItem("spl.ui.conv", id); } catch (e) { /* ignore */ } renderAll(); }
-  function renderAll() { renderList(); renderMain(); }
+  function renderAll() {
+    const empty = !convs.length;
+    $("convEmpty").hidden = !empty; $("convGrid").hidden = empty;
+    if (!empty) { renderList(); renderMain(); }
+    storageLine();
+  }
   function covTag(cov) { return el("span", { class: "ctag cov-" + cov.status, text: P.COVERAGE_LABELS[cov.status] }); }
   function tag(text, cls) { return el("span", { class: "ctag " + (cls || ""), text }); }
   function renderList() {
@@ -411,13 +435,12 @@
     const box = $("convMain"); box.replaceChildren();
     const c = current();
     if (!c) {
-      box.append(el("h3", { class: "h-small", text: "No conversation open" }),
-        el("p", { class: "hint", text: "To document a conversation you are about to have, tick “Research conversation” in Build, step 7, and copy the prompt: the session appears here. To record a conversation you have already had, choose New conversation and import its transcript or the provider's data export." }));
+      box.append(el("p", { class: "hint", text: "Choose a conversation from the list." }));
       return;
     }
     box.append(headerView(c), aboutView(c), coverageView(c), toolsView(c), el("p", { class: "status", id: "convStatus", role: "status" }));
     const open = c.discrepancies.filter((d) => !d.resolved);
-    if (open.length) box.append(el("p", { class: "notice warn", text: plural(open.length, "difference") + " between the AI's record and the original " + (open.length === 1 ? "is" : "are") + " shown below. The original wording is kept; the AI's wording is recorded with each difference, which is itself evidence about the reliability of AI-generated records." }));
+    if (open.length) box.append(el("p", { class: "notice warn", text: plural(open.length, "documented discrepancy", "documented discrepancies") + " between the AI-generated session record and the original conversation record " + (open.length === 1 ? "is" : "are") + " shown below. The original wording is kept, and the AI's wording is retained with each discrepancy for scholarly examination. Review each one to complete the verification." }));
     const seg = el("div", { class: "seg cv-views", role: "group", "aria-label": "View" });
     VIEWS.forEach(([v, label]) => seg.append(btn(label, () => { view = v; renderMain(); const b = $("convMain").querySelector('.cv-views button[aria-pressed="true"]'); if (b) b.focus(); }, "", { "aria-pressed": String(view === v) })));
     const adm = el("input", { type: "checkbox", id: "cvAdmin" }); adm.checked = showAdmin;
@@ -1181,11 +1204,13 @@
       else if (d.kind === "record") reviewRecord(c, text);
       else reviewTranscript(c, text);
     }, "");
-    body.append(el("h2", { id: "ciTitle", text: "Import into “" + c.title + "”" }),
+    body.append(el("h2", { id: "ciTitle", text: c ? "Import into “" + c.title + "”" : "Import conversation" }),
+      c ? null : el("p", { class: "hint", text: "A new research conversation is created from what you import. To add a later checkpoint or the transcript to a conversation already recorded, open that conversation and use its Import button." }),
       el("ul", { class: "hint" }, [
         el("li", { text: "A copy of the conversation: select it all in the AI application, copy and paste here. Speakers are found from labels such as “You said:” and “ChatGPT said:”, and you can correct them." }),
         el("li", { text: "A record or checkpoint the AI system wrote after an SPL command: paste all its parts together, or import each part in turn." }),
         el("li", { text: "A data export from ChatGPT or Claude: choose the ZIP file or its conversations.json, then the conversation. Its times, models and branches are kept. Support for these formats is new: check the result against the application." }),
+        el("li", { text: "A checkpoint or a part of a longer record: import each in turn into the same conversation; turns already recorded are not repeated." }),
         el("li", { text: "A Research Session Record exported from the Lab (JSON): it is added as a new conversation." })]),
       field("ciText", "Paste here", ta), field("ciFile", "Or choose a file", file), field("ciKind", "What it is", kind), el("div", { class: "actions" }, [go, cancelBtn(dlgImport)]), msg);
     openDialog(dlgImport);
@@ -1199,7 +1224,7 @@
     return el("div", { class: "table-wrap", tabindex: "0", role: "region", "aria-label": "Turns read from the text" }, [el("table", { class: "cv-preview" }, [el("thead", {}, [el("tr", {}, [el("th", { scope: "col", text: "Turn" }), el("th", { scope: "col", text: "Speaker" }), el("th", { scope: "col", text: "Beginning of the text" })])]), tb])]);
   }
   function alignmentView(c, turns, isOrig) {
-    const path = P.activePath(c);
+    const path = c ? P.activePath(c) : [];
     if (!path.length) return el("p", { class: "hint", text: "This conversation has no turns yet, so all " + plural(turns.length, "turn") + " will be added." });
     const rows = P.align(path, turns), s = P.alignSummary(rows);
     const box = el("div", { class: "cv-align" }, [el("h3", { class: "h-small", text: "Compared with what is already recorded" }),
@@ -1213,7 +1238,7 @@
   }
   function backBtn(c) { return btn("Back", () => openImport(c), "ghost"); }
   function reviewRecord(c, raw) {
-    const r = P.parseTransfer(raw, c.sessionId || null);
+    const r = P.parseTransfer(raw, c && c.sessionId ? c.sessionId : null);
     const body = $("ciBody"); body.replaceChildren();
     const h = r.header || {};
     body.append(el("h2", { id: "ciTitle", text: "Check the record before saving" }));
@@ -1229,12 +1254,13 @@
     if (r.gaps.length) body.append(el("p", { text: plural(r.gaps.length, "gap") + " will be recorded where turns are missing." }));
     if (r.claims.length || r.decisions.length) body.append(el("p", { text: "The record also suggests " + plural(r.claims.length, "claim") + " and " + plural(r.decisions.length, "decision") + ". They will be added as unverified suggestions for you to confirm or discard." }));
     if (r.turns.length) body.append(el("h3", { class: "h-small", text: plural(r.turns.length, "turn") + " read from the record" }), previewTable(r.turns), alignmentView(c, r.turns, false));
-    const save1 = btn(r.errors.length ? "Save the complete turns" : "Save to this conversation", () => commitRecord(c, raw, r), "", { disabled: !r.turns.length });
+    const save1 = btn(r.errors.length ? "Save the complete turns" : c ? "Save to this conversation" : "Save as a new conversation", () => commitRecord(c, raw, r), "", { disabled: !r.turns.length });
     body.append(el("p", { class: "hint", text: "Saving keeps this text unchanged beside the conversation. Its turns are labelled as reproduced by the AI and unverified until compared with the original conversation." }),
       el("div", { class: "actions" }, [save1, backBtn(c), cancelBtn(dlgImport)]));
   }
   async function commitRecord(c, raw, r) {
     const h = r.header || {};
+    c = importTarget(c, { title: "Research session " + (P.isSessionId(h.session) ? h.session : "imported from an SPL record"), sessionId: h.session, protocol: h.protocol });
     const art = await makeArtefact(c, raw, "spl_record");
     const copy = JSON.parse(JSON.stringify(c));
     const res = P.mergeImport(copy, { turns: r.turns, gaps: r.gaps, original: false, origin: "ai_reported", artefact: art.id, at: now(),
@@ -1269,9 +1295,10 @@
       });
       body.append(ol);
       if (turns.length) body.append(alignmentView(c, turns, true));
-      body.append(el("div", { class: "actions" }, [btn("Save to this conversation", async () => {
-        const art = await makeArtefact(c, raw, "transcript");
-        const copy = JSON.parse(JSON.stringify(c));
+      body.append(el("div", { class: "actions" }, [btn(c ? "Save to this conversation" : "Save as a new conversation", async () => {
+        const target = importTarget(c, { title: "Imported conversation: " + short(turns[0] ? turns[0].text : "", 60) });
+        const art = await makeArtefact(target, raw, "transcript");
+        const copy = JSON.parse(JSON.stringify(target));
         const res = P.mergeImport(copy, { turns: P.markAdministrative(turns.map((t) => ({ role: t.role, text: t.text }))), gaps: [], original: true, origin: "researcher_reported", artefact: art.id, at: now(), sourceRef: "transcript pasted by the researcher" });
         await finishImport(copy, art, res);
       }, "", { disabled: !turns.length }), backBtn(c), cancelBtn(dlgImport)]));
@@ -1314,8 +1341,9 @@
       el("div", { class: "actions" }, [btn("Import this conversation", async () => {
         if (!chosen) { say("Choose a conversation first."); return; }
         const text = JSON.stringify(rawConversation(raw, chosen) || chosen);
-        const art = await makeArtefact(c, text, "provider_export", chosen.provider);
-        const copy = JSON.parse(JSON.stringify(c));
+        const target = importTarget(c, { title: chosen.title });
+        const art = await makeArtefact(target, text, "provider_export", chosen.provider);
+        const copy = JSON.parse(JSON.stringify(target));
         if (!copy.turns.length && (!copy.title || /^Research conversation$/.test(copy.title))) copy.title = chosen.title;
         const res = P.mergeProvider(copy, chosen, art.id, now());
         await finishImport(copy, art, res);
@@ -1352,6 +1380,7 @@
     copy.designedPrompts.forEach((d) => { if (!copy.turns.some((t) => t.designedId === d.id)) { const t = copy.turns.find((x) => x.role === "researcher" && !x.designedId && P.normaliseText(x.text) === P.normaliseText(d.text)); if (t) t.designedId = d.id; } });
     try { await save(copy, art); } catch (e) { say(failMessage(e)); return; }
     closeDialog(dlgImport);
+    selectedId = copy.id; try { sessionStorage.setItem("spl.ui.conv", copy.id); } catch (e) { /* ignore */ }
     renderAll(); renderStudy();
     const s = res.summary;
     say("Imported. " + plural(res.added, "turn") + " added" + (res.branchAdded ? ", and " + plural(res.branchAdded, "turn") + " on other branches" : "") + "; " + (s.identical + s.spacing) + " already recorded; " + plural(res.discrepancies.length, "difference") + " recorded." + (copy.gaps.some((g) => !g.resolved) ? " Gaps are marked in the conversation." : ""));
@@ -1525,8 +1554,8 @@
     const box = $("studyConvs");
     if (!box) return;
     box.replaceChildren();
-    box.append(el("h2", { class: "h-small", text: "Conversations as study conditions" }),
-      el("p", { class: "hint", text: "Compare whole conversations across AI systems, follow-up strategies, theoretical framings, the protocol and its reminders, or repeated sessions. Set each conversation's condition and comparison group under Log & evaluate, Conversation, About this conversation. Differences in outcomes coincide with differences in conditions; the comparison does not establish causes." }));
+    box.append(el("h2", { class: "h-small", text: "Research conversations as study conditions" }),
+      el("p", { class: "hint", text: "Compare whole conversations across AI systems, follow-up strategies, theoretical framings, the protocol and its reminders, or repeated sessions. Set each conversation's condition and comparison group under Log and evaluate, Research conversation, About this conversation. Differences in outcomes coincide with differences in conditions; the comparison does not establish causes." }));
     if (!available) { box.append(el("p", { class: "muted", text: "Conversations are not available in this browser." })); return; }
     if (!convs.length) { box.append(el("p", { class: "muted", text: "No conversations recorded in this project yet." })); return; }
     const cond = (id) => { const x = (A.CONDITIONS || []).find((y) => y.id === id); return x ? x.n + ". " + x.name : "Build tab prompt"; };
@@ -1562,7 +1591,34 @@
     out.append(el("div", { class: "actions" }, list.map((c) => btn("Copy the prompt sequence of “" + short(c.title, 30) + "”", () => A.copy && A.copy(P.promptSequence(c).join("\n\n----\n\n"), "studyCmpStatus")))), el("p", { class: "status", id: "studyCmpStatus", role: "status" }));
   }
 
+  /* ---------- starting or importing a research conversation ---------- */
+  // New conversation: the research prompt is designed in Build, where the protocol option registers the session
+  function startInBuild() {
+    $("tab-build").click();
+    const cb = $("planConv"), hint = $("planConvHint");
+    if (window.LAB_STEPS && window.LAB_STEPS.reveal) window.LAB_STEPS.reveal(cb);
+    if (hint) hint.hidden = cb.checked;
+    const row = cb.closest("label") || cb;
+    row.scrollIntoView({ block: "center", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+    row.classList.remove("flash-target"); void row.offsetWidth; row.classList.add("flash-target");
+    cb.focus({ preventScroll: true });
+  }
+  $("cardNew").addEventListener("click", startInBuild);
+  $("cardImport").addEventListener("click", () => openImport(null));
+  $("convImportNew").addEventListener("click", () => openImport(null));
+  document.querySelectorAll("#convWrap .go-build").forEach((a) => a.addEventListener("click", (e) => { e.preventDefault(); startInBuild(); }));
+  $("planConv").addEventListener("change", () => { if ($("planConvHint") && $("planConv").checked) $("planConvHint").hidden = true; });
+  // a conversation created as part of an import: it is saved only when the import is saved
+  function importTarget(c, o) {
+    if (c) return c;
+    const t = P.newConversation({ projectId: projectId(), title: o.title || "Imported research conversation", sessionId: P.isSessionId(o.sessionId) ? o.sessionId : "", labVersion: A.VERSION,
+      protocolVersion: o.protocol || null, question: (A.readState ? A.readState().question : "") || "" });
+    t.events.push({ type: "created_by_import", at: now(), lab_version: A.VERSION });
+    return t;
+  }
+
   /* ---------- new conversation ---------- */
+  $("convNewEmpty").addEventListener("click", () => $("convNew").click());
   $("convNew").addEventListener("click", () => {
     const name = prompt("Name of the conversation", "");
     if (name === null) return;
