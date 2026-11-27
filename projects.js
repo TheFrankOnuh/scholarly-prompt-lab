@@ -238,6 +238,19 @@
     $("projCount").textContent = "(" + items.length + ")";
   }
 
+  // a teaching case opens as a project of its own, so the open project is kept exactly as it is
+  root.LAB_PROJECTS.startProject = function (name, draft, report) {
+    if (demoRunning()) { say("End the demo before opening a teaching case."); return false; }
+    saveNow();
+    var data = { "spl.draft.v1": JSON.stringify(draft) };
+    if (report) data["spl.report.v1"] = JSON.stringify(report);
+    var r = P.create(name, data);
+    if (!r.ok) { failed(r); return false; }
+    var s = P.switchTo(r.id);
+    if (s.ok) { reload(); return true; }
+    failed(s); render(); return false;
+  };
+
   $("projSelect").addEventListener("change", function () { go($("projSelect").value); });
   $("projNew").addEventListener("click", function () {
     if (demoRunning()) { say("End the demo before starting a new project."); return; }

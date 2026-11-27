@@ -71,7 +71,13 @@
   /* ---------- populate controls ---------- */
   Object.keys(L.techniques).forEach((k) => $("technique").append(option(k, L.techniques[k].label)));
   $("example").append(option("", "Choose an example…"));
-  L.examples.forEach((x) => $("example").append(option(x.id, x.title)));
+  L.examples.filter((x) => !x.teaching).forEach((x) => $("example").append(option(x.id, x.title)));
+  const teachingCases = L.examples.filter((x) => x.teaching);
+  if (teachingCases.length) {
+    const grp = el("optgroup", { label: "Teaching cases (each opens as a new project)" });
+    teachingCases.forEach((x) => grp.append(option(x.id, x.title)));
+    $("example").append(grp);
+  }
   (L.safeguardGroups || [""]).forEach((grp) => {
     const box = el("div", { class: "checks" });
     L.safeguards.filter((g) => (g.group || "") === grp).forEach((g) => {
@@ -122,11 +128,16 @@
   const KEY_DISC = "spl.mydisciplines.v1";
   let myDisciplines = store.get(KEY_DISC, []);
   if (!Array.isArray(myDisciplines)) myDisciplines = [];
-  const discInput = $("discipline"), discList = $("discList");
+  const discInput = $("discipline"), discList = $("discList"), discToggle = $("discToggle");
   let discActive = -1, discOptions = [];
   function discNorm(x) { return (x || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim(); }
+  // groups and the disciplines within them in alphabetical order; the researcher's own come first
+  const abc = (a, b) => a.localeCompare(b, "en", { sensitivity: "base" });
+  function sortedGroups() {
+    return (window.LAB_DISCIPLINES || []).map((g) => ({ group: g.group, items: g.items.slice().sort(abc) })).sort((a, b) => abc(a.group, b.group));
+  }
   function allDisciplines() {
-    return [{ group: "Your disciplines", items: myDisciplines, mine: true }].concat(window.LAB_DISCIPLINES || []);
+    return [{ group: "Your disciplines", items: myDisciplines.slice().sort(abc), mine: true }].concat(sortedGroups());
   }
   function discExists(v) { return allDisciplines().some((g) => g.items.some((d) => discNorm(d) === discNorm(v))); }
   function addDiscipline(v) {
@@ -172,7 +183,7 @@
     closeDisc();
     renderBuild();
   }
-  function closeDisc() { discList.hidden = true; discInput.setAttribute("aria-expanded", "false"); discInput.removeAttribute("aria-activedescendant"); discActive = -1; }
+  function closeDisc() { discList.hidden = true; discInput.setAttribute("aria-expanded", "false"); discToggle.setAttribute("aria-expanded", "false"); discInput.removeAttribute("aria-activedescendant"); discActive = -1; }
   function setActive(i) {
     discActive = i;
     discOptions.forEach((o, k) => o.el.classList.toggle("active", k === i));
@@ -209,10 +220,19 @@
       discList.append(add); discOptions.push({ el: add, value: null, add: true });
     }
     if (!discOptions.length) discList.append(el("div", { class: "combo-empty", text: "Type a discipline name to add it." }));
-    discList.hidden = false; discInput.setAttribute("aria-expanded", "true");
-    setActive(showAll ? discOptions.findIndex((o) => o.value && discNorm(o.value) === discNorm(discInput.value)) : (discOptions.length ? 0 : -1));
+    discList.hidden = false; discInput.setAttribute("aria-expanded", "true"); discToggle.setAttribute("aria-expanded", "true");
+    // highlight the option Enter will choose: an exact match first, then a name that starts with what was typed, then the first match
+    const exact = discOptions.findIndex((o) => o.value && discNorm(o.value) === discNorm(discInput.value));
+    const starts = q ? discOptions.findIndex((o) => o.value && discNorm(o.value).startsWith(q)) : -1;
+    setActive(showAll ? exact : exact !== -1 ? exact : starts !== -1 ? starts : (discOptions.length ? 0 : -1));
   }
   discInput.addEventListener("focus", () => { discInput.select(); renderDisc(true); });
+  // the arrow beside the field opens the whole list, or closes it; focus stays in the field
+  discToggle.addEventListener("mousedown", (e) => e.preventDefault());
+  discToggle.addEventListener("click", () => {
+    if (!discList.hidden) { closeDisc(); return; }
+    if (document.activeElement !== discInput) discInput.focus(); else renderDisc(true);
+  });
   discInput.addEventListener("click", () => { if (discList.hidden) renderDisc(true); });
   discInput.addEventListener("input", () => renderDisc(false));
   discInput.addEventListener("keydown", (e) => {
@@ -367,7 +387,7 @@
     $("proposeGroupWrap").hidden = p.kind !== "discipline";
     if (p.kind === "discipline") {
       const sel = $("proposeGroup");
-      if (!sel.options.length) { sel.append(option("", "Choose a group")); (window.LAB_DISCIPLINES || []).forEach((g) => sel.append(option(g.group, g.group))); }
+      if (!sel.options.length) { sel.append(option("", "Choose a group")); sortedGroups().forEach((g) => sel.append(option(g.group, g.group))); }
       sel.value = p.group || "";
     }
     const probs = proposalProblems();
@@ -794,6 +814,7 @@
     s.theoryDefs = s.theories.map(theoryById).filter((t) => t && t.custom);
     s.exampleId = $("example").value;
     s.procAuto = procAuto;
+    s.teachingCase = teachingCase;
     s.safeguards = [...document.querySelectorAll("#safeguards input:checked")].map((i) => i.value);
     s.planCross = $("planCross").checked;
     s.planLog = $("planLog").checked;
@@ -806,7 +827,7 @@
     // designs come from older versions, other people's exports and hand-edited files: never trust their shape
     const o = Object.assign({}, BLANK);
     if (!d || typeof d !== "object") return o;
-    Object.keys(BLANK).concat(["runs", "models", "theory", "exampleId", "procAuto"]).forEach((k) => { if (d[k] !== undefined && d[k] !== null) o[k] = d[k]; });
+    Object.keys(BLANK).concat(["runs", "models", "theory", "exampleId", "procAuto", "teachingCase"]).forEach((k) => { if (d[k] !== undefined && d[k] !== null) o[k] = d[k]; });
     FIELDS.forEach((k) => { o[k] = typeof o[k] === "string" ? o[k] : String(o[k] == null ? "" : o[k]); });
     if (!L.techniques[o.technique]) o.technique = BLANK.technique;
     if (!["table", "json", "csv", "prose"].includes(o.output)) o.output = "table";
@@ -831,6 +852,7 @@
     });
     store.set(KEY_THEORIES, myTheories);
     selectedTheories = (s.theories || []).filter((id) => theoryById(id));
+    teachingCase = typeof s.teachingCase === "string" ? s.teachingCase : "";
     FIELDS.forEach((f) => { if (s[f] !== undefined) $(f).value = s[f]; });
     // a procedure the Lab generated (now or in an older version) is kept in step with the design; one the researcher wrote is left alone
     const stored = (s.procedure || "").trim();
@@ -853,6 +875,11 @@
   const TSTEPS = window.LAB_THEORY_STEPS || {};
   const DCONV = window.LAB_DISCIPLINE_CONVENTIONS || [];
   let procAuto = true;
+  let teachingCase = "";   // the teaching case this design was started from, if any
+  const GUIDE = "https://github.com/TheFrankOnuh/scholarly-prompt-lab/blob/main/docs/research-use-cases.md";
+  // shown in the Lab and in the downloaded research design while a design started from a teaching case
+  const TEACHING_NOTICE = "The example responses in the guide are constructed teaching specimens, including deliberately introduced errors. They are not transcripts of independently executed model runs. The accompanying scores are illustrative applications of the evaluation rubric, not empirical performance measurements or human-confirmed evaluations. No claim is made that SPL improves model performance. Researchers can test that question by executing the protocols themselves.";
+  function teachingExample() { return teachingCase ? L.examples.find((e) => e.teaching && e.teachingCase === teachingCase) || null : null; }
   function techniqueOf(s) { return L.techniques[s.technique] || L.techniques[BLANK.technique]; }
   function noSources(s) { return techniqueOf(s).sources === "none"; }
   function conventionFor(discipline) {
@@ -1015,7 +1042,17 @@
     });
   }
 
+  function renderTeachingNotice() {
+    const box = $("teachNotice"), x = teachingExample();
+    box.hidden = !x;
+    if (!x) return;
+    const link = el("a", { href: GUIDE + "#" + x.guideAnchor, target: "_blank", rel: "noopener", text: "teaching guide" });
+    box.replaceChildren(
+      el("strong", { text: "Teaching case " + x.teachingCase + " (version " + x.caseVersion + "): " + x.caseTitle + ". " }),
+      "The worked responses and illustrative scores for this case are in the ", link, ". " + TEACHING_NOTICE + " Keep teaching specimens separate from the live output log: record only the responses you obtain from AI systems in Log & evaluate.");
+  }
   function renderBuild() {
+    renderTeachingNotice();
     const s = readState();
     refreshDiscOwn();
     renderPrompt($("prompt"), buildPrompt(s, 4));
@@ -1094,6 +1131,8 @@
     const cov = coverage(s);
     let md = "# Research design: " + (s.question || "untitled") + "\n\n";
     md += "Generated " + today() + " with Scholarly Prompt Lab v" + VERSION + ".\n\n";
+    const tx = teachingExample();
+    if (tx) md += "> **Teaching case " + tx.teachingCase + " (version " + tx.caseVersion + "): " + tx.caseTitle + ".** This design was started from a teaching case. " + TEACHING_NOTICE + " The guide: " + GUIDE + "#" + tx.guideAnchor + "\n\n";
     md += "| Field | Value |\n|---|---|\n";
     const row = (k, v) => "| " + k + " | " + String(v || "—").replace(/\|/g, "\\|").replace(/\n/g, "<br>") + " |\n";
     md += row("Discipline", s.discipline) + row("Theoretical orientation", theoryLines(s).map((t) => t.n + (t.t ? " (" + t.t + ")" : "") + (t.custom ? " [researcher-defined]" : "")).concat(s.theoryNotes.trim() ? [s.theoryNotes.trim()] : []).join("\n")) + row("Technique", L.techniques[s.technique].label);
@@ -1775,6 +1814,17 @@
   $("models").addEventListener("input", renderBuild);
   $("technique").addEventListener("change", renderBuild);
   $("example").addEventListener("change", () => {
+    const chosen = L.examples.find((e) => e.id === $("example").value);
+    if (chosen && chosen.teaching) {
+      // the open project keeps its own design: put the menu back before anything is saved
+      $("example").value = (matchingExample() || {}).id || "";
+      const P = window.LAB_PROJECTS;
+      if (!P || !P.startProject) return;
+      const draft = Object.assign({}, BLANK, chosen, { procAuto: !chosen.procedure, exampleId: chosen.id, teachingCase: chosen.teachingCase });
+      P.startProject("Teaching case " + chosen.teachingCase + ": " + chosen.caseTitle, draft,
+        { title: "Teaching case " + chosen.teachingCase + ": " + chosen.caseTitle, roles: chosen.reportRoles || [], rolesVersion: 2 });
+      return;
+    }
     const hasOwnWork = $("question").value.trim() && !matchingExample();
     if (hasOwnWork && !confirm("Replace your current design with " + ($("example").value ? "this example" : "a blank form") + "? Download your research design first if you want to keep it.")) {
       $("example").value = "";

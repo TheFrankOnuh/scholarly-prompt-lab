@@ -72,6 +72,12 @@ The Lab has no server and no accounts, and it never contacts an AI system. Every
 
 The full methodological guide is available in [`docs/CONTEXT-framework.md`](docs/CONTEXT-framework.md) in the repository.
 
+## Teaching cases
+
+Two worked teaching cases show the Lab applied to small corpora that a reader can check in full: equality and political belonging in the Declaration of Independence (1776) and the Declaration of Sentiments (1848), and cultural rights and collective knowledge in the African Charter on Human and Peoples' Rights and the United Nations Declaration on the Rights of Indigenous Peoples. The guide, [`docs/research-use-cases.md`](docs/research-use-cases.md), sets out for each case the research design, the prompt, a prompt-sensitivity protocol, a constructed specimen response with its review and scores, and a sample methods report.
+
+In the Lab, choose a teaching case from the Worked example menu. It opens as a new project, so the project you are working on is kept as it is. The specimen responses and scores in the guide were constructed for teaching. They are not records of model runs and are not empirical results.
+
 ## Integrity of sources
 
 When you log an output, the Lab records a SHA-256 fingerprint of the exact source text analysed and prints it in the methods report, so a reader can confirm which text a result refers to. Every prompt tells the AI system that source text is material to analyse and not instructions to follow, and the Lab warns you when a source contains wording that reads like an instruction to an AI.
@@ -108,6 +114,6 @@ Code: [MIT](LICENSE). Documentation and the CONTEXT framework guide: [CC BY 4.0]
 
 If you use the Lab or the framework in research, please cite it:
 
-> Onuh, F. (2026). *Scholarly Prompt Lab: The Prompt as Method* (Version 1.4.1) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.24521711
+> Onuh, F. (2026). *Scholarly Prompt Lab: The Prompt as Method* (Version 1.5.0) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.24521711
 
 The DOI above always points to the latest version. Each release also has its own DOI on [Zenodo](https://doi.org/10.5281/zenodo.24521711). See also [CITATION.cff](CITATION.cff).

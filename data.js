@@ -286,6 +286,101 @@ window.LAB = {
       output: "table",
       fields: "image ID, feature, what is depicted, documented comparison, match / mismatch / uncertain, note",
       safeguards: ["obs", "uncert", "review", "terms", "nofab"]
+    },
+    // ---------- teaching cases: each opens as a new project; the worked specimens and scores are in docs/research-use-cases.md ----------
+    {
+      id: "uc-equality",
+      teaching: true,
+      teachingCase: "SPL-UC-001",
+      caseVersion: "1.0",
+      caseTitle: "Equality, citizenship and political belonging",
+      guideAnchor: "use-case-01--equality-citizenship-and-political-belonging",
+      title: "Teaching case SPL-UC-001: Equality, citizenship and political belonging (1776 and 1848)",
+      discipline: "History",
+      question: "How does the Declaration of Sentiments (1848) rework the language of equality in the Declaration of Independence (1776), and what can this textual comparison establish about the representation of political subjects?",
+      theories: ["uc-historical-contextualism", "intertextuality"],
+      theoryDefs: [
+        { id: "uc-historical-contextualism", f: "hist", n: "Historical contextualism", t: "Skinner", a: "attend to what political language does within a particular historical situation, and make no unsupported claims about intention" }
+      ],
+      theoryNotes: "The comparison treats the wording as evidence of textual relationships while leaving claims about intention and reception open to further investigation.",
+      technique: "evidence-constrained",
+      procedure: [
+        "Identify the wording in each passage and its document provenance.",
+        "Compare DOC-01 P1 with DOC-02 P1 and record any additions or deletions.",
+        "Compare the statements about legitimate authority in P2.",
+        "Separate direct observations from interpretations.",
+        "Consider an alternative reading of the term “men”.",
+        "Identify claims that cannot be established from the supplied excerpts.",
+        "Verify each quotation and record its source identifier."
+      ].join("\n"),
+      unit: "a labelled passage",
+      corpus: "Paired passages are selected purposively because they contain parallel statements about equality and the legitimacy of government. This is a comparison of four excerpts, not a representative corpus of American political discourse. The selection makes lexical comparison possible but cannot establish patterns across either full document.",
+      definitions: [
+        "Named political subject: a person or group explicitly named as bearing equality. Code the words used; do not infer unnamed groups.",
+        "Lexical expansion: an identifiable addition to the corresponding formulation. Code only where both passages are available.",
+        "Continuity: a formulation retained across both texts. Record exact shared wording.",
+        "Normative assertion: a statement of a principle or entitlement. Do not code it as evidence of actual implementation.",
+        "Historical inference: a contextual interpretation extending beyond direct lexical observation. Label it explicitly and identify additional evidence needed.",
+        "Borderline case: the expression “men” may invite discussion of generic versus gender-specific usage. Record that ambiguity rather than imposing a single reading."
+      ].join("\n"),
+      sourceDesc: "Excerpts from the Declaration of Independence (1776; US National Archives transcription) and the Declaration of Sentiments (1848; US National Park Service transcription). The identifiers and passage labels are research metadata, not part of the original documents",
+      sourceText: "[DOC-01: Declaration of Independence (1776), preamble]\nP1: that all men are created equal\nP2: deriving their just powers from the consent of the governed\n\n[DOC-02: Declaration of Sentiments (1848), opening declaration]\nP1: that all men and women are created equal\nP2: deriving their just powers from the consent of the governed",
+      context: "DOC-01 was adopted by the Continental Congress on 4 July 1776 in the context of declaring independence from Britain. DOC-02 emerged from the women's rights convention at Seneca Falls, New York, on 19–20 July 1848. The Smithsonian identifies the Declaration of Independence as the model for the later declaration. This contextual information is provided separately from the corpus; it should not be cited as if it were wording from either excerpt. Do not assume the historical meaning of a term is identical to its contemporary meaning.",
+      terms: "“men” (generic or gender-specific usage)",
+      output: "table",
+      fields: "claim ID, document/passage ID, exact quotation, observation, interpretation, alternative interpretation or limitation, confidence (high/moderate/low with reason)",
+      safeguards: ["quote", "nofab", "obs", "alt", "disconfirm", "uncert", "scope"],
+      planCross: true,
+      planLog: true,
+      reportRoles: ["prelim", "compare", "challenge"]
+    },
+    {
+      id: "uc-cultural-rights",
+      teaching: true,
+      teachingCase: "SPL-UC-002",
+      caseVersion: "1.0",
+      caseTitle: "Cultural rights and collective knowledge",
+      guideAnchor: "use-case-02--cultural-rights-and-collective-knowledge",
+      title: "Teaching case SPL-UC-002: Cultural rights and collective knowledge (African Charter and UNDRIP)",
+      discipline: "African studies",
+      question: "How do selected provisions of the African Charter and UNDRIP represent cultural participation, community authority and control of educational institutions, and what distinctions should a comparative analysis preserve?",
+      theories: ["uc-relational-rights", "uc-situated-knowledges"],
+      theoryDefs: [
+        { id: "uc-relational-rights", f: "phil", n: "Relational approaches to rights", t: "", a: "attend to relations among individual rights holders, communities and institutions" },
+        { id: "uc-situated-knowledges", f: "phil", n: "Situated knowledges", t: "Haraway", a: "examine the risk that an analytical category developed in one context will obscure distinctions in another" }
+      ],
+      theoryNotes: "These concepts guide the inquiry; they do not establish in advance that the instruments express identical theories of rights.",
+      technique: "evidence-constrained",
+      procedure: [
+        "Identify the explicit subject and action in each passage.",
+        "Code rights holders and duty bearers separately.",
+        "Identify evidence of cultural participation, institutional authority and linguistic specificity.",
+        "Record differences in scope and legal form using contextual notes separately from the excerpts.",
+        "Examine alternative interpretations of community participation and institutional control.",
+        "Identify claims requiring full-document analysis, legal expertise or community-informed interpretation.",
+        "Verify quotations and assess whether each quotation supports the accompanying interpretation."
+      ].join("\n"),
+      unit: "a rights-bearing or duty-bearing provision",
+      corpus: "Four fragments with contextual summaries, from Article 17(2–3) of the African Charter and Article 14(1) of UNDRIP, selected purposively because they articulate different relationships between culture, community and institutions. They are not functionally identical provisions. This asymmetry is analytically important and must remain visible.",
+      definitions: [
+        "Rights holder: the subject explicitly assigned a right or entitlement. Distinguish an individual from a people or collective.",
+        "Duty bearer: the actor explicitly assigned a responsibility. Do not infer a duty merely because an institution is mentioned.",
+        "Cultural participation: express entitlement to participate in cultural life. Distinguish participation from authority over an institution.",
+        "Institutional authority: express power to establish or control an institution. Do not infer exclusive authority from the word “control”.",
+        "Linguistic specificity: express recognition of language in the relevant activity. Do not equate language of education with the totality of cultural rights.",
+        "Contextual uncertainty: a question about interpretation or application that the supplied corpus cannot resolve. Mark for further research or human review.",
+        "Borderline case: “his community” refers to the individual's relationship with a community in DOC-01 P1. This phrase alone does not establish a separate collective legal entitlement. Conversely, the explicit subject “Indigenous peoples” in DOC-02 P1 must not be recoded as an individual merely to fit a common rights template."
+      ].join("\n"),
+      sourceDesc: "Short verbatim excerpts from the African Charter on Human and Peoples' Rights (1981; African Commission on Human and Peoples' Rights) and the United Nations Declaration on the Rights of Indigenous Peoples (2007; UN General Assembly resolution A/RES/61/295). Only the excerpts are reproduced; they are not full articles",
+      sourceText: "[DOC-01: African Charter on Human and Peoples' Rights (1981), Article 17]\nP1 (Article 17(2)): Every individual may freely take part in the cultural life of his community.\nP2 (Article 17(3), fragment): shall be the duty of the State.\n\n[DOC-02: United Nations Declaration on the Rights of Indigenous Peoples (2007), Article 14(1), fragments]\nP1: Indigenous peoples have the right to establish and control their educational systems\nP2: in their own languages",
+      context: "The African Charter is a regional human rights treaty adopted in 1981. Article 17(3) assigns responsibility for protecting and promoting community-recognised morals and traditional values to the state. UNDRIP is a UN General Assembly declaration adopted in 2007. Article 14(1) concerns Indigenous peoples' authority over educational systems and institutions providing education in their languages in culturally appropriate ways. These are researcher-supplied summaries, not quotations. The documents have different legal forms and the provisions have different subject matter. Treat Africa and Indigenous peoples as internally diverse.",
+      terms: "“peoples”; “community”; “control”; “duty”",
+      output: "table",
+      fields: "claim ID, document/passage ID, exact quotation, observation, analytical category, interpretation, alternative interpretation or limitation, confidence (high/moderate/low with reason)",
+      safeguards: ["quote", "nofab", "terms", "obs", "alt", "syco", "review", "uncert"],
+      planCross: true,
+      planLog: true,
+      reportRoles: ["aicoding", "compare", "challenge"]
     }
   ]
 };

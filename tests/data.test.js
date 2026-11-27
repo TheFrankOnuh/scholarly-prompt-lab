@@ -54,10 +54,25 @@ test("recommendation pairs and cues refer only to existing theories", () => {
 test("worked examples refer only to existing theories, techniques and safeguards", () => {
   const safeguards = new Set(W.LAB.safeguards.map((s) => s.id));
   for (const ex of W.LAB.examples) {
-    for (const id of ex.theories || []) assert.ok(ids.has(id), ex.id + " theory " + id);
+    const own = new Map((ex.theoryDefs || []).map((t) => [t.id, t]));
+    for (const t of own.values()) assert.ok(t.n && t.a && !ids.has(t.id), ex.id + " defines theory " + t.id + " fully, with an id the library does not use");
+    for (const id of ex.theories || []) assert.ok(ids.has(id) || own.has(id), ex.id + " theory " + id);
     assert.ok(W.LAB.techniques[ex.technique], ex.id + " technique");
     for (const s of ex.safeguards || []) assert.ok(safeguards.has(s), ex.id + " safeguard " + s);
   }
+});
+
+test("teaching cases are complete, and say which case and version they are", () => {
+  const discs = new Set(W.LAB_DISCIPLINES.flatMap((g) => g.items));
+  const cases = W.LAB.examples.filter((x) => x.teaching);
+  assert.ok(cases.length >= 2);
+  for (const x of cases) {
+    assert.match(x.teachingCase, /^SPL-UC-\d{3}$/, x.id);
+    assert.ok(x.caseVersion && x.caseTitle && x.guideAnchor && x.procedure && x.sourceText.includes("[DOC-01"), x.id);
+    assert.ok(discs.has(x.discipline), x.id + " discipline " + x.discipline);
+    assert.ok(x.title.startsWith("Teaching case " + x.teachingCase), x.id + " is labelled as a teaching case in the menu");
+  }
+  assert.equal(new Set(cases.map((x) => x.teachingCase)).size, cases.length);
 });
 
 test("disciplines are unique", () => {

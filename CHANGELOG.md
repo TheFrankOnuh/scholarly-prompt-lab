@@ -8,6 +8,16 @@ This page lists every version of the Scholarly Prompt Lab, newest first.
 
 To cite the Lab, use the DOI that always opens the latest version: [10.5281/zenodo.24521711](https://doi.org/10.5281/zenodo.24521711).
 
+## 1.5.0, November 2026
+
+- Two teaching cases, documented in the guide [Research applications and methodological use cases](docs/research-use-cases.md): SPL-UC-001, equality, citizenship and political belonging in the Declaration of Independence (1776) and the Declaration of Sentiments (1848); and SPL-UC-002, cultural rights and collective knowledge in the African Charter on Human and Peoples' Rights and the United Nations Declaration on the Rights of Indigenous Peoples. Every quotation and reference in the guide was checked against its source.
+- A teaching case is chosen from the Worked example menu and opens as a new project with its research design, procedure, source passages, working definitions and study-level AI uses. The project that was open is kept as it is.
+- While a design started from a teaching case, the Build tab shows a notice that the worked responses and scores in the guide are constructed teaching specimens, and the downloaded research design carries the same notice.
+- A worked example can now bring its own analytical procedure and its own theoretical orientations. The seven existing worked examples are unchanged: their prompts, research design downloads, study protocols and methods reports are identical to version 1.3.1.
+- The Discipline field shows an arrow at its right edge, which opens or closes the full list of disciplines.
+- Disciplines are listed in alphabetical order, as are their groups. Typing a discipline and pressing Enter chooses the exact match.
+- "+ Add your own discipline" and "+ Add your own theory" no longer show a second plus sign.
+
 ## 1.4.1, November 2026
 
 - Privacy and data storage stays readable when the pointer rests on it: the text turns petrol and is underlined. In 1.4.0 the button was filled with dark petrol on hover, which left its text at a contrast of about 1.3:1. Every other button and link was checked and keeps a contrast of at least 4.5:1 on hover, and an automated test now guards this.

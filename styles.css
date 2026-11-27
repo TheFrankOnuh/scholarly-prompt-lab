@@ -1082,3 +1082,14 @@ button.step-mode:hover { color: var(--ink); }
 /* the privacy statement's button is plain text: on hover it turns petrol and is underlined, never filled */
 .privacy-trigger:hover, .privacy-trigger:active { background: transparent; border-color: transparent; color: var(--accent);
   text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; transform: none; }
+
+/* the discipline field is a list: an arrow at its right edge says so, and opens or closes the whole list */
+.combo > input { padding-right: 48px; }
+.combo-toggle, .combo-toggle:hover { position: absolute; top: 0; right: 0; width: 44px; height: 44px; min-height: 44px; padding: 0; border: 0; border-radius: 0 8px 8px 0;
+  background: transparent; color: var(--muted); display: grid; place-items: center; transform: none; }
+.combo-toggle:hover { color: var(--accent); background: var(--accent-soft); }
+.combo-toggle::before { content: ""; width: 18px; height: 18px; background: currentColor; -webkit-mask: var(--i-chev) center / contain no-repeat; mask: var(--i-chev) center / contain no-repeat; }
+.combo-toggle[aria-expanded="true"]::before { transform: rotate(180deg); }
+@media (prefers-reduced-motion: no-preference) { .combo-toggle::before { transition: transform 0.2s cubic-bezier(.2, .7, .2, 1); } }
+/* these two buttons already begin with "+", so they carry no icon */
+#discAddBtn::before, #addTheoryBtn::before { content: none; display: none; }

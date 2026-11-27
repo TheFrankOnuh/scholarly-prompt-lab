@@ -12,8 +12,8 @@
   <link rel="apple-touch-icon" href="icons/icon-192.png">
   <link rel="preload" href="assets/fonts/ibm-plex-sans-normal-400-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="assets/fonts/source-serif-4-normal-400-700-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="assets/fonts/fonts.css?v=1.4.1">
-  <link rel="stylesheet" href="styles.css?v=1.4.1">
+  <link rel="stylesheet" href="assets/fonts/fonts.css?v=1.5.0">
+  <link rel="stylesheet" href="styles.css?v=1.5.0">
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to the main content</a>
@@ -75,6 +75,7 @@
         </div>
       </div>
 
+      <div class="notice teaching" id="teachNotice" role="note" hidden></div>
       <div class="grid">
         <form id="builder" class="card" autocomplete="off">
           <fieldset>
@@ -82,6 +83,7 @@
             <label for="discipline">Discipline</label>
             <div class="combo">
               <input id="discipline" name="discipline" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="discList" autocomplete="off" spellcheck="false" placeholder="Search or type your discipline">
+              <button type="button" class="combo-toggle" id="discToggle" tabindex="-1" aria-label="Show all disciplines" aria-controls="discList" aria-expanded="false"></button>
               <div id="discList" class="combo-list" role="listbox" aria-label="Disciplines" hidden></div>
             </div>
             <div class="disc-tools">
@@ -559,20 +561,20 @@
     <p><span id="offlineStatus" role="status"></span> <button type="button" id="installBtn" class="ghost small-btn" hidden>Install the Lab on this device</button> <span class="hint" id="installHelp" role="status"></span></p>
   </footer>
 
-  <script src="release.js?v=1.4.1"></script>
-  <script src="theories.js?v=1.4.1"></script>
-  <script src="theory-links.js?v=1.4.1"></script>
-  <script src="disciplines.js?v=1.4.1"></script>
-  <script src="community.js?v=1.4.1"></script>
-  <script src="procedures.js?v=1.4.1"></script>
-  <script src="data.js?v=1.4.1"></script>
-  <script src="checks.js?v=1.4.1"></script>
-  <script src="app.js?v=1.4.1"></script>
-  <script src="ui.js?v=1.4.1"></script>
-  <script src="report.js?v=1.4.1"></script>
-  <script src="tour.js?v=1.4.1"></script>
-  <script src="projects.js?v=1.4.1"></script>
-  <script src="offline.js?v=1.4.1"></script>
-  <script src="counter.js?v=1.4.1"></script>
+  <script src="release.js?v=1.5.0"></script>
+  <script src="theories.js?v=1.5.0"></script>
+  <script src="theory-links.js?v=1.5.0"></script>
+  <script src="disciplines.js?v=1.5.0"></script>
+  <script src="community.js?v=1.5.0"></script>
+  <script src="procedures.js?v=1.5.0"></script>
+  <script src="data.js?v=1.5.0"></script>
+  <script src="checks.js?v=1.5.0"></script>
+  <script src="app.js?v=1.5.0"></script>
+  <script src="ui.js?v=1.5.0"></script>
+  <script src="report.js?v=1.5.0"></script>
+  <script src="tour.js?v=1.5.0"></script>
+  <script src="projects.js?v=1.5.0"></script>
+  <script src="offline.js?v=1.5.0"></script>
+  <script src="counter.js?v=1.5.0"></script>
 </body>
 </html>
